@@ -1,190 +1,81 @@
-CREATE DATABASE IF NOT EXISTS kigumo_tvc;
-USE kigumo_tvc;
+-- ============================================================
+-- ADDITIONAL TABLES FOR KIGUMO TVC
+-- Tables 16-20 to be added to existing schema
+-- ============================================================
 
--- 1. DEPARTMENTS
-CREATE TABLE departments (
-  id          INT AUTO_INCREMENT PRIMARY KEY,
-  name        VARCHAR(100) NOT NULL,
-  type        ENUM('academic','non_academic') NOT NULL DEFAULT 'academic',
-  description TEXT,
-  created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-);
+-- TABLE 16: slider_slides
+-- Stores hero slider content for homepage
+CREATE TABLE IF NOT EXISTS slider_slides (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    image_path VARCHAR(255) NOT NULL COMMENT 'Path relative to /uploads/',
+    badge_text VARCHAR(100) DEFAULT NULL COMMENT 'Small badge text overlaid on slide',
+    heading VARCHAR(200) DEFAULT NULL COMMENT 'Main heading text',
+    subtext TEXT DEFAULT NULL COMMENT 'Descriptive subtext',
+    btn1_text VARCHAR(80) DEFAULT NULL COMMENT 'First button label',
+    btn1_url VARCHAR(255) DEFAULT NULL COMMENT 'First button destination URL',
+    btn2_text VARCHAR(80) DEFAULT NULL COMMENT 'Second button label',
+    btn2_url VARCHAR(255) DEFAULT NULL COMMENT 'Second button destination URL',
+    sort_order INT DEFAULT 0 COMMENT 'Display order (lower numbers first)',
+    is_active BOOLEAN DEFAULT TRUE,
+    created_by INT DEFAULT NULL COMMENT 'FK to users(id) - admin who created',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL,
+    INDEX idx_slider_active_sort (is_active, sort_order)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- 2. USERS
-CREATE TABLE users (
-  id                    INT AUTO_INCREMENT PRIMARY KEY,
-  full_name             VARCHAR(100) NOT NULL,
-  email                 VARCHAR(100) UNIQUE,
-  reg_number            VARCHAR(50) UNIQUE,
-  password              VARCHAR(255) NOT NULL,
-  role                  ENUM('student','lecturer','admin') NOT NULL,
-  primary_department_id INT,
-  year_of_study         INT DEFAULT NULL,
-  photo_path            VARCHAR(255) DEFAULT NULL,
-  bio                   TEXT DEFAULT NULL,
-  is_active             BOOLEAN DEFAULT TRUE,
-  created_at            TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at            TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  FOREIGN KEY (primary_department_id) REFERENCES departments(id)
-);
+-- TABLE 17: principal_message
+-- Stores the Chief Principal's welcome message for homepage
+CREATE TABLE IF NOT EXISTS principal_message (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    principal_name VARCHAR(100) DEFAULT NULL COMMENT 'Full name of the chief principal',
+    title VARCHAR(100) DEFAULT NULL COMMENT 'Official title e.g. Chief Principal',
+    message LONGTEXT DEFAULT NULL COMMENT 'Full message body text',
+    image_path VARCHAR(255) DEFAULT NULL COMMENT 'Principal photo path',
+    is_active BOOLEAN DEFAULT TRUE COMMENT 'Only one record should be active at a time',
+    created_by INT DEFAULT NULL COMMENT 'FK to users(id) - admin who created',
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL,
+    INDEX idx_principal_active (is_active)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- 3. HOD ASSIGNMENTS
-CREATE TABLE hod_assignments (
-  id            INT AUTO_INCREMENT PRIMARY KEY,
-  department_id INT NOT NULL UNIQUE,
-  lecturer_id   INT NOT NULL,
-  assigned_at   DATE NOT NULL,
-  created_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (department_id) REFERENCES departments(id),
-  FOREIGN KEY (lecturer_id)   REFERENCES users(id)
-);
+-- TABLE 18: page_content
+-- Stores editable HTML content for various page sections
+CREATE TABLE IF NOT EXISTS page_content (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    page_key VARCHAR(100) NOT NULL COMMENT 'Identifier for the page e.g. about, admissions',
+    section_key VARCHAR(100) NOT NULL COMMENT 'Identifier for the section e.g. history, charter',
+    content_html LONGTEXT DEFAULT NULL COMMENT 'Rich HTML content for the section',
+    updated_by INT DEFAULT NULL COMMENT 'FK to users(id) - admin who last updated',
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    UNIQUE KEY unique_page_section (page_key, section_key),
+    FOREIGN KEY (updated_by) REFERENCES users(id) ON DELETE SET NULL,
+    INDEX idx_page_key (page_key)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- 4. STUDENT NON-ACADEMIC MEMBERSHIPS
-CREATE TABLE student_non_academic_memberships (
-  id            INT AUTO_INCREMENT PRIMARY KEY,
-  student_id    INT NOT NULL,
-  department_id INT NOT NULL,
-  joined_at     DATE DEFAULT (CURRENT_DATE),
-  UNIQUE KEY unique_membership (student_id, department_id),
-  FOREIGN KEY (student_id)    REFERENCES users(id),
-  FOREIGN KEY (department_id) REFERENCES departments(id)
-);
+-- TABLE 19: recycle_bin
+-- Soft delete recovery system with 30-day retention
+CREATE TABLE IF NOT EXISTS recycle_bin (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    original_table VARCHAR(100) NOT NULL COMMENT 'Table name where data originated',
+    original_id INT NOT NULL COMMENT 'Primary key ID of the deleted record',
+    data_snapshot LONGTEXT NOT NULL COMMENT 'JSON string of the complete row data',
+    deleted_by INT DEFAULT NULL COMMENT 'FK to users(id) - who performed the deletion',
+    deleted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT 'When the deletion occurred',
+    restore_deadline TIMESTAMP GENERATED ALWAYS AS (deleted_at + INTERVAL 30 DAY) STORED COMMENT 'Auto-calculated: 30 days from deletion',
+    FOREIGN KEY (deleted_by) REFERENCES users(id) ON DELETE SET NULL,
+    INDEX idx_restore_deadline (restore_deadline),
+    INDEX idx_original_table (original_table)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- 5. COURSES
-CREATE TABLE courses (
-  id                 INT AUTO_INCREMENT PRIMARY KEY,
-  name               VARCHAR(150) NOT NULL,
-  duration_years     INT NOT NULL,
-  department_id      INT NOT NULL,
-  examining_body     ENUM('KNEC','KASNEB','CDACC') NOT NULL,
-  cbet_status        BOOLEAN DEFAULT FALSE,
-  entry_requirements TEXT,
-  description        TEXT,
-  is_active          BOOLEAN DEFAULT TRUE,
-  created_at         TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at         TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  FOREIGN KEY (department_id) REFERENCES departments(id)
-);
-
--- 6. INTAKE DATES
-CREATE TABLE intake_dates (
-  id          INT AUTO_INCREMENT PRIMARY KEY,
-  course_id   INT NOT NULL,
-  intake_date DATE NOT NULL,
-  label       VARCHAR(100),
-  FOREIGN KEY (course_id) REFERENCES courses(id)
-);
-
--- 7. FEES
-CREATE TABLE fees (
-  id            INT AUTO_INCREMENT PRIMARY KEY,
-  course_id     INT NOT NULL,
-  year_of_study INT NOT NULL,
-  tuition       DECIMAL(10,2) DEFAULT 0,
-  examination   DECIMAL(10,2) DEFAULT 0,
-  registration  DECIMAL(10,2) DEFAULT 0,
-  id_card       DECIMAL(10,2) DEFAULT 0,
-  other         DECIMAL(10,2) DEFAULT 0,
-  other_label   VARCHAR(100),
-  last_updated  DATE,
-  FOREIGN KEY (course_id) REFERENCES courses(id)
-);
-
--- 8. TIMETABLE
-CREATE TABLE timetable (
-  id            INT AUTO_INCREMENT PRIMARY KEY,
-  department_id INT NOT NULL,
-  course_id     INT NOT NULL,
-  lecturer_id   INT NOT NULL,
-  subject       VARCHAR(100) NOT NULL,
-  day           ENUM('Mon','Tue','Wed','Thu','Fri') NOT NULL,
-  time_start    TIME NOT NULL,
-  time_end      TIME NOT NULL,
-  room          VARCHAR(50),
-  FOREIGN KEY (department_id) REFERENCES departments(id),
-  FOREIGN KEY (course_id)     REFERENCES courses(id),
-  FOREIGN KEY (lecturer_id)   REFERENCES users(id)
-);
-
--- 9. COURSE MATERIALS
-CREATE TABLE materials (
-  id          INT AUTO_INCREMENT PRIMARY KEY,
-  title       VARCHAR(150) NOT NULL,
-  description TEXT,
-  file_path   VARCHAR(255) NOT NULL,
-  file_size   INT,
-  course_id   INT NOT NULL,
-  uploaded_by INT NOT NULL,
-  uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (course_id)   REFERENCES courses(id),
-  FOREIGN KEY (uploaded_by) REFERENCES users(id)
-);
-
--- 10. ANNOUNCEMENTS
-CREATE TABLE announcements (
-  id            INT AUTO_INCREMENT PRIMARY KEY,
-  title         VARCHAR(200) NOT NULL,
-  body          TEXT NOT NULL,
-  scope         ENUM('college_wide','department') DEFAULT 'college_wide',
-  department_id INT DEFAULT NULL,
-  posted_by     INT NOT NULL,
-  posted_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (department_id) REFERENCES departments(id),
-  FOREIGN KEY (posted_by)     REFERENCES users(id)
-);
-
--- 11. NEWS ARTICLES
-CREATE TABLE news_articles (
-  id           INT AUTO_INCREMENT PRIMARY KEY,
-  title        VARCHAR(200) NOT NULL,
-  body         LONGTEXT NOT NULL,
-  category     ENUM('event','partnership','graduation','achievement','general') DEFAULT 'general',
-  image_path   VARCHAR(255),
-  published_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  created_by   INT NOT NULL,
-  is_published BOOLEAN DEFAULT TRUE,
-  FOREIGN KEY (created_by) REFERENCES users(id)
-);
-
--- 12. DOWNLOADS
-CREATE TABLE downloads (
-  id          INT AUTO_INCREMENT PRIMARY KEY,
-  title       VARCHAR(150) NOT NULL,
-  category    ENUM('admission','academic','legal','student_welfare') NOT NULL,
-  file_path   VARCHAR(255) NOT NULL,
-  file_size   INT,
-  uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  uploaded_by INT NOT NULL,
-  FOREIGN KEY (uploaded_by) REFERENCES users(id)
-);
-
--- 13. GALLERY ALBUMS
-CREATE TABLE gallery_albums (
-  id         INT AUTO_INCREMENT PRIMARY KEY,
-  title      VARCHAR(150) NOT NULL,
-  event_date DATE,
-  created_by INT NOT NULL,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (created_by) REFERENCES users(id)
-);
-
--- 14. GALLERY PHOTOS
-CREATE TABLE gallery_photos (
-  id        INT AUTO_INCREMENT PRIMARY KEY,
-  album_id  INT NOT NULL,
-  file_path VARCHAR(255) NOT NULL,
-  caption   VARCHAR(200),
-  FOREIGN KEY (album_id) REFERENCES gallery_albums(id) ON DELETE CASCADE
-);
-
--- 15. CONTACT ENQUIRIES
-CREATE TABLE contact_enquiries (
-  id           INT AUTO_INCREMENT PRIMARY KEY,
-  full_name    VARCHAR(100) NOT NULL,
-  email        VARCHAR(100) NOT NULL,
-  subject      VARCHAR(200),
-  message      TEXT NOT NULL,
-  submitted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  is_read      BOOLEAN DEFAULT FALSE
-);
+-- TABLE 20: bom_members
+-- Board of Management members for about page display
+CREATE TABLE IF NOT EXISTS bom_members (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    full_name VARCHAR(100) NOT NULL COMMENT 'BOM member full name',
+    position VARCHAR(100) DEFAULT NULL COMMENT 'Position/title on the board',
+    photo_path VARCHAR(255) DEFAULT NULL COMMENT 'Member photo path',
+    sort_order INT DEFAULT 0 COMMENT 'Display order',
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_bom_active_sort (is_active, sort_order)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description"
+        content="Latest news, events, and announcements from Kigumo Technical and Vocational College">
+    <meta name="theme-color" content="#1a7a1a">
+    <title>News & Events - Kigumo Technical and Vocational College</title>
+
+    <link rel="icon" type="image/jpeg" href="assets/images/logo.jpeg">
+    <link rel="stylesheet" href="assets/css/main.css">
+
+    <script type="text/javascript">
+        function googleTranslateElementInit() {
+            new google.translate.TranslateElement({
+                pageLanguage: 'en',
+                includedLanguages: 'sw',
+                layout: google.translate.TranslateElement.InlineLayout.SIMPLE
+            }, 'google_translate_element');
+        }
+    </script>
+    <!-- Google Translate Widget -->
+    <script type="text/javascript">
+        function googleTranslateElementInit() {
+            new google.translate.TranslateElement(
+                {
+                    pageLanguage: 'en',
+                    includedLanguages: 'sw',
+                    layout: google.translate.TranslateElement.InlineLayout.SIMPLE
+                },
+                'google_translate_element'
+            );
+        }
+    </script>
+    <script src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+
+    <style>
+        .news-hero {
+            background: linear-gradient(135deg, #1a1a2e, #1a7a1a);
+            color: #fff;
+            padding: 4rem 2rem 2.5rem;
+            text-align: center;
+        }
+
+        .news-hero h1 {
+            font-size: 2.5rem;
+        }
+
+        .news-container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem;
+        }
+
+        .filter-bar {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            margin-bottom: 2rem;
+            justify-content: center;
+        }
+
+        .filter-btn {
+            padding: 0.5rem 1.2rem;
+            border: 2px solid #1a7a1a;
+            background: #fff;
+            color: #1a7a1a;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+
+        .filter-btn:hover,
+        .filter-btn.active {
+            background: #1a7a1a;
+            color: #fff;
+        }
+
+        .news-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .news-card {
+            background: #fff;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+            transition: transform 0.3s;
+        }
+
+        .news-card:hover {
+            transform: translateY(-3px);
+        }
+
+        .news-image {
+            height: 200px;
+            background: #e0e0e0;
+            overflow: hidden;
+        }
+
+        .news-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .news-image .placeholder-img {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            font-size: 3rem;
+            color: #1a7a1a;
+        }
+
+        .news-body {
+            padding: 1.5rem;
+        }
+
+        .news-body .category-badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 15px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .cat-event {
+            background: #cce5ff;
+            color: #004085;
+        }
+
+        .cat-partnership {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .cat-graduation {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .cat-achievement {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .cat-general {
+            background: #e2e3e5;
+            color: #383d41;
+        }
+
+        .news-body h3 {
+            color: #1a1a2e;
+            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .news-body .date {
+            color: #888;
+            font-size: 0.85rem;
+            margin-bottom: 0.8rem;
+        }
+
+        .news-body .excerpt {
+            color: #555;
+            line-height: 1.6;
+            font-size: 0.9rem;
+        }
+
+        .read-more-link {
+            display: inline-block;
+            color: #1a7a1a;
+            font-weight: 600;
+            text-decoration: none;
+            margin-top: 0.8rem;
+        }
+
+        .read-more-link:hover {
+            text-decoration: underline;
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-top: 2.5rem;
+        }
+
+        .page-btn {
+            padding: 0.5rem 1rem;
+            border: 2px solid #1a7a1a;
+            background: #fff;
+            color: #1a7a1a;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        .page-btn.active {
+            background: #1a7a1a;
+            color: #fff;
+        }
+
+        @media (max-width: 768px) {
+            .news-hero h1 {
+                font-size: 1.8rem;
+            }
+
+            .news-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div id="google_translate_element" style="position:fixed;top:10px;right:10px;z-index:9999;"></div>
+    <header id="mainNavbar"></header>
+
+    <section class="news-hero">
+        <h1>News &amp; Events</h1>
+        <p>Stay updated with the latest from Kigumo TVC</p>
+    </section>
+
+    <div class="news-container">
+        <!-- Filter Bar -->
+        <div class="filter-bar" id="filterBar">
+            <button class="filter-btn active" data-category="all">All News</button>
+            <button class="filter-btn" data-category="event">Events</button>
+            <button class="filter-btn" data-category="partnership">Partnerships</button>
+            <button class="filter-btn" data-category="graduation">Graduation</button>
+            <button class="filter-btn" data-category="achievement">Achievements</button>
+            <button class="filter-btn" data-category="general">General</button>
+        </div>
+
+        <!-- News Grid -->
+        <div class="news-grid" id="newsGrid">
+            <p style="text-align:center;color:#888;grid-column:1/-1;padding:2rem;">Loading news...</p>
+        </div>
+
+        <!-- Pagination -->
+        <div class="pagination" id="pagination"></div>
+    </div>
+
+    <footer id="mainFooter"></footer>
+
+    <script>
+        let currentPage = 1;
+        let currentCategory = 'all';
+        const limit = 10;
+
+        (async function () {
+            await loadSharedComponents();
+            await loadNews();
+            setupFilters();
+        })();
+
+        async function loadSharedComponents() {
+            try {
+                const res = await fetch('/');
+                const html = await res.text();
+                const doc = new DOMParser().parseFromString(html, 'text/html');
+                const nav = doc.querySelector('header');
+                const footer = doc.querySelector('footer');
+                if (nav) document.getElementById('mainNavbar').innerHTML = nav.outerHTML;
+                if (footer) document.getElementById('mainFooter').innerHTML = footer.outerHTML;
+            } catch (e) { }
+        }
+
+        async function loadNews() {
+            try {
+                let url = `/api/v1/news?page=${currentPage}&limit=${limit}`;
+                if (currentCategory !== 'all') {
+                    url += `&category=${currentCategory}`;
+                }
+
+                const res = await fetch(url);
+                if (!res.ok) throw new Error('Failed to fetch news');
+                const data = await res.json();
+
+                if (!data.success || !data.data) {
+                    document.getElementById('newsGrid').innerHTML = '<p style="text-align:center;color:#888;grid-column:1/-1;padding:2rem;">No news articles found.</p>';
+                    return;
+                }
+
+                renderNews(data.data);
+                renderPagination(data.total, data.page, data.totalPages);
+
+            } catch (e) {
+                console.log('News fetch failed');
+                document.getElementById('newsGrid').innerHTML = '<p style="text-align:center;color:#888;grid-column:1/-1;padding:2rem;">Unable to load news. Please try again later.</p>';
+            }
+        }
+
+        function renderNews(articles) {
+            const grid = document.getElementById('newsGrid');
+
+            if (articles.length === 0) {
+                grid.innerHTML = '<p style="text-align:center;color:#888;grid-column:1/-1;padding:2rem;">No articles in this category yet.</p>';
+                return;
+            }
+
+            grid.innerHTML = articles.map(article => `
+                <div class="news-card">
+                    <div class="news-image">
+                        ${article.image_path
+                    ? `<img src="/uploads/${article.image_path}" alt="${escapeHtml(article.title)}" loading="lazy">`
+                    : `<div class="placeholder-img">📰</div>`}
+                    </div>
+                    <div class="news-body">
+                        <span class="category-badge cat-${article.category}">${capitalizeFirst(article.category)}</span>
+                        <h3>${escapeHtml(article.title)}</h3>
+                        <p class="date">📅 ${formatDate(article.published_at)}</p>
+                        <p class="excerpt">${getExcerpt(article.body, 150)}</p>
+                        <a href="news-article.html?id=${article.id}" class="read-more-link">Read More →</a>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderPagination(total, page, totalPages) {
+            const pagination = document.getElementById('pagination');
+            if (totalPages <= 1) {
+                pagination.innerHTML = '';
+                return;
+            }
+
+            let html = '';
+
+            // Previous button
+            if (page > 1) {
+                html += `<button class="page-btn" data-page="${page - 1}">← Previous</button>`;
+            }
+
+            // Page numbers
+            for (let i = 1; i <= totalPages; i++) {
+                if (i === page) {
+                    html += `<button class="page-btn active">${i}</button>`;
+                } else {
+                    html += `<button class="page-btn" data-page="${i}">${i}</button>`;
+                }
+            }
+
+            // Next button
+            if (page < totalPages) {
+                html += `<button class="page-btn" data-page="${page + 1}">Next →</button>`;
+            }
+
+            pagination.innerHTML = html;
+
+            // Add click handlers
+            pagination.querySelectorAll('.page-btn[data-page]').forEach(btn => {
+                btn.addEventListener('click', function () {
+                    currentPage = parseInt(this.getAttribute('data-page'));
+                    loadNews();
+                    window.scrollTo({ top: 400, behavior: 'smooth' });
+                });
+            });
+        }
+
+        function setupFilters() {
+            document.getElementById('filterBar').addEventListener('click', function (e) {
+                if (e.target.classList.contains('filter-btn')) {
+                    // Update active state
+                    this.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                    e.target.classList.add('active');
+
+                    // Update category and reload
+                    currentCategory = e.target.getAttribute('data-category');
+                    currentPage = 1;
+                    loadNews();
+                }
+            });
+        }
+
+        function getExcerpt(html, maxChars) {
+            const div = document.createElement('div');
+            div.innerHTML = html;
+            const text = div.textContent || div.innerText || '';
+            if (text.length <= maxChars) return text;
+            return text.substring(0, maxChars).trim() + '...';
+        }
+
+        function formatDate(dateStr) {
+            if (!dateStr) return '';
+            const date = new Date(dateStr);
+            return date.toLocaleDateString('en-KE', { year: 'numeric', month: 'long', day: 'numeric' });
+        }
+
+        function capitalizeFirst(str) {
+            if (!str) return '';
+            return str.charAt(0).toUpperCase() + str.slice(1);
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        }
+    </script>
+
+    <script src="assets/js/navbar.js"></script>
+    <script>
+        buildNavbar('PAGE_IDENTIFIER');
+    </script>
+</body>
+
+</html>

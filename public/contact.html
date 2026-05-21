@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Contact Kigumo Technical and Vocational College - Get in touch with admissions, academics, or administration" />
+  <meta name="theme-color" content="#1a7a1a" />
+  <title>Contact Us - Kigumo Technical and Vocational College</title>
+  <link rel="icon" href="assets/images/logo.jpeg" type="image/jpeg" />
+  <link rel="stylesheet" href="assets/css/main.css" />
+
+  <!-- Google Translate Widget -->
+  <script type="text/javascript">
+    function googleTranslateElementInit() {
+      new google.translate.TranslateElement(
+        { pageLanguage: 'en', includedLanguages: 'sw', layout: google.translate.TranslateElement.InlineLayout.SIMPLE },
+        'google_translate_element'
+      );
+    }
+  </script>
+  <script src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+
+  <style>
+    .contact-hero {
+      background: linear-gradient(135deg, #1a1a2e, #1a7a1a);
+      color: #fff;
+      padding: 3rem 2rem;
+      text-align: center;
+    }
+    .contact-container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 2rem 1.5rem;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2rem;
+    }
+    .contact-form {
+      background: #fff;
+      border-radius: 12px;
+      padding: 2rem;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+    }
+    .contact-form h2 {
+      color: #1a7a1a;
+      margin-bottom: 1.5rem;
+    }
+    .form-group {
+      margin-bottom: 1.2rem;
+    }
+    .form-group label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 0.3rem;
+    }
+    .form-group input, .form-group select, .form-group textarea {
+      width: 100%;
+      padding: 0.7rem;
+      border: 2px solid #e0e0e0;
+      border-radius: 6px;
+      font-size: 1rem;
+      box-sizing: border-box;
+    }
+    .form-group textarea {
+      resize: vertical;
+      min-height: 120px;
+    }
+    .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+      border-color: #1a7a1a;
+      outline: none;
+    }
+    .btn-submit {
+      background: #1a7a1a;
+      color: #fff;
+      border: none;
+      padding: 0.8rem 2rem;
+      border-radius: 6px;
+      font-size: 1rem;
+      cursor: pointer;
+      font-weight: 600;
+    }
+    .btn-submit:hover {
+      background: #145214;
+    }
+    .contact-info {
+      background: #f8f9fa;
+      border-radius: 12px;
+      padding: 2rem;
+    }
+    .contact-info h2 {
+      color: #1a7a1a;
+      margin-bottom: 1.5rem;
+    }
+    .contact-info p {
+      margin-bottom: 1rem;
+      line-height: 1.7;
+    }
+    .map-container {
+      margin-top: 1.5rem;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .alert {
+      display: none;
+      padding: 0.8rem;
+      border-radius: 6px;
+      margin-bottom: 1rem;
+    }
+    .alert-success { background: #d4edda; color: #155724; }
+    .alert-error { background: #f8d7da; color: #721c24; }
+    @media (max-width: 768px) {
+      .contact-container { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="contact-hero">
+    <h1>Contact Us</h1>
+    <p>We’d love to hear from you. Reach out for admissions, partnerships, or general inquiries.</p>
+  </div>
+
+  <div class="contact-container">
+    <!-- Left: Contact Form -->
+    <div class="contact-form">
+      <h2>Send Us a Message</h2>
+      <div id="formAlert" class="alert"></div>
+      <form id="contactForm" novalidate>
+        <div class="form-group">
+          <label for="fullName">Full Name *</label>
+          <input type="text" id="fullName" name="fullName" required />
+        </div>
+        <div class="form-group">
+          <label for="email">Email *</label>
+          <input type="email" id="email" name="email" required />
+        </div>
+        <div class="form-group">
+          <label for="subject">Subject *</label>
+          <select id="subject" name="subject" required>
+            <option value="">-- Select --</option>
+            <option value="Admissions">Admissions</option>
+            <option value="Academic">Academic</option>
+            <option value="Partnership">Partnership</option>
+            <option value="General Inquiry">General Inquiry</option>
+            <option value="Complaint">Complaint</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="message">Message *</label>
+          <textarea id="message" name="message" required></textarea>
+        </div>
+        <button type="submit" class="btn-submit">Send Message</button>
+      </form>
+    </div>
+
+    <!-- Right: Contact Info + Map -->
+    <div class="contact-info">
+      <h2>Our Details</h2>
+      <p><strong>📍 Physical Address:</strong><br>Muthithi Town, Murang`a County, Kenya</p>
+      <p><strong>📞 Phone:</strong><br>+254 700 000 000</p>
+      <p><strong>✉️ Email:</strong><br>info@kigumotvc.ac.ke</p>
+      <p><strong>🕐 Office Hours:</strong><br>Mon – Fri: 8:00 AM – 5:00 PM<br></p>
+      <!-- Sat: 9:00 AM – 12:00 PM -->
+      <div class="map-container">
+        <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3989.733164774102!2d37.3472!3d-0.516!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x1827d5a9e5a09a9b%3A0x4e9a9b8a1b0a9b8a!2sKigumo!5e0!3m2!1sen!2ske!4v1699999999999" width="100%" height="250" style="border:0;" allowfullscreen="" loading="lazy"></iframe>
+      </div>
+    </div>
+  </div>
+
+  <footer id="mainFooter"></footer>
+
+  <script src="assets/js/navbar.js"></script>
+  <script>
+    buildNavbar('contact');
+
+    // Load footer from homepage (optional fallback)
+    fetch('/')
+      .then(res => res.text())
+      .then(html => {
+        const doc = new DOMParser().parseFromString(html, 'text/html');
+        const footer = doc.querySelector('footer');
+        if (footer) document.getElementById('mainFooter').innerHTML = footer.outerHTML;
+      }).catch(() => {});
+
+    const form = document.getElementById('contactForm');
+    const alertBox = document.getElementById('formAlert');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      alertBox.style.display = 'none';
+
+      const formData = {
+        full_name: form.fullName.value.trim(),
+        email: form.email.value.trim(),
+        subject: form.subject.value,
+        message: form.message.value.trim()
+      };
+
+      try {
+        const res = await fetch('/api/v1/contact', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(formData)
+        });
+        const data = await res.json();
+        if (data.success) {
+          alertBox.className = 'alert alert-success';
+          alertBox.textContent = 'Message sent successfully! We will get back to you soon.';
+          alertBox.style.display = 'block';
+          form.reset();
+        } else {
+          throw new Error(data.message || 'Failed to send');
+        }
+      } catch (err) {
+        alertBox.className = 'alert alert-error';
+        alertBox.textContent = 'Failed to send message. Please try again later.';
+        alertBox.style.display = 'block';
+      }
+    });
+  </script>
+</body>
+</html>

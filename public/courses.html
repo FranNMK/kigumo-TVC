@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description"
+        content="Courses offered at Kigumo Technical and Vocational College - Diploma, Certificate, and Artisan programs">
+    <meta name="theme-color" content="#1a7a1a">
+    <title>Courses - Kigumo Technical and Vocational College</title>
+
+    <link rel="icon" type="image/jpeg" href="assets/images/logo.jpeg">
+    <link rel="stylesheet" href="assets/css/main.css">
+
+    <script type="text/javascript">
+        function googleTranslateElementInit() {
+            new google.translate.TranslateElement({
+                pageLanguage: 'en',
+                includedLanguages: 'sw',
+                layout: google.translate.TranslateElement.InlineLayout.SIMPLE
+            }, 'google_translate_element');
+        }
+    </script>
+    <!-- Google Translate Widget -->
+    <script type="text/javascript">
+        function googleTranslateElementInit() {
+            new google.translate.TranslateElement(
+                {
+                    pageLanguage: 'en',
+                    includedLanguages: 'sw',
+                    layout: google.translate.TranslateElement.InlineLayout.SIMPLE
+                },
+                'google_translate_element'
+            );
+        }
+    </script>
+    <script src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+
+    <style>
+        .courses-hero {
+            background: linear-gradient(135deg, #1a1a2e, #1a7a1a);
+            color: #fff;
+            padding: 4rem 2rem 2.5rem;
+            text-align: center;
+        }
+
+        .courses-hero h1 {
+            font-size: 2.5rem;
+        }
+
+        .courses-container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem;
+        }
+
+        .dept-heading {
+            background: #1a7a1a;
+            color: #fff;
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            margin: 2rem 0 1.5rem;
+            font-size: 1.3rem;
+        }
+
+        .course-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .course-card {
+            background: #fff;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+            transition: transform 0.3s;
+        }
+
+        .course-card:hover {
+            transform: translateY(-3px);
+        }
+
+        .course-card-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid #eee;
+        }
+
+        .course-card-header h3 {
+            color: #1a1a2e;
+            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .course-meta {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .badge-knec {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .badge-kasneb {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .badge-cdacc {
+            background: #cce5ff;
+            color: #004085;
+        }
+
+        .badge-cbet {
+            background: #f5c518;
+            color: #1a1a2e;
+        }
+
+        .badge-duration {
+            background: #e2e3e5;
+            color: #383d41;
+        }
+
+        .course-card-body {
+            padding: 1.5rem;
+        }
+
+        .fees-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+            font-size: 0.9rem;
+        }
+
+        .fees-table th,
+        .fees-table td {
+            padding: 0.5rem 0.7rem;
+            border-bottom: 1px solid #eee;
+            text-align: left;
+        }
+
+        .fees-table th {
+            background: #f8f9fa;
+            color: #1a7a1a;
+            font-weight: 600;
+        }
+
+        .fees-table .total-row {
+            font-weight: 700;
+            color: #1a7a1a;
+        }
+
+        .read-more-btn {
+            background: none;
+            border: none;
+            color: #1a7a1a;
+            cursor: pointer;
+            font-weight: 600;
+            padding: 0;
+            font-size: 0.9rem;
+        }
+
+        .read-more-btn:hover {
+            text-decoration: underline;
+        }
+
+        .entry-req-content {
+            display: none;
+            margin-top: 0.5rem;
+            color: #555;
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+
+        .entry-req-content.open {
+            display: block;
+        }
+
+        .apply-btn {
+            display: inline-block;
+            background: #1a7a1a;
+            color: #fff;
+            padding: 0.6rem 1.5rem;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: 600;
+            margin-top: 1rem;
+            transition: background 0.3s;
+        }
+
+        .apply-btn:hover {
+            background: #145214;
+        }
+
+        .intake-info {
+            background: #f8f9fa;
+            padding: 0.8rem;
+            border-radius: 6px;
+            margin-top: 0.8rem;
+            font-size: 0.9rem;
+        }
+
+        .intake-info strong {
+            color: #1a7a1a;
+        }
+
+        @media (max-width: 768px) {
+            .courses-hero h1 {
+                font-size: 1.8rem;
+            }
+
+            .course-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div id="google_translate_element" style="position:fixed;top:10px;right:10px;z-index:9999;"></div>
+    <header id="mainNavbar"></header>
+
+    <section class="courses-hero">
+        <h1>Our Courses</h1>
+        <p>TVETA-accredited programs designed for industry relevance</p>
+    </section>
+
+    <div class="courses-container" id="coursesContainer">
+        <p style="text-align:center;color:#888;padding:3rem;">Loading courses...</p>
+    </div>
+
+    <footer id="mainFooter"></footer>
+
+    <script>
+        (async function () {
+            await loadSharedComponents();
+            await loadCourses();
+        })();
+
+        async function loadSharedComponents() {
+            try {
+                const res = await fetch('/');
+                const html = await res.text();
+                const doc = new DOMParser().parseFromString(html, 'text/html');
+                const nav = doc.querySelector('header');
+                const footer = doc.querySelector('footer');
+                if (nav) document.getElementById('mainNavbar').innerHTML = nav.outerHTML;
+                if (footer) document.getElementById('mainFooter').innerHTML = footer.outerHTML;
+            } catch (e) { }
+        }
+
+        async function loadCourses() {
+            try {
+                const res = await fetch('/api/v1/courses');
+                if (!res.ok) throw new Error('Failed to fetch courses');
+                const data = await res.json();
+
+                if (!data.success || !data.data) {
+                    document.getElementById('coursesContainer').innerHTML = '<p style="text-align:center;color:#888;padding:3rem;">No courses available at this time.</p>';
+                    return;
+                }
+
+                const courses = data.data;
+
+                // Group courses by department
+                const deptMap = {};
+                courses.forEach(course => {
+                    const deptName = course.department.name;
+                    if (!deptMap[deptName]) {
+                        deptMap[deptName] = { id: course.department.id, courses: [] };
+                    }
+                    deptMap[deptName].courses.push(course);
+                });
+
+                // Render departments and their courses
+                let html = '';
+                for (const [deptName, deptData] of Object.entries(deptMap)) {
+                    html += `<div class="dept-heading">${escapeHtml(deptName)}</div>`;
+                    html += '<div class="course-grid">';
+
+                    deptData.courses.forEach(course => {
+                        html += renderCourseCard(course);
+                    });
+
+                    html += '</div>';
+                }
+
+                document.getElementById('coursesContainer').innerHTML = html;
+
+                // Add event listeners for Read More buttons
+                document.querySelectorAll('.read-more-btn').forEach(btn => {
+                    btn.addEventListener('click', function () {
+                        const targetId = this.getAttribute('data-target');
+                        const content = document.getElementById(targetId);
+                        if (content) {
+                            content.classList.toggle('open');
+                            this.textContent = content.classList.contains('open') ? 'Read Less ▲' : 'Read More ▼';
+                        }
+                    });
+                });
+
+            } catch (e) {
+                console.log('Courses fetch failed');
+                document.getElementById('coursesContainer').innerHTML = '<p style="text-align:center;color:#888;padding:3rem;">Unable to load courses. Please try again later.</p>';
+            }
+        }
+
+        function renderCourseCard(course) {
+            const reqId = `req-${course.id}`;
+            const fees = course.fees || [];
+            const firstYearFees = fees.find(f => f.year_of_study === 1) || fees[0];
+
+            return `
+                <div class="course-card" id="course-${course.id}">
+                    <div class="course-card-header">
+                        <h3>${escapeHtml(course.name)}</h3>
+                        <div class="course-meta">
+                            <span class="badge badge-duration">📅 ${course.duration_years} Year${course.duration_years > 1 ? 's' : ''}</span>
+                            <span class="badge badge-${course.examining_body.toLowerCase()}">${course.examining_body}</span>
+                            ${course.cbet_status ? '<span class="badge badge-cbet">CBET</span>' : ''}
+                        </div>
+                    </div>
+                    <div class="course-card-body">
+                        <!-- Entry Requirements -->
+                        <button class="read-more-btn" data-target="${reqId}">Entry Requirements ▼</button>
+                        <div class="entry-req-content" id="${reqId}">
+                            ${escapeHtml(course.entry_requirements || 'No specific entry requirements listed.')}
+                        </div>
+                        
+                        <!-- Fees Table (Year 1) -->
+                        ${firstYearFees ? `
+                            <table class="fees-table">
+                                <tr><th colspan="2">Year 1 Fees (Ksh)</th></tr>
+                                <tr><td>Tuition</td><td>${firstYearFees.tuition.toLocaleString()}</td></tr>
+                                <tr><td>Examination</td><td>${firstYearFees.examination.toLocaleString()}</td></tr>
+                                <tr><td>Registration</td><td>${firstYearFees.registration.toLocaleString()}</td></tr>
+                                <tr><td>ID Card</td><td>${firstYearFees.id_card.toLocaleString()}</td></tr>
+                                ${firstYearFees.other > 0 ? `<tr><td>${escapeHtml(firstYearFees.other_label || 'Other')}</td><td>${firstYearFees.other.toLocaleString()}</td></tr>` : ''}
+                                <tr class="total-row"><td>TOTAL</td><td>Ksh ${firstYearFees.total.toLocaleString()}</td></tr>
+                            </table>
+                        ` : '<p style="color:#888;font-size:0.9rem;">Fees: Contact admissions office</p>'}
+                        
+                        <!-- Next Intake -->
+                        ${course.next_intake ? `
+                            <div class="intake-info">
+                                <strong>📅 Next Intake:</strong> ${escapeHtml(course.next_intake.label)} 
+                                (${new Date(course.next_intake.date).toLocaleDateString('en-KE', { year: 'numeric', month: 'long', day: 'numeric' })})
+                            </div>
+                        ` : ''}
+                        
+                        <a href="admissions.html" class="apply-btn">Apply Now →</a>
+                    </div>
+                </div>
+            `;
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        }
+    </script>
+    <script src="assets/js/navbar.js"></script>
+    <script>
+        buildNavbar('PAGE_IDENTIFIER');
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Download admission forms, academic calendars, legal documents and more from Kigumo TVC" />
+  <meta name="theme-color" content="#1a7a1a" />
+  <title>Downloads - Kigumo Technical and Vocational College</title>
+  <link rel="icon" href="assets/images/logo.jpeg" type="image/jpeg" />
+  <link rel="stylesheet" href="assets/css/main.css" />
+
+  <script type="text/javascript">
+    function googleTranslateElementInit() {
+      new google.translate.TranslateElement(
+        { pageLanguage: 'en', includedLanguages: 'sw', layout: google.translate.TranslateElement.InlineLayout.SIMPLE },
+        'google_translate_element'
+      );
+    }
+  </script>
+  <script src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+
+  <style>
+    .downloads-hero {
+      background: linear-gradient(135deg, #1a1a2e, #1a7a1a);
+      color: #fff;
+      padding: 3rem 2rem;
+      text-align: center;
+    }
+    .downloads-container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 2rem 1.5rem;
+    }
+    .category-section {
+      margin-bottom: 2.5rem;
+    }
+    .category-title {
+      color: #1a7a1a;
+      font-size: 1.6rem;
+      border-bottom: 3px solid #f5c518;
+      padding-bottom: 0.5rem;
+      margin-bottom: 1rem;
+    }
+    .download-item {
+      background: #fff;
+      border-radius: 8px;
+      padding: 1rem 1.5rem;
+      margin-bottom: 0.8rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+      transition: transform 0.2s;
+    }
+    .download-item:hover { transform: translateY(-2px); }
+    .download-info h3 {
+      margin: 0 0 0.3rem;
+      color: #1a1a2e;
+    }
+    .download-info .meta {
+      color: #888;
+      font-size: 0.85rem;
+    }
+    .download-btn {
+      background: #1a7a1a;
+      color: #fff;
+      padding: 0.5rem 1.2rem;
+      border-radius: 6px;
+      text-decoration: none;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+    .download-btn:hover { background: #145214; }
+    @media (max-width: 600px) {
+      .download-item { flex-direction: column; align-items: flex-start; gap: 0.8rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="downloads-hero">
+    <h1>Downloads</h1>
+    <p>Admission forms, academic documents, legal compliance, and student welfare resources</p>
+  </div>
+
+  <div class="downloads-container" id="downloadsContainer">
+    <p style="text-align:center;color:#888;">Loading documents...</p>
+  </div>
+
+  <footer id="mainFooter"></footer>
+
+  <script src="assets/js/navbar.js"></script>
+  <script>
+    buildNavbar('downloads');
+
+    fetch('/')
+      .then(res => res.text())
+      .then(html => {
+        const doc = new DOMParser().parseFromString(html, 'text/html');
+        const footer = doc.querySelector('footer');
+        if (footer) document.getElementById('mainFooter').innerHTML = footer.outerHTML;
+      }).catch(() => {});
+
+    async function loadDownloads() {
+      try {
+        const res = await fetch('/api/v1/downloads');
+        const data = await res.json();
+        if (!data.success || !data.data) {
+          document.getElementById('downloadsContainer').innerHTML = '<p style="text-align:center;">No downloads available.</p>';
+          return;
+        }
+
+        const categories = {
+          admission: '📋 Admission Documents',
+          academic: '📚 Academic Documents',
+          legal: '⚖️ Legal / Compliance',
+          student_welfare: '🤝 Student Welfare'
+        };
+
+        let html = '';
+        for (const [cat, title] of Object.entries(categories)) {
+          const items = data.data.filter(d => d.category === cat);
+          if (items.length === 0) continue;
+          html += `<div class="category-section" id="${cat}">
+            <h2 class="category-title">${title}</h2>`;
+          items.forEach(item => {
+            const size = item.file_size ? (item.file_size / 1024).toFixed(1) + ' MB' : 'Unknown size';
+            html += `
+            <div class="download-item">
+              <div class="download-info">
+                <h3>${escapeHtml(item.title)}</h3>
+                <div class="meta">📅 ${new Date(item.uploaded_at).toLocaleDateString('en-KE')} &bull; 💾 ${size}</div>
+              </div>
+              <a href="/uploads/${item.file_path}" class="download-btn" download>Download</a>
+            </div>`;
+          });
+          html += `</div>`;
+        }
+        document.getElementById('downloadsContainer').innerHTML = html || '<p style="text-align:center;">No documents available.</p>';
+      } catch (err) {
+        document.getElementById('downloadsContainer').innerHTML = '<p style="text-align:center;color:red;">Failed to load downloads.</p>';
+      }
+    }
+
+    function escapeHtml(str) {
+      const div = document.createElement('div');
+      div.textContent = str || '';
+      return div.innerHTML;
+    }
+
+    loadDownloads();
+  </script>
+</body>
+</html>

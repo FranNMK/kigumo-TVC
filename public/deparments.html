@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Academic and Non-Academic Departments at Kigumo Technical and Vocational College">
+    <meta name="theme-color" content="#1a7a1a">
+    <title>Departments - Kigumo Technical and Vocational College</title>
+
+    <link rel="icon" type="image/jpeg" href="assets/images/logo.jpeg">
+    <link rel="stylesheet" href="assets/css/main.css">
+
+    <script type="text/javascript">
+        function googleTranslateElementInit() {
+            new google.translate.TranslateElement({
+                pageLanguage: 'en',
+                includedLanguages: 'sw',
+                layout: google.translate.TranslateElement.InlineLayout.SIMPLE
+            }, 'google_translate_element');
+        }
+    </script>
+    <!-- Google Translate Widget -->
+    <script type="text/javascript">
+        function googleTranslateElementInit() {
+            new google.translate.TranslateElement(
+                {
+                    pageLanguage: 'en',
+                    includedLanguages: 'sw',
+                    layout: google.translate.TranslateElement.InlineLayout.SIMPLE
+                },
+                'google_translate_element'
+            );
+        }
+    </script>
+    <script src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+
+    <style>
+        .dept-hero {
+            background: linear-gradient(135deg, #1a1a2e, #1a7a1a);
+            color: #fff;
+            padding: 4rem 2rem 2.5rem;
+            text-align: center;
+        }
+
+        .dept-hero h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .dept-container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem;
+        }
+
+        .dept-section-title {
+            color: #1a7a1a;
+            font-size: 1.8rem;
+            margin: 2.5rem 0 1.5rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 3px solid #f5c518;
+        }
+
+        .dept-card {
+            background: #fff;
+            border-radius: 10px;
+            padding: 1.8rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+            border-left: 4px solid #1a7a1a;
+        }
+
+        .dept-card h3 {
+            color: #1a7a1a;
+            font-size: 1.3rem;
+            margin-bottom: 0.3rem;
+        }
+
+        .dept-card .description {
+            color: #555;
+            line-height: 1.7;
+            margin: 0.8rem 0;
+        }
+
+        .dept-card .hod-info {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            margin: 1rem 0;
+            padding: 0.8rem;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .dept-card .hod-photo-sm {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: #e0e0e0;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+
+        .dept-card .hod-photo-sm img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .dept-card .hod-details .hod-name {
+            font-weight: 600;
+            color: #1a1a2e;
+        }
+
+        .dept-card .hod-details .hod-label {
+            font-size: 0.85rem;
+            color: #1a7a1a;
+        }
+
+        .course-list {
+            margin-top: 1rem;
+            padding-left: 1.2rem;
+        }
+
+        .course-list li {
+            margin-bottom: 0.5rem;
+            color: #555;
+        }
+
+        .course-list a {
+            color: #1a7a1a;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .course-list a:hover {
+            text-decoration: underline;
+        }
+
+        .non-acad-card {
+            background: #fff;
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+            border-top: 4px solid #f5c518;
+        }
+
+        .non-acad-card h3 {
+            color: #1a7a1a;
+            margin-bottom: 0.3rem;
+        }
+
+        .loading-skeleton {
+            background: #e0e0e0;
+            border-radius: 8px;
+            animation: pulse 1.5s infinite;
+            height: 120px;
+            margin-bottom: 1rem;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .dept-hero h1 {
+                font-size: 1.8rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div id="google_translate_element" style="position:fixed;top:10px;right:10px;z-index:9999;"></div>
+    <header id="mainNavbar"></header>
+
+    <section class="dept-hero">
+        <h1>Our Departments</h1>
+        <p>Explore our academic programs and support services</p>
+    </section>
+
+    <div class="dept-container">
+        <!-- Academic Departments -->
+        <h2 class="dept-section-title">📚 Academic Departments</h2>
+        <div id="academicDepts">
+            <div class="loading-skeleton"></div>
+            <div class="loading-skeleton"></div>
+            <div class="loading-skeleton"></div>
+        </div>
+
+        <!-- Non-Academic Departments -->
+        <h2 class="dept-section-title">🤝 Non-Academic Departments</h2>
+        <div id="nonAcademicDepts">
+            <div class="loading-skeleton"></div>
+            <div class="loading-skeleton"></div>
+        </div>
+    </div>
+
+    <footer id="mainFooter"></footer>
+
+    <script>
+        (async function () {
+            await loadSharedComponents();
+            await loadDepartments();
+        })();
+
+        async function loadSharedComponents() {
+            try {
+                const res = await fetch('/');
+                const html = await res.text();
+                const doc = new DOMParser().parseFromString(html, 'text/html');
+                const nav = doc.querySelector('header');
+                const footer = doc.querySelector('footer');
+                if (nav) document.getElementById('mainNavbar').innerHTML = nav.outerHTML;
+                if (footer) document.getElementById('mainFooter').innerHTML = footer.outerHTML;
+            } catch (e) { }
+        }
+
+        async function loadDepartments() {
+            try {
+                // Fetch all departments
+                const res = await fetch('/api/v1/departments');
+                if (!res.ok) throw new Error('Failed to fetch departments');
+                const data = await res.json();
+
+                if (!data.success || !data.data) return;
+
+                const departments = data.data;
+                const academic = departments.filter(d => d.type === 'academic');
+                const nonAcademic = departments.filter(d => d.type === 'non_academic');
+
+                renderAcademicDepts(academic);
+                renderNonAcademicDepts(nonAcademic);
+
+            } catch (e) {
+                console.log('Departments fetch failed');
+                document.getElementById('academicDepts').innerHTML = '<p style="text-align:center;color:#888;">Unable to load departments. Please try again later.</p>';
+                document.getElementById('nonAcademicDepts').innerHTML = '';
+            }
+        }
+
+        async function renderAcademicDepts(departments) {
+            const container = document.getElementById('academicDepts');
+
+            if (departments.length === 0) {
+                container.innerHTML = '<p style="text-align:center;color:#888;">No academic departments found.</p>';
+                return;
+            }
+
+            // For each department, fetch its courses
+            const deptHtmlPromises = departments.map(async (dept) => {
+                let coursesHtml = '<p style="color:#888;">Loading courses...</p>';
+
+                try {
+                    const courseRes = await fetch(`/api/v1/departments/${dept.id}/courses`);
+                    if (courseRes.ok) {
+                        const courseData = await courseRes.json();
+                        if (courseData.success && courseData.data && courseData.data.length > 0) {
+                            coursesHtml = `
+                                <p style="font-weight:600;color:#1a1a2e;margin-top:1rem;">Courses Offered:</p>
+                                <ul class="course-list">
+                                    ${courseData.data.map(c => `
+                                        <li>
+                                            <a href="courses.html#course-${c.id}">
+                                                ${escapeHtml(c.name)} 
+                                                (${c.duration_years} Year${c.duration_years > 1 ? 's' : ''})
+                                            </a>
+                                            ${c.cbet_status ? '<span style="background:#f5c518;color:#1a1a2e;padding:2px 8px;border-radius:4px;font-size:0.75rem;margin-left:6px;">CBET</span>' : ''}
+                                        </li>
+                                    `).join('')}
+                                </ul>
+                            `;
+                        } else {
+                            coursesHtml = '<p style="color:#888;">No courses listed yet.</p>';
+                        }
+                    }
+                } catch (e) {
+                    coursesHtml = '<p style="color:#888;">Courses unavailable.</p>';
+                }
+
+                return `
+                    <div class="dept-card" id="dept-${dept.id}">
+                        <h3>${escapeHtml(dept.name)}</h3>
+                        <p class="description">${escapeHtml(dept.description || 'Department of ' + dept.name)}</p>
+                        ${dept.hod_name ? `
+                            <div class="hod-info">
+                                <div class="hod-photo-sm">
+                                    ${dept.hod_photo ? `<img src="/uploads/${dept.hod_photo}" alt="${escapeHtml(dept.hod_name)}">` : '👤'}
+                                </div>
+                                <div class="hod-details">
+                                    <div class="hod-name">${escapeHtml(dept.hod_name)}</div>
+                                    <div class="hod-label">Head of Department</div>
+                                </div>
+                            </div>
+                        ` : ''}
+                        ${coursesHtml}
+                    </div>
+                `;
+            });
+
+            const htmls = await Promise.all(deptHtmlPromises);
+            container.innerHTML = htmls.join('');
+        }
+
+        function renderNonAcademicDepts(departments) {
+            const container = document.getElementById('nonAcademicDepts');
+
+            if (departments.length === 0) {
+                container.innerHTML = '<p style="text-align:center;color:#888;">No non-academic departments found.</p>';
+                return;
+            }
+
+            container.innerHTML = departments.map(dept => `
+                <div class="non-acad-card" id="dept-${dept.id}">
+                    <h3>${escapeHtml(dept.name)}</h3>
+                    <p style="color:#555;line-height:1.6;">${escapeHtml(dept.description || '')}</p>
+                    ${dept.hod_name ? `
+                        <p style="margin-top:0.8rem;color:#1a7a1a;font-weight:500;">
+                            📋 Head: ${escapeHtml(dept.hod_name)}
+                        </p>
+                    ` : ''}
+                </div>
+            `).join('');
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        }
+    </script>
+    <script src="assets/js/navbar.js"></script>
+    <script>
+        buildNavbar('PAGE_IDENTIFIER');
+    </script>
+</body>
+
+</html>

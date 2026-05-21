@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description"
+        content="About Kigumo Technical and Vocational College - Our history, vision, mission, administration, and Board of Management">
+    <meta name="theme-color" content="#1a7a1a">
+    <title>About Us - Kigumo Technical and Vocational College</title>
+
+    <link rel="icon" type="image/jpeg" href="assets/images/logo.jpeg">
+    <link rel="stylesheet" href="assets/css/main.css">
+
+    <script type="text/javascript">
+        function googleTranslateElementInit() {
+            new google.translate.TranslateElement({
+                pageLanguage: 'en',
+                includedLanguages: 'sw',
+                layout: google.translate.TranslateElement.InlineLayout.SIMPLE
+            }, 'google_translate_element');
+        }
+    </script>
+    <!-- Google Translate Widget -->
+    <script type="text/javascript">
+        function googleTranslateElementInit() {
+            new google.translate.TranslateElement(
+                {
+                    pageLanguage: 'en',
+                    includedLanguages: 'sw',
+                    layout: google.translate.TranslateElement.InlineLayout.SIMPLE
+                },
+                'google_translate_element'
+            );
+        }
+    </script>
+    <script src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+
+    <style>
+        /* About Page Specific Styles */
+        .about-hero {
+            background: linear-gradient(135deg, #1a1a2e 0%, #1a7a1a 100%);
+            color: #ffffff;
+            padding: 5rem 2rem 3rem;
+            text-align: center;
+        }
+
+        .about-hero h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .about-hero p {
+            font-size: 1.1rem;
+            max-width: 700px;
+            margin: 0 auto;
+            opacity: 0.9;
+        }
+
+        .section-container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 3rem 1.5rem;
+        }
+
+        .section-title {
+            text-align: center;
+            color: #1a7a1a;
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .section-subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 2.5rem;
+        }
+
+        /* Vision & Mission Cards */
+        .vision-mission-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin: 2rem 0;
+        }
+
+        .vm-card {
+            background: #ffffff;
+            border: 2px solid #1a7a1a;
+            border-radius: 12px;
+            padding: 2rem;
+            text-align: center;
+        }
+
+        .vm-card h3 {
+            color: #1a7a1a;
+            font-size: 1.4rem;
+            margin-bottom: 1rem;
+        }
+
+        .vm-card p {
+            color: #555;
+            line-height: 1.7;
+        }
+
+        .core-values-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .value-item {
+            background: #f8f9fa;
+            border-left: 4px solid #1a7a1a;
+            padding: 1.2rem;
+            border-radius: 6px;
+        }
+
+        .value-item strong {
+            display: block;
+            color: #1a7a1a;
+            margin-bottom: 0.3rem;
+        }
+
+        /* BOM Grid */
+        .bom-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .bom-card {
+            background: #ffffff;
+            border-radius: 10px;
+            padding: 1.5rem;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+            transition: transform 0.3s;
+        }
+
+        .bom-card:hover {
+            transform: translateY(-4px);
+        }
+
+        .bom-photo {
+            width: 90px;
+            height: 90px;
+            border-radius: 50%;
+            background: #e0e0e0;
+            margin: 0 auto 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            color: #1a7a1a;
+            overflow: hidden;
+        }
+
+        .bom-photo img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .bom-card h4 {
+            color: #1a1a2e;
+            margin-bottom: 0.3rem;
+        }
+
+        .bom-card .position {
+            color: #1a7a1a;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        /* Profile Section */
+        .profile-full {
+            display: flex;
+            gap: 2.5rem;
+            align-items: flex-start;
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 2.5rem;
+            border-left: 5px solid #1a7a1a;
+        }
+
+        .profile-photo-lg {
+            width: 200px;
+            height: 200px;
+            border-radius: 12px;
+            background: #e0e0e0;
+            flex-shrink: 0;
+            overflow: hidden;
+        }
+
+        .profile-photo-lg img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .profile-info h3 {
+            color: #1a7a1a;
+            font-size: 1.5rem;
+            margin-bottom: 0.3rem;
+        }
+
+        .profile-info .title {
+            color: #666;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        .profile-info .bio {
+            color: #555;
+            line-height: 1.8;
+        }
+
+        /* Service Charter */
+        .charter-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .charter-card {
+            background: #ffffff;
+            border-radius: 10px;
+            padding: 1.8rem;
+            border-top: 4px solid #f5c518;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+        }
+
+        .charter-card .icon {
+            font-size: 2rem;
+            margin-bottom: 0.8rem;
+        }
+
+        .charter-card h4 {
+            color: #1a7a1a;
+            margin-bottom: 0.5rem;
+        }
+
+        /* HOD Grid */
+        .hod-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .hod-card {
+            background: #ffffff;
+            border-radius: 10px;
+            padding: 1.5rem;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+        }
+
+        .hod-photo {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: #e0e0e0;
+            margin: 0 auto 1rem;
+            overflow: hidden;
+        }
+
+        .hod-photo img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .hod-card h4 {
+            color: #1a1a2e;
+            margin-bottom: 0.2rem;
+        }
+
+        .hod-card .dept {
+            color: #1a7a1a;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .hod-card .bio-short {
+            color: #777;
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+        }
+
+        /* Accreditation Badge */
+        .accreditation-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.8rem;
+            background: #d4edda;
+            color: #155724;
+            padding: 0.8rem 1.5rem;
+            border-radius: 30px;
+            font-weight: 600;
+            margin: 1rem 0;
+        }
+
+        @media (max-width: 768px) {
+            .vision-mission-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .profile-full {
+                flex-direction: column;
+                align-items: center;
+                text-align: center;
+            }
+
+            .about-hero h1 {
+                font-size: 1.8rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+
+
+
+    <!-- Hero -->
+    <section class="about-hero">
+        <h1>About Kigumo TVC</h1>
+        <p>Empowering youth with practical skills for self-reliance and national development since 2015.</p>
+    </section>
+
+    <!-- #about - History -->
+    <section id="about" class="section-container">
+        <h2 class="section-title">About KTVC</h2>
+        <p class="section-subtitle">Our journey of excellence in technical education</p>
+
+        <div style="max-width:800px;margin:0 auto;line-height:1.8;color:#555;" id="aboutHistory">
+            <p>Loading...</p>
+        </div>
+
+        <div style="text-align:center;margin-top:1.5rem;">
+            <span class="accreditation-badge">
+                ✅ TVETA Accredited Institution
+            </span>
+        </div>
+    </section>
+
+    <!-- #charter - Service Charter -->
+    <section id="charter" style="background:#f8f9fa;">
+        <div class="section-container">
+            <h2 class="section-title">Service Charter</h2>
+            <p class="section-subtitle">Our commitments to students, staff, and stakeholders</p>
+            <div class="charter-grid" id="charterGrid">
+                <div class="charter-card">
+                    <div class="icon">⏱️</div>
+                    <h4>Timely Results</h4>
+                    <p>Examination results released within 30 days after examining body release.</p>
+                </div>
+                <div class="charter-card">
+                    <div class="icon">📋</div>
+                    <h4>Fast Admissions</h4>
+                    <p>Applications processed within 48 hours of submission.</p>
+                </div>
+                <div class="charter-card">
+                    <div class="icon">💬</div>
+                    <h4>Quick Response</h4>
+                    <p>Student queries and complaints addressed within 24 hours.</p>
+                </div>
+                <div class="charter-card">
+                    <div class="icon">💰</div>
+                    <h4>Transparent Fees</h4>
+                    <p>Clear fee structures with no hidden charges.</p>
+                </div>
+                <div class="charter-card">
+                    <div class="icon">🛡️</div>
+                    <h4>Safe Environment</h4>
+                    <p>Inclusive and conducive learning environment for all.</p>
+                </div>
+                <div class="charter-card">
+                    <div class="icon">🎯</div>
+                    <h4>Career Guidance</h4>
+                    <p>Industrial attachment placement and career counseling support.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- #vision - Vision & Mission -->
+    <section id="vision" class="section-container">
+        <h2 class="section-title">Vision &amp; Mission</h2>
+        <p class="section-subtitle">What drives us every day</p>
+
+        <div class="vision-mission-grid">
+            <div class="vm-card">
+                <h3>🔭 Our Vision</h3>
+                <p id="visionText">To be a leading center of excellence in technical and vocational education and
+                    training in Kenya, producing skilled graduates who drive economic transformation.</p>
+            </div>
+            <div class="vm-card">
+                <h3>🎯 Our Mission</h3>
+                <p id="missionText">To provide quality, accessible, and relevant technical and vocational education that
+                    equips learners with practical skills, knowledge, and attitudes for employment, self-reliance, and
+                    lifelong learning.</p>
+            </div>
+        </div>
+
+        <h3 style="text-align:center;color:#1a7a1a;margin-top:2.5rem;">Core Values</h3>
+        <div class="core-values-grid">
+            <div class="value-item"><strong>Excellence</strong>Striving for the highest standards</div>
+            <div class="value-item"><strong>Integrity</strong>Honesty, transparency, and ethical conduct</div>
+            <div class="value-item"><strong>Innovation</strong>Creativity and continuous improvement</div>
+            <div class="value-item"><strong>Inclusivity</strong>Respecting diversity, equal opportunities</div>
+            <div class="value-item"><strong>Teamwork</strong>Collaborating to achieve common goals</div>
+            <div class="value-item"><strong>Accountability</strong>Taking responsibility for our actions</div>
+        </div>
+    </section>
+
+    <!-- #bom - Board of Management -->
+    <section id="bom" style="background:#f8f9fa;">
+        <div class="section-container">
+            <h2 class="section-title">Board of Management</h2>
+            <p class="section-subtitle">Our governance and oversight team</p>
+            <div class="bom-grid" id="bomGrid">
+                <!-- Dynamically loaded from API -->
+                <div class="bom-card">
+                    <div class="bom-photo">👤</div>
+                    <h4>Loading...</h4>
+                    <p class="position">BOM Member</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- #chief-principal -->
+    <section id="chief-principal" class="section-container">
+        <h2 class="section-title">Office of the Chief Principal</h2>
+        <p class="section-subtitle">Leadership and administration</p>
+        <div class="profile-full" id="principalProfile">
+            <div class="profile-photo-lg"
+                style="background:#e0e0e0;display:flex;align-items:center;justify-content:center;font-size:4rem;">👤
+            </div>
+            <div class="profile-info">
+                <h3>Loading...</h3>
+                <p class="title">Chief Principal</p>
+                <p class="bio">Loading profile information...</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- #dp-academics -->
+    <section id="dp-academics" style="background:#f8f9fa;">
+        <div class="section-container">
+            <h2 class="section-title">Deputy Principal - Academics</h2>
+            <div class="profile-full" id="dpAcademicsProfile">
+                <div class="profile-photo-lg"
+                    style="background:#e0e0e0;display:flex;align-items:center;justify-content:center;font-size:4rem;">👤
+                </div>
+                <div class="profile-info">
+                    <h3>Loading...</h3>
+                    <p class="title">Deputy Principal Academics</p>
+                    <p class="bio">Loading profile information...</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- #dp-administration -->
+    <section id="dp-administration" class="section-container">
+        <h2 class="section-title">Deputy Principal - Administration</h2>
+        <div class="profile-full" id="dpAdminProfile">
+            <div class="profile-photo-lg"
+                style="background:#e0e0e0;display:flex;align-items:center;justify-content:center;font-size:4rem;">👤
+            </div>
+            <div class="profile-info">
+                <h3>Loading...</h3>
+                <p class="title">Deputy Principal Administration</p>
+                <p class="bio">Loading profile information...</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- #hods -->
+    <section id="hods" style="background:#f8f9fa;">
+        <div class="section-container">
+            <h2 class="section-title">Heads of Departments</h2>
+            <p class="section-subtitle">Academic and administrative department leaders</p>
+            <div class="hod-grid" id="hodGrid">
+                <div class="hod-card">
+                    <div class="hod-photo"
+                        style="display:flex;align-items:center;justify-content:center;font-size:2rem;">👤</div>
+                    <h4>Loading...</h4>
+                    <p class="dept">Department</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer id="mainFooter"></footer>
+
+    <script>
+        /**
+         * About Page - Dynamic Content Loader
+         * Fetches data from API and populates page sections.
+         */
+        (async function () {
+            // Load navbar and footer from shared components
+            await loadSharedComponents();
+
+            // Fetch all data in parallel
+            await Promise.all([
+                loadPageContent(),
+                loadBOMMembers(),
+                loadPrincipalProfile(),
+                loadDeputyPrincipals(),
+                loadHODs()
+            ]);
+        })();
+
+        async function loadSharedComponents() {
+            try {
+                const navRes = await fetch('/');
+                const html = await navRes.text();
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+
+                const navbar = doc.querySelector('header');
+                const footer = doc.querySelector('footer');
+
+                if (navbar) document.getElementById('mainNavbar').innerHTML = navbar.outerHTML;
+                if (footer) document.getElementById('mainFooter').innerHTML = footer.outerHTML;
+            } catch (e) {
+                console.log('Could not load shared components, using fallback');
+            }
+        }
+
+        async function loadPageContent() {
+            try {
+                const res = await fetch('/api/v1/content/about/history');
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.success && data.data) {
+                        document.getElementById('aboutHistory').innerHTML = data.data.content_html;
+                    }
+                }
+
+                const visionRes = await fetch('/api/v1/content/about/vision');
+                if (visionRes.ok) {
+                    const data = await visionRes.json();
+                    if (data.success && data.data) {
+                        document.getElementById('visionText').innerHTML = data.data.content_html;
+                    }
+                }
+
+                const missionRes = await fetch('/api/v1/content/about/mission');
+                if (missionRes.ok) {
+                    const data = await missionRes.json();
+                    if (data.success && data.data) {
+                        document.getElementById('missionText').innerHTML = data.data.content_html;
+                    }
+                }
+            } catch (e) {
+                console.log('Page content fetch failed, using static content');
+            }
+        }
+
+        async function loadBOMMembers() {
+            try {
+                const res = await fetch('/api/v1/bom');
+                if (!res.ok) throw new Error('BOM fetch failed');
+                const data = await res.json();
+
+                if (data.success && data.data && data.data.length > 0) {
+                    const grid = document.getElementById('bomGrid');
+                    grid.innerHTML = data.data.map(member => `
+                        <div class="bom-card">
+                            <div class="bom-photo">
+                                ${member.photo_path
+                            ? `<img src="/uploads/${member.photo_path}" alt="${member.full_name}">`
+                            : '👤'}
+                            </div>
+                            <h4>${escapeHtml(member.full_name)}</h4>
+                            <p class="position">${escapeHtml(member.position || 'BOM Member')}</p>
+                        </div>
+                    `).join('');
+                }
+            } catch (e) {
+                console.log('BOM members fetch failed');
+                showPlaceholderBOM();
+            }
+        }
+
+        function showPlaceholderBOM() {
+            const grid = document.getElementById('bomGrid');
+            const placeholders = [
+                'BOM Chairperson', 'Secretary to the Board', 'County Government Rep',
+                'TVETA Representative', 'University Representative', 'Industry Representative',
+                'Community Representative', 'Staff Representative'
+            ];
+            grid.innerHTML = placeholders.map((pos, i) => `
+                <div class="bom-card">
+                    <div class="bom-photo">👤</div>
+                    <h4>Board Member ${i + 1}</h4>
+                    <p class="position">${pos}</p>
+                </div>
+            `).join('');
+        }
+
+        async function loadPrincipalProfile() {
+            try {
+                const res = await fetch('/api/v1/content/principal-message');
+                if (!res.ok) throw new Error('Principal fetch failed');
+                const data = await res.json();
+
+                if (data.success && data.data) {
+                    const p = data.data;
+                    document.getElementById('principalProfile').innerHTML = `
+                        <div class="profile-photo-lg">
+                            ${p.image_path
+                            ? `<img src="/uploads/${p.image_path}" alt="${escapeHtml(p.principal_name)}">`
+                            : '<span style="font-size:4rem;">👤</span>'}
+                        </div>
+                        <div class="profile-info">
+                            <h3>${escapeHtml(p.principal_name || 'Chief Principal')}</h3>
+                            <p class="title">${escapeHtml(p.title || 'Chief Principal')}</p>
+                            <div class="bio">${p.message || 'Profile information coming soon.'}</div>
+                        </div>
+                    `;
+                }
+            } catch (e) {
+                console.log('Principal profile fetch failed');
+            }
+        }
+
+        async function loadDeputyPrincipals() {
+            try {
+                // Fetch users with deputy_principal role
+                const res = await fetch('/api/v1/users?role=deputy_principal');
+                if (!res.ok) throw new Error('DP fetch failed');
+                const data = await res.json();
+
+                if (data.success && data.data) {
+                    data.data.forEach(dp => {
+                        const isAcademics = dp.bio && dp.bio.toLowerCase().includes('academ');
+                        const targetId = isAcademics ? 'dpAcademicsProfile' : 'dpAdminProfile';
+
+                        document.getElementById(targetId).innerHTML = `
+                            <div class="profile-photo-lg">
+                                ${dp.photo_path
+                                ? `<img src="/uploads/${dp.photo_path}" alt="${escapeHtml(dp.full_name)}">`
+                                : '<span style="font-size:4rem;">👤</span>'}
+                            </div>
+                            <div class="profile-info">
+                                <h3>${escapeHtml(dp.full_name)}</h3>
+                                <p class="title">${isAcademics ? 'Deputy Principal - Academics' : 'Deputy Principal - Administration'}</p>
+                                <div class="bio">${dp.bio || 'Profile information coming soon.'}</div>
+                            </div>
+                        `;
+                    });
+                }
+            } catch (e) {
+                console.log('Deputy Principals fetch failed');
+            }
+        }
+
+        async function loadHODs() {
+            try {
+                const res = await fetch('/api/v1/departments');
+                if (!res.ok) throw new Error('HOD fetch failed');
+                const data = await res.json();
+
+                if (data.success && data.data) {
+                    const hodsWithData = data.data.filter(d => d.hod_name);
+                    if (hodsWithData.length > 0) {
+                        const grid = document.getElementById('hodGrid');
+                        grid.innerHTML = hodsWithData.map(dept => `
+                            <div class="hod-card">
+                                <div class="hod-photo">
+                                    ${dept.hod_photo
+                                ? `<img src="/uploads/${dept.hod_photo}" alt="${escapeHtml(dept.hod_name)}">`
+                                : '👤'}
+                                </div>
+                                <h4>${escapeHtml(dept.hod_name)}</h4>
+                                <p class="dept">${escapeHtml(dept.name)}</p>
+                            </div>
+                        `).join('');
+                    }
+                }
+            } catch (e) {
+                console.log('HODs fetch failed');
+            }
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        }
+    </script>
+
+    <script src="assets/js/navbar.js"></script>
+    <script>
+        buildNavbar('PAGE_IDENTIFIER');
+    </script>
+</body>
+
+</html>
