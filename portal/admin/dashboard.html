@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Panel - Kigumo TVC</title>
+  <link rel="icon" href="/assets/images/logo.jpeg" />
+  <link rel="stylesheet" href="/assets/css/main.css" />
+  <style>
+    .dashboard-wrapper { display: flex; min-height: 100vh; }
+    .sidebar { width: 250px; background: #1a1a2e; color: #fff; padding: 1rem 0; overflow-y: auto; max-height: 100vh; }
+    .sidebar h3 { padding: 0 1rem; color: #f5c518; margin-bottom: 1rem; font-size: 1rem; }
+    .sidebar a { display: block; padding: 0.6rem 1rem; color: #ccc; text-decoration: none; font-size: 0.85rem; }
+    .sidebar a:hover, .sidebar a.active { background: #1a7a1a; color: #fff; }
+    .main-content { flex: 1; padding: 1.5rem; background: #f8f9fa; overflow-y: auto; max-height: 100vh; }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    .card { background: #fff; border-radius: 8px; padding: 1.2rem; margin-bottom: 1rem; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+    .grid-4 { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px,1fr)); gap: 1rem; }
+    table { width: 100%; border-collapse: collapse; margin-top: 0.5rem; }
+    th, td { padding: 0.6rem; border-bottom: 1px solid #eee; text-align: left; font-size: 0.85rem; }
+    th { background: #f8f9fa; color: #1a7a1a; font-weight: 600; }
+    .btn { padding: 0.5rem 1rem; border: none; border-radius: 4px; cursor: pointer; font-weight: 600; font-size: 0.85rem; }
+    .btn-green { background: #1a7a1a; color: #fff; }
+    .btn-yellow { background: #f5c518; color: #1a1a2e; }
+    .btn-red { background: #c00; color: #fff; }
+    .btn-sm { padding: 0.3rem 0.7rem; font-size: 0.78rem; }
+    .badge { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: 600; }
+    .badge-active { background: #d4edda; color: #155724; }
+    .badge-inactive { background: #f8d7da; color: #721c24; }
+    .badge-read { background: #e2e3e5; color: #383d41; }
+    .badge-unread { background: #fff3cd; color: #856404; }
+    .form-group { margin-bottom: 0.8rem; }
+    .form-group label { display: block; font-weight: 600; margin-bottom: 0.2rem; font-size: 0.85rem; }
+    .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px; font-size: 0.85rem; }
+    .form-inline { display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: end; margin-bottom: 1rem; }
+    .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 999; justify-content: center; align-items: center; }
+    .modal-overlay.active { display: flex; }
+    .modal { background: #fff; border-radius: 8px; padding: 1.5rem; max-width: 600px; width: 90%; max-height: 80vh; overflow-y: auto; }
+    .modal h3 { margin-bottom: 1rem; color: #1a7a1a; }
+    @media (max-width: 768px) { .dashboard-wrapper { flex-direction: column; } .sidebar { width: 100%; max-height: none; } .main-content { max-height: none; } }
+  </style>
+</head>
+<body>
+<div class="dashboard-wrapper">
+  <nav class="sidebar">
+    <h3>⚙️ Admin Panel</h3>
+    <a href="#" class="nav-link active" data-tab="overview">📊 Overview</a>
+    <a href="#" class="nav-link" data-tab="slider">🎞️ Slider</a>
+    <a href="#" class="nav-link" data-tab="principal">👤 Principal Msg</a>
+    <a href="#" class="nav-link" data-tab="page-content">📝 Page Content</a>
+    <a href="#" class="nav-link" data-tab="users">👥 Users</a>
+    <a href="#" class="nav-link" data-tab="departments">🏛️ Departments</a>
+    <a href="#" class="nav-link" data-tab="courses">📚 Courses</a>
+    <a href="#" class="nav-link" data-tab="timetable">📅 Timetable</a>
+    <a href="#" class="nav-link" data-tab="news">📰 News</a>
+    <a href="#" class="nav-link" data-tab="downloads">📥 Downloads</a>
+    <a href="#" class="nav-link" data-tab="gallery">🖼️ Gallery</a>
+    <a href="#" class="nav-link" data-tab="recycle">🗑️ Recycle Bin</a>
+    <a href="#" class="nav-link" data-tab="enquiries">✉️ Enquiries</a>
+    <a href="#" class="nav-link" data-tab="bom">🏛️ BOM</a>
+    <hr style="border-color:#444;margin:0.5rem 0;">
+    <button id="logoutBtn" style="background:#c00;color:#fff;border:none;padding:0.5rem 1rem;margin-left:1rem;cursor:pointer;border-radius:4px;">🚪 Logout</button>
+  </nav>
+
+  <main class="main-content">
+    <!-- All tab-content divs will be populated by JS -->
+    <div class="tab-content active" id="tab-overview"><h2>Overview</h2><div id="overviewContent">Loading...</div></div>
+    <div class="tab-content" id="tab-slider"><h2>Slider Management</h2><div id="sliderContent">Loading...</div></div>
+    <div class="tab-content" id="tab-principal"><h2>Principal Message</h2><div id="principalContent">Loading...</div></div>
+    <div class="tab-content" id="tab-page-content"><h2>Page Content</h2><div id="pageContentContent">Loading...</div></div>
+    <div class="tab-content" id="tab-users"><h2>Users</h2><div id="usersContent">Loading...</div></div>
+    <div class="tab-content" id="tab-departments"><h2>Departments</h2><div id="departmentsContent">Loading...</div></div>
+    <div class="tab-content" id="tab-courses"><h2>Courses</h2><div id="coursesContent">Loading...</div></div>
+    <div class="tab-content" id="tab-timetable"><h2>Timetable</h2><div id="timetableContent">Loading...</div></div>
+    <div class="tab-content" id="tab-news"><h2>News</h2><div id="newsContent">Loading...</div></div>
+    <div class="tab-content" id="tab-downloads"><h2>Downloads</h2><div id="downloadsContent">Loading...</div></div>
+    <div class="tab-content" id="tab-gallery"><h2>Gallery</h2><div id="galleryContent">Loading...</div></div>
+    <div class="tab-content" id="tab-recycle"><h2>Recycle Bin</h2><div id="recycleContent">Loading...</div></div>
+    <div class="tab-content" id="tab-enquiries"><h2>Enquiries</h2><div id="enquiriesContent">Loading...</div></div>
+    <div class="tab-content" id="tab-bom"><h2>BOM Members</h2><div id="bomContent">Loading...</div></div>
+  </main>
+</div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal" id="modalBox"></div>
+</div>
+
+<script>
+const API = '/api/v1/admin';
+let currentUser = null;
+
+// Init
+fetch('/api/v1/auth/me').then(r=>r.json()).then(d=>{
+  if(!d.success||d.user.role!=='admin'){window.location.href='/portal/login.html';return;}
+  currentUser=d.user;
+  loadOverview();
+});
+
+// Tabs
+document.querySelectorAll('.nav-link').forEach(l=>{
+  l.addEventListener('click',function(e){
+    e.preventDefault();
+    document.querySelectorAll('.nav-link').forEach(x=>x.classList.remove('active'));
+    this.classList.add('active');
+    document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
+    document.getElementById('tab-'+this.dataset.tab).classList.add('active');
+    const loader={overview:loadOverview,slider:loadSlides,principal:loadPrincipal, 'page-content':loadPageContent, users:loadUsers, departments:loadDepartments, courses:loadCourses, timetable:loadTimetable, news:loadNews, downloads:loadDownloads, gallery:loadGallery, recycle:loadRecycle, enquiries:loadEnquiries, bom:loadBOM}[this.dataset.tab];
+    if(loader) loader();
+  });
+});
+
+document.getElementById('logoutBtn').addEventListener('click',async()=>{await fetch('/api/v1/auth/logout',{method:'POST'});window.location.href='/portal/login.html';});
+
+// Modal
+function openModal(html){document.getElementById('modalBox').innerHTML=html;document.getElementById('modalOverlay').classList.add('active');}
+function closeModal(){document.getElementById('modalOverlay').classList.remove('active');}
+document.getElementById('modalOverlay').addEventListener('click',function(e){if(e.target===this)closeModal();});
+
+function escapeHtml(s){if(!s)return'';const d=document.createElement('div');d.textContent=s;return d.innerHTML;}
+
+// ── OVERVIEW ──
+async function loadOverview(){
+  const r=await Promise.all([fetch('/api/v1/users'),fetch('/api/v1/courses'),fetch('/api/v1/departments'),fetch('/api/v1/admin/enquiries')]);
+  const [u,c,d,e]=await Promise.all(r.map(x=>x.json()));
+  document.getElementById('overviewContent').innerHTML=`
+    <div class="grid-4">
+      <div class="card" style="text-align:center;"><h3>${u.data?.length||0}</h3><p>Users</p></div>
+      <div class="card" style="text-align:center;"><h3>${c.data?.length||0}</h3><p>Courses</p></div>
+      <div class="card" style="text-align:center;"><h3>${d.data?.length||0}</h3><p>Departments</p></div>
+      <div class="card" style="text-align:center;"><h3>${e.data?.length||0}</h3><p>Enquiries</p></div>
+    </div>`;
+}
+
+// ── SLIDER ──
+async function loadSlides(){
+  const r=await fetch(`${API}/slides`),d=await r.json();
+  let h='<button class="btn btn-green btn-sm" onclick="openSlideForm()">+ Add Slide</button><table><tr><th>Image</th><th>Heading</th><th>Order</th><th>Active</th><th>Actions</th></tr>';
+  if(d.success&&d.data)d.data.forEach(s=>{h+=`<tr><td>${s.image_path||'No img'}</td><td>${escapeHtml(s.heading||'')}</td><td>${s.sort_order}</td><td><span class="badge ${s.is_active?'badge-active':'badge-inactive'}">${s.is_active?'Yes':'No'}</span></td><td><button class="btn btn-yellow btn-sm" onclick="toggleSlide(${s.id})">Toggle</button> <button class="btn btn-red btn-sm" onclick="deleteSlide(${s.id})">Del</button></td></tr>`});
+  h+='</table>';document.getElementById('sliderContent').innerHTML=h;
+}
+function openSlideForm(){
+  openModal(`<h3>Add Slide</h3><form onsubmit="addSlide(event)" enctype="multipart/form-data">
+    <div class="form-group"><label>Image</label><input type="file" name="image" required></div>
+    <div class="form-group"><label>Badge Text</label><input name="badge_text"></div>
+    <div class="form-group"><label>Heading</label><input name="heading"></div>
+    <div class="form-group"><label>Subtext</label><textarea name="subtext"></textarea></div>
+    <div class="form-group"><label>Button 1 Text</label><input name="btn1_text"></div>
+    <div class="form-group"><label>Button 1 URL</label><input name="btn1_url"></div>
+    <div class="form-group"><label>Button 2 Text</label><input name="btn2_text"></div>
+    <div class="form-group"><label>Button 2 URL</label><input name="btn2_url"></div>
+    <div class="form-group"><label>Sort Order</label><input type="number" name="sort_order" value="0"></div>
+    <button class="btn btn-green">Save</button> <button type="button" class="btn btn-red" onclick="closeModal()">Cancel</button>
+  </form>`);
+}
+async function addSlide(e){e.preventDefault();const f=new FormData(e.target);const r=await fetch(`${API}/slides`,{method:'POST',body:f});alert((await r.json()).message);closeModal();loadSlides();}
+async function toggleSlide(id){await fetch(`${API}/slides/${id}/toggle`,{method:'PATCH'});loadSlides();}
+async function deleteSlide(id){if(!confirm('Move to recycle bin?'))return;await fetch(`${API}/slides/${id}`,{method:'DELETE'});loadSlides();}
+
+// ── PRINCIPAL MESSAGE ──
+async function loadPrincipal(){
+  const r=await fetch('/api/v1/content/principal-message'),d=await r.json();
+  const p=d.data||{};
+  document.getElementById('principalContent').innerHTML=`
+    <form onsubmit="savePrincipal(event)">
+      <div class="form-group"><label>Principal Name</label><input name="principal_name" value="${escapeHtml(p.principal_name||'')}"></div>
+      <div class="form-group"><label>Title</label><input name="title" value="${escapeHtml(p.title||'')}"></div>
+      <div class="form-group"><label>Message</label><textarea name="message" rows="10">${escapeHtml(p.message||'')}</textarea></div>
+      <div class="form-group"><label>Photo</label><input type="file" name="photo"></div>
+      <button class="btn btn-green">Save</button>
+    </form>`;
+}
+async function savePrincipal(e){e.preventDefault();const f=new FormData(e.target);const r=await fetch(`${API}/principal-message`,{method:'PUT',body:f});alert((await r.json()).message);loadPrincipal();}
+
+// ── PAGE CONTENT ──
+async function loadPageContent(){
+  const r=await fetch(`${API}/page-content`),d=await r.json();
+  let h='<table><tr><th>Page</th><th>Section</th><th>Actions</th></tr>';
+  if(d.success&&d.data)d.data.forEach(p=>{h+=`<tr><td>${p.page_key}</td><td>${p.section_key}</td><td><button class="btn btn-yellow btn-sm" onclick="editPageContent('${p.page_key}','${p.section_key}')">Edit</button></td></tr>`});
+  h+='</table>';document.getElementById('pageContentContent').innerHTML=h;
+}
+async function editPageContent(pk,sk){
+  const r=await fetch(`/api/v1/content/${pk}/${sk}`),d=await r.json();
+  const html=d.data?.content_html||'';
+  openModal(`<h3>Edit ${pk}.${sk}</h3><div contenteditable="true" id="editContent" style="border:1px solid #ddd;padding:1rem;min-height:200px;">${html}</div><br><button class="btn btn-green" onclick="savePageContent('${pk}','${sk}')">Save</button> <button class="btn btn-red" onclick="closeModal()">Cancel</button>`);
+}
+async function savePageContent(pk,sk){
+  const html=document.getElementById('editContent').innerHTML;
+  const r=await fetch(`${API}/page-content/${pk}/${sk}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({content_html:html})});
+  alert((await r.json()).message);closeModal();loadPageContent();
+}
+
+// ── USERS ──
+async function loadUsers(){
+  const r=await fetch('/api/v1/users'),d=await r.json();
+  let h='<button class="btn btn-green btn-sm" onclick="openAddLecturerForm()">+ Add Lecturer</button><table><tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th>Actions</th></tr>';
+  if(d.success&&d.data)d.data.forEach(u=>{h+=`<tr><td>${escapeHtml(u.full_name)}</td><td>${escapeHtml(u.email||'')}</td><td>${u.role}</td><td>${u.is_active?'Active':'Inactive'}</td><td>${u.is_active?`<button class="btn btn-red btn-sm" onclick="deactivateUser(${u.id})">Deactivate</button>`:''}</td></tr>`});
+  h+='</table>';document.getElementById('usersContent').innerHTML=h;
+}
+function openAddLecturerForm(){
+  openModal(`<h3>Add Lecturer</h3><form onsubmit="addLecturer(event)">
+    <div class="form-group"><label>Full Name</label><input name="full_name" required></div>
+    <div class="form-group"><label>Email</label><input name="email" type="email" required></div>
+    <div class="form-group"><label>Phone (password)</label><input name="phone" required></div>
+    <div class="form-group"><label>Department</label><select name="department_id" id="addLectDept"></select></div>
+    <button class="btn btn-green">Add</button> <button type="button" class="btn btn-red" onclick="closeModal()">Cancel</button>
+  </form>`);
+  fetch('/api/v1/departments').then(r=>r.json()).then(d=>{if(d.success){document.getElementById('addLectDept').innerHTML=d.data.map(x=>`<option value="${x.id}">${x.name}</option>`).join('');}});
+}
+async function addLecturer(e){e.preventDefault();const f=new FormData(e.target);const r=await fetch(`${API}/users/add-lecturer`,{method:'POST',body:f});alert((await r.json()).message);closeModal();loadUsers();}
+async function deactivateUser(id){if(!confirm('Deactivate this user?'))return;await fetch(`${API}/users/${id}/deactivate`,{method:'PATCH'});loadUsers();}
+
+// ── DEPARTMENTS ──
+async function loadDepartments(){
+  const r=await fetch('/api/v1/departments'),d=await r.json();
+  let h='<table><tr><th>Name</th><th>Type</th><th>HOD</th></tr>';
+  if(d.success&&d.data)d.data.forEach(d=>{h+=`<tr><td>${escapeHtml(d.name)}</td><td>${d.type}</td><td>${escapeHtml(d.hod_name||'None')}</td></tr>`});
+  h+='</table>';document.getElementById('departmentsContent').innerHTML=h;
+}
+
+// ── COURSES ──
+async function loadCourses(){
+  const r=await fetch('/api/v1/courses'),d=await r.json();
+  let h='<table><tr><th>Name</th><th>Dept</th><th>Exam Body</th></tr>';
+  if(d.success&&d.data)d.data.forEach(c=>{h+=`<tr><td>${escapeHtml(c.name)}</td><td>${escapeHtml(c.department?.name||'')}</td><td>${c.examining_body}</td></tr>`});
+  h+='</table>';document.getElementById('coursesContent').innerHTML=h;
+}
+
+// ── TIMETABLE ──
+async function loadTimetable(){
+  const r=await fetch('/api/v1/timetable/all'),d=await r.json();
+  let h='<table><tr><th>Day</th><th>Time</th><th>Subject</th><th>Room</th></tr>';
+  if(d.success&&d.data)d.data.forEach(t=>{h+=`<tr><td>${t.day}</td><td>${t.time_start?.substring(0,5)}-${t.time_end?.substring(0,5)}</td><td>${t.subject}</td><td>${t.room}</td></tr>`});
+  h+='</table>';document.getElementById('timetableContent').innerHTML=h;
+}
+
+// ── NEWS ──
+async function loadNews(){
+  const r=await fetch('/api/v1/news?limit=50'),d=await r.json();
+  let h='<table><tr><th>Title</th><th>Category</th><th>Published</th></tr>';
+  if(d.success&&d.data)d.data.forEach(n=>{h+=`<tr><td>${escapeHtml(n.title)}</td><td>${n.category}</td><td>${new Date(n.published_at).toLocaleDateString()}</td></tr>`});
+  h+='</table>';document.getElementById('newsContent').innerHTML=h;
+}
+
+// ── DOWNLOADS ──
+async function loadDownloads(){
+  const r=await fetch('/api/v1/downloads'),d=await r.json();
+  let h='<table><tr><th>Title</th><th>Category</th></tr>';
+  if(d.success&&d.data)d.data.forEach(dl=>{h+=`<tr><td>${escapeHtml(dl.title)}</td><td>${dl.category}</td></tr>`});
+  h+='</table>';document.getElementById('downloadsContent').innerHTML=h;
+}
+
+// ── GALLERY ──
+async function loadGallery(){
+  document.getElementById('galleryContent').innerHTML='<p>Gallery management coming soon.</p>';
+}
+
+// ── RECYCLE BIN ──
+async function loadRecycle(){
+  const r=await fetch(`${API}/recycle-bin`),d=await r.json();
+  let h='<table><tr><th>Table</th><th>Deleted At</th><th>Restore By</th><th>Actions</th></tr>';
+  if(d.success&&d.data)d.data.forEach(b=>{h+=`<tr><td>${b.original_table} #${b.original_id}</td><td>${new Date(b.deleted_at).toLocaleString()}</td><td>${new Date(b.restore_deadline).toLocaleDateString()}</td><td><button class="btn btn-yellow btn-sm" onclick="restoreItem(${b.id})">Restore</button> <button class="btn btn-red btn-sm" onclick="permDelete(${b.id})">Delete Forever</button></td></tr>`});
+  h+='</table>';document.getElementById('recycleContent').innerHTML=h;
+}
+async function restoreItem(id){await fetch(`${API}/recycle-bin/${id}/restore`,{method:'POST'});loadRecycle();}
+async function permDelete(id){if(!confirm('Permanently delete? This cannot be undone.'))return;await fetch(`${API}/recycle-bin/${id}`,{method:'DELETE'});loadRecycle();}
+
+// ── ENQUIRIES ──
+async function loadEnquiries(){
+  const r=await fetch(`${API}/enquiries`),d=await r.json();
+  let h='<table><tr><th>Name</th><th>Subject</th><th>Date</th><th>Status</th><th>Actions</th></tr>';
+  if(d.success&&d.data)d.data.forEach(e=>{h+=`<tr><td>${escapeHtml(e.full_name)}</td><td>${escapeHtml(e.subject)}</td><td>${new Date(e.submitted_at).toLocaleDateString()}</td><td><span class="badge ${e.is_read?'badge-read':'badge-unread'}">${e.is_read?'Read':'Unread'}</span></td><td>${!e.is_read?`<button class="btn btn-green btn-sm" onclick="markRead(${e.id})">Mark Read</button>`:''}</td></tr>`});
+  h+='</table>';document.getElementById('enquiriesContent').innerHTML=h;
+}
+async function markRead(id){await fetch(`${API}/enquiries/${id}/read`,{method:'PATCH'});loadEnquiries();}
+
+// ── BOM ──
+async function loadBOM(){
+  const r=await fetch('/api/v1/bom'),d=await r.json();
+  let h='<table><tr><th>Name</th><th>Position</th></tr>';
+  if(d.success&&d.data)d.data.forEach(m=>{h+=`<tr><td>${escapeHtml(m.full_name)}</td><td>${escapeHtml(m.position||'')}</td></tr>`});
+  h+='</table>';document.getElementById('bomContent').innerHTML=h;
+}
+</script>
+</body>
+</html>

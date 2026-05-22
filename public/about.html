@@ -21,21 +21,8 @@
             }, 'google_translate_element');
         }
     </script>
-    <!-- Google Translate Widget -->
-    <script type="text/javascript">
-        function googleTranslateElementInit() {
-            new google.translate.TranslateElement(
-                {
-                    pageLanguage: 'en',
-                    includedLanguages: 'sw',
-                    layout: google.translate.TranslateElement.InlineLayout.SIMPLE
-                },
-                'google_translate_element'
-            );
-        }
-    </script>
-    <script src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
-
+ 
+   
     <style>
         /* About Page Specific Styles */
         .about-hero {
@@ -616,18 +603,27 @@
 
                 if (data.success && data.data) {
                     const p = data.data;
+
+                    // Fix: remove any leading /uploads/ from image_path to avoid doubling
+                    const imagePath = p.image_path
+                        ? p.image_path.replace(/^\/uploads\//, '')
+                        : '';
+
+                    const photoHtml = imagePath
+                        ? `<img src="/uploads/${imagePath}" alt="${escapeHtml(p.principal_name || '')}" style="width:100%;height:100%;object-fit:cover;">`
+                        : '<span style="font-size:4rem;">👤</span>';
+
+                    // Fix: only show name once; title is the position
                     document.getElementById('principalProfile').innerHTML = `
-                        <div class="profile-photo-lg">
-                            ${p.image_path
-                            ? `<img src="/uploads/${p.image_path}" alt="${escapeHtml(p.principal_name)}">`
-                            : '<span style="font-size:4rem;">👤</span>'}
-                        </div>
-                        <div class="profile-info">
-                            <h3>${escapeHtml(p.principal_name || 'Chief Principal')}</h3>
-                            <p class="title">${escapeHtml(p.title || 'Chief Principal')}</p>
-                            <div class="bio">${p.message || 'Profile information coming soon.'}</div>
-                        </div>
-                    `;
+                <div class="profile-photo-lg">
+                    ${photoHtml}
+                </div>
+                <div class="profile-info">
+                    <h3>${escapeHtml(p.principal_name || 'Chief Principal')}</h3>
+                    <p class="title">${escapeHtml(p.title || 'Chief Principal')}</p>
+                    <div class="bio">${p.message || 'Profile information coming soon.'}</div>
+                </div>
+            `;
                 }
             } catch (e) {
                 console.log('Principal profile fetch failed');
@@ -635,35 +631,75 @@
         }
 
         async function loadDeputyPrincipals() {
-            try {
-                // Fetch users with deputy_principal role
-                const res = await fetch('/api/v1/users?role=deputy_principal');
-                if (!res.ok) throw new Error('DP fetch failed');
-                const data = await res.json();
+    try {
+        // Fetch the two specific deputy principals directly by role
+        const [resAcad, resAdmin] = await Promise.all([
+            fetch('/api/v1/users?role=deputy_principal_academics'),
+            fetch('/api/v1/users?role=deputy_principal_administration')
+        ]);
 
-                if (data.success && data.data) {
-                    data.data.forEach(dp => {
-                        const isAcademics = dp.bio && dp.bio.toLowerCase().includes('academ');
-                        const targetId = isAcademics ? 'dpAcademicsProfile' : 'dpAdminProfile';
+        const dataAcad = await resAcad.json();
+        const dataAdmin = await resAdmin.json();
 
-                        document.getElementById(targetId).innerHTML = `
-                            <div class="profile-photo-lg">
-                                ${dp.photo_path
-                                ? `<img src="/uploads/${dp.photo_path}" alt="${escapeHtml(dp.full_name)}">`
-                                : '<span style="font-size:4rem;">👤</span>'}
-                            </div>
-                            <div class="profile-info">
-                                <h3>${escapeHtml(dp.full_name)}</h3>
-                                <p class="title">${isAcademics ? 'Deputy Principal - Academics' : 'Deputy Principal - Administration'}</p>
-                                <div class="bio">${dp.bio || 'Profile information coming soon.'}</div>
-                            </div>
-                        `;
-                    });
-                }
-            } catch (e) {
-                console.log('Deputy Principals fetch failed');
-            }
+        // Build HTML for Academics
+        let dpAcademicsHtml = '';
+        if (dataAcad.success && dataAcad.data && dataAcad.data.length > 0) {
+            const dp = dataAcad.data[0];
+            dpAcademicsHtml = `
+                <div class="profile-photo-lg">
+                    ${dp.photo_path
+                        ? `<img src="/uploads/${dp.photo_path.replace(/^\/uploads\//, '')}" alt="${escapeHtml(dp.full_name)}">`
+                        : '<span style="font-size:4rem;">👤</span>'}
+                </div>
+                <div class="profile-info">
+                    <h3>${escapeHtml(dp.full_name)}</h3>
+                    <p class="title">Deputy Principal - Academics</p>
+                    <div class="bio">${dp.bio || 'Profile information coming soon.'}</div>
+                </div>
+            `;
         }
+
+        // Build HTML for Administration
+        let dpAdminHtml = '';
+        if (dataAdmin.success && dataAdmin.data && dataAdmin.data.length > 0) {
+            const dp = dataAdmin.data[0];
+            dpAdminHtml = `
+                <div class="profile-photo-lg">
+                    ${dp.photo_path
+                        ? `<img src="/uploads/${dp.photo_path.replace(/^\/uploads\//, '')}" alt="${escapeHtml(dp.full_name)}">`
+                        : '<span style="font-size:4rem;">👤</span>'}
+                </div>
+                <div class="profile-info">
+                    <h3>${escapeHtml(dp.full_name)}</h3>
+                    <p class="title">Deputy Principal - Administration</p>
+                    <div class="bio">${dp.bio || 'Profile information coming soon.'}</div>
+                </div>
+            `;
+        }
+
+        // Update DOM
+        document.getElementById('dpAcademicsProfile').innerHTML = dpAcademicsHtml || `
+            <div class="profile-photo-lg"><span style="font-size:4rem;">👤</span></div>
+            <div class="profile-info">
+                <h3>Deputy Principal - Academics</h3>
+                <p class="title">Position</p>
+                <div class="bio">Profile information will be updated soon.</div>
+            </div>
+        `;
+
+        document.getElementById('dpAdminProfile').innerHTML = dpAdminHtml || `
+            <div class="profile-photo-lg"><span style="font-size:4rem;">👤</span></div>
+            <div class="profile-info">
+                <h3>Deputy Principal - Administration</h3>
+                <p class="title">Position</p>
+                <div class="bio">Profile information will be updated soon.</div>
+            </div>
+        `;
+
+    } catch(e) {
+        console.log('Deputy Principals fetch failed');
+    }
+}
 
         async function loadHODs() {
             try {
@@ -703,7 +739,7 @@
 
     <script src="assets/js/navbar.js"></script>
     <script>
-        buildNavbar('PAGE_IDENTIFIER');
+        buildNavbar('about');
     </script>
 </body>
 

@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Student Dashboard - Kigumo TVC</title>
+  <link rel="icon" href="../public/assets/images/logo.jpeg" />
+  <link rel="stylesheet" href="../public/assets/css/main.css" />
+  <style>
+    .dashboard-wrapper { display: flex; min-height: 100vh; }
+    .sidebar { width: 250px; background: #1a1a2e; color: #fff; padding: 1rem 0; }
+    .sidebar h3 { padding: 0 1rem; color: #f5c518; margin-bottom: 1rem; }
+    .sidebar a { display: block; padding: 0.8rem 1rem; color: #ccc; text-decoration: none; }
+    .sidebar a:hover, .sidebar a.active { background: #1a7a1a; color: #fff; }
+    .main-content { flex: 1; padding: 2rem; background: #f8f9fa; }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    .card { background: #fff; border-radius: 8px; padding: 1.5rem; margin-bottom: 1rem; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+    .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px,1fr)); gap: 1rem; }
+    .stat-card { text-align: center; padding: 1.2rem; border-radius: 8px; color: #fff; }
+    .logout-btn { background: #c00; color: #fff; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer; }
+    @media (max-width: 768px) { .dashboard-wrapper { flex-direction: column; } .sidebar { width: 100%; } }
+  </style>
+</head>
+<body>
+<div class="dashboard-wrapper">
+  <nav class="sidebar">
+    <h3>Student Portal</h3>
+    <a href="#" class="nav-link active" data-tab="dashboard">📋 Dashboard</a>
+    <a href="#" class="nav-link" data-tab="timetable">📅 My Timetable</a>
+    <a href="#" class="nav-link" data-tab="materials">📁 Course Materials</a>
+    <a href="#" class="nav-link" data-tab="announcements">📢 Announcements</a>
+    <a href="#" class="nav-link" data-tab="profile">👤 My Profile</a>
+    <hr style="border-color:#444;margin:1rem 0;">
+    <a href="#" id="logoutBtn" class="logout-btn" style="margin-left:1rem;">Logout</a>
+  </nav>
+
+  <main class="main-content">
+    <!-- Dashboard Tab -->
+    <div class="tab-content active" id="tab-dashboard">
+      <h2>Welcome, <span id="welcomeName">Student</span></h2>
+      <div class="grid-3" id="summaryCards"></div>
+    </div>
+
+    <!-- Timetable Tab -->
+    <div class="tab-content" id="tab-timetable">
+      <h2>My Timetable</h2>
+      <div id="timetableContent"><p>Loading...</p></div>
+    </div>
+
+    <!-- Materials Tab -->
+    <div class="tab-content" id="tab-materials">
+      <h2>Course Materials</h2>
+      <div id="materialsContent"><p>Loading...</p></div>
+    </div>
+
+    <!-- Announcements Tab -->
+    <div class="tab-content" id="tab-announcements">
+      <h2>Announcements</h2>
+      <div id="announcementsContent"><p>Loading...</p></div>
+    </div>
+
+    <!-- Profile Tab -->
+    <div class="tab-content" id="tab-profile">
+      <h2>My Profile</h2>
+      <div id="profileContent"><p>Loading...</p></div>
+    </div>
+  </main>
+</div>
+
+<script>
+// Check session
+fetch('/api/v1/auth/me')
+  .then(r => r.json())
+  .then(data => {
+    if (!data.success || data.user.role !== 'student') {
+      window.location.href = '/portal/login.html';
+      return;
+    }
+    window.currentUser = data.user;
+    document.getElementById('welcomeName').textContent = data.user.full_name;
+    loadDashboard();
+  });
+
+// Tab switching
+document.querySelectorAll('.nav-link').forEach(link => {
+  link.addEventListener('click', function(e) {
+    e.preventDefault();
+    document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+    this.classList.add('active');
+    document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+    const tabId = 'tab-' + this.dataset.tab;
+    document.getElementById(tabId).classList.add('active');
+    if (this.dataset.tab === 'timetable') loadTimetable();
+    else if (this.dataset.tab === 'materials') loadMaterials();
+    else if (this.dataset.tab === 'announcements') loadAnnouncements();
+    else if (this.dataset.tab === 'profile') loadProfile();
+  });
+});
+
+document.getElementById('logoutBtn').addEventListener('click', async () => {
+  await fetch('/api/v1/auth/logout', { method: 'POST' });
+  window.location.href = '/portal/login.html';
+});
+
+async function loadDashboard() {
+  // Summary cards static for now
+  document.getElementById('summaryCards').innerHTML = `
+    <div class="card"><h3>Department</h3><p id="deptInfo">Loading...</p></div>
+    <div class="card"><h3>Year of Study</h3><p>Year ${currentUser.year_of_study || 1}</p></div>
+  `;
+  // Fetch department name
+  fetch(`/api/v1/departments/${currentUser.primary_department_id}`)
+    .then(r => r.json())
+    .then(d => { if(d.success) document.getElementById('deptInfo').textContent = d.data.name; });
+}
+
+async function loadTimetable() {
+  const res = await fetch('/api/v1/timetable/my');
+  const data = await res.json();
+  let html = '<table class="fees-table"><thead><tr><th>Day</th><th>Time</th><th>Subject</th><th>Room</th><th>Lecturer</th></tr></thead><tbody>';
+  if (data.success) {
+    data.data.forEach(t => {
+      html += `<tr><td>${t.day}</td><td>${t.time_start?.substring(0,5)}-${t.time_end?.substring(0,5)}</td><td>${t.subject}</td><td>${t.room}</td><td>${t.lecturer_name || ''}</td></tr>`;
+    });
+  }
+  html += '</tbody></table>';
+  document.getElementById('timetableContent').innerHTML = html;
+}
+
+async function loadMaterials() {
+  const res = await fetch('/api/v1/materials/my');
+  const data = await res.json();
+  let html = '';
+  if (data.success && data.data.length) {
+    data.data.forEach(m => {
+      html += `<div class="card"><strong>${m.title}</strong> (${m.course_name})<br>
+      <a href="/uploads/${m.file_path}" target="_blank">Download</a> &bull; Uploaded ${new Date(m.uploaded_at).toLocaleDateString()}</div>`;
+    });
+  } else html = '<p>No materials available.</p>';
+  document.getElementById('materialsContent').innerHTML = html;
+}
+
+async function loadAnnouncements() {
+  const res = await fetch('/api/v1/announcements/my');
+  const data = await res.json();
+  let html = '';
+  if (data.success && data.data.length) {
+    data.data.forEach(a => {
+      html += `<div class="card"><h3>${a.title}</h3><small>${new Date(a.posted_at).toLocaleString()}</small><p>${a.body}</p></div>`;
+    });
+  } else html = '<p>No announcements.</p>';
+  document.getElementById('announcementsContent').innerHTML = html;
+}
+
+async function loadProfile() {
+  const u = currentUser;
+  document.getElementById('profileContent').innerHTML = `
+    <div class="card">
+      <p><strong>Name:</strong> ${u.full_name}</p>
+      <p><strong>Reg Number:</strong> ${u.reg_number}</p>
+      <p><strong>Email:</strong> ${u.email || 'N/A'}</p>
+      <p><strong>Year:</strong> ${u.year_of_study || 1}</p>
+    </div>`;
+}
+</script>
+</body>
+</html>

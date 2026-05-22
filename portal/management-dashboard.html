@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Management Dashboard - Kigumo TVC</title>
+  <link rel="icon" href="../public/assets/images/logo.jpeg" />
+  <link rel="stylesheet" href="../public/assets/css/main.css" />
+  <style>
+    .dashboard-wrapper { display: flex; min-height: 100vh; }
+    .sidebar { width: 250px; background: #1a1a2e; color: #fff; padding: 1rem 0; }
+    .sidebar h3 { padding: 0 1rem; color: #f5c518; margin-bottom: 1rem; }
+    .sidebar a { display: block; padding: 0.8rem 1rem; color: #ccc; text-decoration: none; }
+    .sidebar a:hover, .sidebar a.active { background: #1a7a1a; color: #fff; }
+    .main-content { flex: 1; padding: 2rem; background: #f8f9fa; }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    .card { background: #fff; border-radius: 8px; padding: 1.5rem; margin-bottom: 1rem; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+    .grid-4 { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px,1fr)); gap: 1rem; }
+    table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+    th, td { padding: 0.7rem; border-bottom: 1px solid #eee; text-align: left; }
+    .status-green { color: #1a7a1a; font-weight: 600; }
+    .status-yellow { color: #f5c518; font-weight: 600; }
+    .status-red { color: #c00; font-weight: 600; }
+    @media (max-width: 768px) { .dashboard-wrapper { flex-direction: column; } .sidebar { width: 100%; } }
+  </style>
+</head>
+<body>
+<div class="dashboard-wrapper">
+  <nav class="sidebar">
+    <h3>Management</h3>
+    <a href="#" class="nav-link active" data-tab="overview">📊 Overview</a>
+    <a href="#" class="nav-link" data-tab="departments">🏛️ Departments</a>
+    <button id="logoutBtn" style="background:#c00;color:#fff;border:none;padding:0.5rem 1rem;margin:1rem;cursor:pointer;">Logout</button>
+  </nav>
+
+  <main class="main-content">
+    <div class="tab-content active" id="tab-overview">
+      <h2>Management Overview</h2>
+      <div class="grid-4" id="summaryCards"><p>Loading...</p></div>
+    </div>
+    <div class="tab-content" id="tab-departments">
+      <h2>Department Resources Matrix</h2>
+      <div id="deptMatrix"><p>Loading...</p></div>
+    </div>
+  </main>
+</div>
+
+<script>
+fetch('/api/v1/auth/me')
+  .then(r => r.json())
+  .then(data => {
+    if (!data.success || !['chief_principal','deputy_principal_academics','deputy_principal_administration'].includes(data.user.role)) {
+      window.location.href = '/portal/login.html';
+      return;
+    }
+    window.currentUser = data.user;
+    loadOverview();
+  });
+
+document.querySelectorAll('.nav-link').forEach(link => {
+  link.addEventListener('click', function(e) {
+    e.preventDefault();
+    document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+    this.classList.add('active');
+    document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+    document.getElementById('tab-' + this.dataset.tab).classList.add('active');
+    if (this.dataset.tab === 'departments') loadDepartments();
+  });
+});
+
+document.getElementById('logoutBtn').addEventListener('click', async () => {
+  await fetch('/api/v1/auth/logout', { method: 'POST' });
+  window.location.href = '/portal/login.html';
+});
+
+async function loadOverview() {
+  const res = await fetch('/api/v1/management/overview');
+  const data = await res.json();
+  if (data.success) {
+    const d = data.data;
+    document.getElementById('summaryCards').innerHTML = `
+      <div class="card"><h3>Total Students</h3><p style="font-size:2rem;">${d.totalStudents}</p></div>
+      <div class="card"><h3>Total Lecturers</h3><p style="font-size:2rem;">${d.totalLecturers}</p></div>
+      <div class="card"><h3>Active Courses</h3><p style="font-size:2rem;">${d.totalCourses}</p></div>
+      <div class="card"><h3>Departments</h3><p style="font-size:2rem;">${d.totalDepartments}</p></div>
+    `;
+  }
+}
+
+async function loadDepartments() {
+  const res = await fetch('/api/v1/management/departments');
+  const data = await res.json();
+  let html = '<table><tr><th>Department</th><th>HOD</th><th>Materials</th><th>Students</th><th>Status</th></tr>';
+  if (data.success && data.data.length) {
+    data.data.forEach(dept => {
+      const statusClass = dept.materialsCount > 0 ? 'status-green' : 'status-red';
+      html += `<tr><td>${dept.name}</td><td>${dept.hod_name || 'Not assigned'}</td><td>${dept.materialsCount}</td><td>${dept.studentCount}</td><td class="${statusClass}">${dept.materialsCount > 0 ? 'Active' : 'Incomplete'}</td></tr>`;
+    });
+  }
+  html += '</table>';
+  document.getElementById('deptMatrix').innerHTML = html;
+}
+</script>
+</body>
+</html>
