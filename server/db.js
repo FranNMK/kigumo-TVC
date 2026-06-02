@@ -8,6 +8,8 @@
  */
 
 const mysql = require('mysql2/promise');
+const fs = require('fs');
+const path = require('path');
 const { wrapPoolWithLogging } = require('./utils/dbLogger');
 const logger = require('./utils/logger');
 
@@ -25,6 +27,37 @@ const poolConfig = {
     enableKeepAlive: true,
     keepAliveInitialDelay: 0
 };
+
+// ── SSL/TLS Configuration for TiDB Cloud ───────────────────
+
+if (process.env.DB_SSL === 'true') {
+    const caPath = process.env.DB_SSL_CA_PATH;
+    
+    if (!caPath) {
+        logger.warn('DB_SSL is enabled but DB_SSL_CA_PATH is not set. SSL will be enabled without CA verification.');
+        poolConfig.ssl = 'Amazon RDS';
+    } else {
+        try {
+            const caCertPath = path.resolve(caPath);
+            if (!fs.existsSync(caCertPath)) {
+                logger.error(`❌ SSL CA certificate not found at: ${caCertPath}`);
+                logger.error('Please download your TiDB Cloud CA certificate from the TiDB Cloud dashboard.');
+                logger.error('Place it at the path specified in DB_SSL_CA_PATH environment variable.');
+                throw new Error(`CA certificate not found at ${caCertPath}`);
+            }
+            
+            const caCert = fs.readFileSync(caCertPath, 'utf8');
+            poolConfig.ssl = {
+                ca: caCert,
+                rejectUnauthorized: true
+            };
+            logger.info('✅ SSL/TLS configured with CA certificate for TiDB Cloud');
+        } catch (err) {
+            logger.error(`❌ Failed to configure SSL: ${err.message}`);
+            throw err;
+        }
+    }
+}
 
 // ── Create Pool ────────────────────────────────────────────
 

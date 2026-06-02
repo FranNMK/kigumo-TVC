@@ -5,3 +5,7 @@ uploads/
 # Logs
 logs/
 *.log
+
+# SSL Certificates (never commit these)
+server/certs/*.pem
+server/certs/tidb-ca.pem
