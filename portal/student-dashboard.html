@@ -134,8 +134,12 @@ async function loadMaterials() {
   let html = '';
   if (data.success && data.data.length) {
     data.data.forEach(m => {
+      // Detect if file_path is a full Cloudinary URL or local path
+      const downloadUrl = m.file_path.startsWith('http://') || m.file_path.startsWith('https://') 
+        ? m.file_path 
+        : `/uploads/${m.file_path}`;
       html += `<div class="card"><strong>${m.title}</strong> (${m.course_name})<br>
-      <a href="/uploads/${m.file_path}" target="_blank">Download</a> &bull; Uploaded ${new Date(m.uploaded_at).toLocaleDateString()}</div>`;
+      <a href="${downloadUrl}" target="_blank">Download</a> &bull; Uploaded ${new Date(m.uploaded_at).toLocaleDateString()}</div>`;
     });
   } else html = '<p>No materials available.</p>';
   document.getElementById('materialsContent').innerHTML = html;
