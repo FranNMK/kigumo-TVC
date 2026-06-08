@@ -15,6 +15,7 @@ app.use(express.urlencoded({ extended: true }));
 
 // Serve static files from public folder (website pages)
 app.use(express.static(path.join(__dirname, "../public")));
+app.use("/public", express.static(path.join(__dirname, "../public")));
 
 // Serve portal files (login, dashboards) - CRITICAL ADDITION
 // Portal HTML files need to be accessible from /portal/ path
@@ -64,6 +65,9 @@ app.use("/api/v1/downloads", require("./routes/downloads"));
 app.use("/api/v1/announcements", require("./routes/announcements"));
 app.use("/api/v1/management", require("./routes/management"));
 app.use("/api/v1/admin", require("./routes/admin"));
+app.use('/api/v1/stats', require('./routes/stats'));
+app.use('/api/v1/slides', require('./routes/slides'));
+app.use('/api/v1/partners', require('./routes/partners'));
 
 // ── Portal Page Routes ─────────────────────────────────────
 // CRITICAL ADDITION: These routes serve portal HTML pages

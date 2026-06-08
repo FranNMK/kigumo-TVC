@@ -22,20 +22,18 @@ router.get('/', async (req, res) => {
                FROM news_articles WHERE is_published = TRUE`;
     let countSql = `SELECT COUNT(*) AS total FROM news_articles WHERE is_published = TRUE`;
     const params = [];
-    const countParams = [];
 
     if (category && ['event','partnership','graduation','achievement','general'].includes(category)) {
       sql += ` AND category = ?`;
       countSql += ` AND category = ?`;
       params.push(category);
-      countParams.push(category);
     }
 
-    sql += ` ORDER BY published_at DESC LIMIT ? OFFSET ?`;
-    params.push(limit, offset);
+    // Use integer interpolation for LIMIT/OFFSET (already validated as integers)
+    sql += ` ORDER BY published_at DESC LIMIT ${offset}, ${limit}`;
 
     const [rows] = await db.execute(sql, params);
-    const [[{ total }]] = await db.execute(countSql, countParams);
+    const [[{ total }]] = await db.execute(countSql, params);
     const totalPages = Math.ceil(total / limit);
 
     res.json({

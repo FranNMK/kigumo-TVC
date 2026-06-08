@@ -78,26 +78,26 @@ router.get('/', async (req, res) => {
         const courseIds = courses.map(c => c.id);
         const placeholders = courseIds.map(() => '?').join(',');
         
-        const [fees] = await db.execute(
-            `SELECT 
-                course_id, year_of_study, tuition, examination, 
-                registration, id_card, other, other_label
-            FROM fees 
-            WHERE course_id IN (${placeholders})
-            ORDER BY course_id, year_of_study`,
-            courseIds
-        );
-        
-        // Fetch next intake date for all courses
-        const [intakes] = await db.execute(
-            `SELECT 
-                course_id, intake_date, label
-            FROM intake_dates 
-            WHERE course_id IN (${placeholders}) 
-                AND intake_date >= CURDATE()
-            ORDER BY course_id, intake_date ASC`,
-            courseIds
-        );
+        const [[fees], [intakes]] = await Promise.all([
+            db.execute(
+                `SELECT 
+                    course_id, year_of_study, tuition, examination, 
+                    registration, id_card, other, other_label
+                FROM fees 
+                WHERE course_id IN (${placeholders})
+                ORDER BY course_id, year_of_study`,
+                courseIds
+            ),
+            db.execute(
+                `SELECT 
+                    course_id, intake_date, label
+                FROM intake_dates 
+                WHERE course_id IN (${placeholders}) 
+                    AND intake_date >= CURDATE()
+                ORDER BY course_id, intake_date ASC`,
+                courseIds
+            )
+        ]);
         
         // Group fees and intakes by course_id
         const feesMap = {};

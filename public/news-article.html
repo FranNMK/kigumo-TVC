@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="News Article - Kigumo Technical and Vocational College" />
+  <meta name="theme-color" content="#1a7a1a" />
+  <title>News Article - Kigumo Technical and Vocational College</title>
+
+  <link rel="icon" type="image/jpeg" href="assets/images/logo.jpeg" />
+  <link rel="stylesheet" href="assets/css/main.css" />
+
+  <script type="text/javascript">
+    function googleTranslateElementInit() {
+      new google.translate.TranslateElement(
+        { pageLanguage: 'en', includedLanguages: 'sw', layout: google.translate.TranslateElement.InlineLayout.SIMPLE },
+        'google_translate_element'
+      );
+    }
+  </script>
+  <script src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+
+  <style>
+    .article-container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 3rem 1.5rem;
+    }
+    .article-header {
+      margin-bottom: 2rem;
+    }
+    .category-badge {
+      display: inline-block;
+      padding: 4px 14px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+    }
+    .cat-event { background: #cce5ff; color: #004085; }
+    .cat-partnership { background: #d4edda; color: #155724; }
+    .cat-graduation { background: #fff3cd; color: #856404; }
+    .cat-achievement { background: #f8d7da; color: #721c24; }
+    .cat-general { background: #e2e3e5; color: #383d41; }
+    .article-title {
+      font-size: 2.2rem;
+      font-weight: 800;
+      color: #1a1a2e;
+      line-height: 1.3;
+      margin-bottom: 0.8rem;
+    }
+    .article-date {
+      color: #888;
+      font-size: 0.95rem;
+      margin-bottom: 1.5rem;
+    }
+    .article-image {
+      width: 100%;
+      max-height: 450px;
+      object-fit: cover;
+      border-radius: 12px;
+      margin-bottom: 2rem;
+      background: #e0e0e0;
+    }
+    .article-body {
+      font-size: 1.1rem;
+      line-height: 1.85;
+      color: #333;
+    }
+    .article-body p {
+      margin-bottom: 1.2rem;
+    }
+    .back-link {
+      display: inline-block;
+      margin-top: 2.5rem;
+      color: #1a7a1a;
+      font-weight: 600;
+      text-decoration: none;
+      font-size: 1rem;
+    }
+    .back-link:hover {
+      text-decoration: underline;
+    }
+    .error-message {
+      text-align: center;
+      padding: 4rem 2rem;
+      color: #888;
+    }
+    @media (max-width: 768px) {
+      .article-title { font-size: 1.6rem; }
+      .article-body { font-size: 1rem; }
+    }
+  </style>
+</head>
+<body>
+  <div id="google_translate_element" style="position:fixed;top:10px;right:10px;z-index:9999;"></div>
+  <header id="mainNavbar"></header>
+
+  <div class="article-container" id="articleContent">
+    <p style="text-align:center;color:#888;padding:3rem;">Loading article...</p>
+  </div>
+
+  <footer id="mainFooter"></footer>
+
+  <script src="assets/js/navbar.js"></script>
+  <script>
+    buildNavbar('news');
+
+    // Get article ID from URL
+    const params = new URLSearchParams(window.location.search);
+    const articleId = params.get('id');
+
+    async function loadSharedComponents() {
+      try {
+        const res = await fetch('/');
+        const html = await res.text();
+        const doc = new DOMParser().parseFromString(html, 'text/html');
+        const nav = doc.querySelector('header');
+        const footer = doc.querySelector('footer');
+        if (nav) document.getElementById('mainNavbar').innerHTML = nav.outerHTML;
+        if (footer) document.getElementById('mainFooter').innerHTML = footer.outerHTML;
+      } catch (e) {}
+    }
+
+    async function loadArticle() {
+      const container = document.getElementById('articleContent');
+
+      if (!articleId) {
+        container.innerHTML = '<div class="error-message"><h2>No article specified</h2><p>Please select an article from the <a href="news.html">news page</a>.</p></div>';
+        return;
+      }
+
+      try {
+        const res = await fetch(`/api/v1/news/${articleId}`);
+        if (!res.ok) throw new Error('Article not found');
+        const data = await res.json();
+
+        if (!data.success || !data.data) {
+          container.innerHTML = '<div class="error-message"><h2>Article not found</h2><p>The article you are looking for does not exist or has been removed.</p><p><a href="news.html">← Back to News</a></p></div>';
+          return;
+        }
+
+        const article = data.data;
+        const date = new Date(article.published_at).toLocaleDateString('en-KE', {
+          year: 'numeric', month: 'long', day: 'numeric'
+        });
+
+        // Handle image path
+        let imageHtml = '';
+        if (article.image_path) {
+          let imgSrc = article.image_path;
+          if (!imgSrc.startsWith('http://') && !imgSrc.startsWith('https://')) {
+            imgSrc = '/' + imgSrc.replace(/^\/?(uploads\/)?/, 'uploads/');
+          }
+          imageHtml = `<img src="${imgSrc}" alt="${escapeHtml(article.title)}" class="article-image" />`;
+        }
+
+        container.innerHTML = `
+          <div class="article-header">
+            <span class="category-badge cat-${article.category}">${capitalizeFirst(article.category)}</span>
+            <h1 class="article-title">${escapeHtml(article.title)}</h1>
+            <p class="article-date">📅 ${date}</p>
+          </div>
+          ${imageHtml}
+          <div class="article-body">${article.body}</div>
+          <a href="news.html" class="back-link">← Back to News</a>
+        `;
+
+        // Update page title
+        document.title = `${article.title} - Kigumo TVC`;
+
+      } catch (e) {
+        container.innerHTML = '<div class="error-message"><h2>Error loading article</h2><p>Unable to load the article. Please try again later.</p><p><a href="news.html">← Back to News</a></p></div>';
+      }
+    }
+
+    function capitalizeFirst(str) {
+      if (!str) return '';
+      return str.charAt(0).toUpperCase() + str.slice(1);
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      const div = document.createElement('div');
+      div.textContent = str;
+      return div.innerHTML;
+    }
+
+    (async function () {
+      await loadSharedComponents();
+      await loadArticle();
+    })();
+  </script>
+</body>
+</html>

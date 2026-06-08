@@ -6,7 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description"
         content="Kigumo Technical and Vocational College — TVETA Accredited TVET Institution in Kirinyaga County, Kenya." />
-    <title>Kigumo TVC — Empowering Youth Through Technical Excellence</title>
+    <title>Kigumo TVC — Skills for Self-Reliance</title>
+    <!-- <title>Kigumo TVC — Empowering Youth Through Technical Excellence</title> -->
     <link rel="icon" href="assets/images/logo.jpeg" type="image/jpeg" />
     <link rel="stylesheet" href="assets/css/main.css" />
 
@@ -30,63 +31,14 @@
 <body>
 
     <!-- ══════════════════════════════════════════════════════════
-     HERO SLIDER
+     HERO SLIDER (Dynamic from Database)
 ══════════════════════════════════════════════════════════ -->
-    <section class="hero" aria-label="Hero Slider">
-
-        <!-- Slide 1 -->
-        <div class="slide active" style="background-image: url('assets/images/school.jpg');">
-            <div class="slide-overlay"></div>
-            <div class="slide-content">
-                <span class="slide-badge" data-i18n="hero-badge">TVETA Accredited College</span>
-                <h2 data-i18n="hero-tagline">Empowering Youth Through Technical Excellence</h2>
-                <p data-i18n="hero-sub">Join thousands of students building real careers at Kigumo TVC — Kirinyaga's
-                    premier TVET institution.</p>
-                <div class="slide-buttons">
-                    <a href="admissions.html" class="btn btn-yellow" data-i18n="hero-apply">Apply Now</a>
-                    <a href="courses.html" class="btn btn-outline" data-i18n="hero-explore">Explore Courses</a>
-                </div>
-            </div>
-        </div>
-
-        <!-- Slide 2 -->
-        <div class="slide"
-            style="background-image: url('assets/images/ict.jpeg'); background-size: cover; background-position: center;">
-            <div class="slide-overlay"></div>
-            <div class="slide-content">
-                <span class="slide-badge">May 2026 Intake — Now Ongoing</span>
-                <h2>Applications Are Open for All Programmes</h2>
-                <p>KNEC, KASNEB and CDACC accredited programmes. Walk in or apply via KUCCPS.</p>
-                <div class="slide-buttons">
-                    <a href="admissions.html" class="btn btn-yellow">Apply via KUCCPS</a>
-                    <a href="downloads.html" class="btn btn-outline">Download Application Form</a>
-                </div>
-            </div>
-        </div>
-
-        <!-- Slide 3 -->
-        <div class="slide" style="background-image: url('assets/images/staff.jpg');">
-            <div class="slide-overlay"></div>
-            <div class="slide-content">
-                <span class="slide-badge">CBET Programmes Available</span>
-                <h2>Competency-Based Training for the Modern Workplace</h2>
-                <p>Our CBET programmes are designed with industry to ensure you graduate job-ready.</p>
-                <div class="slide-buttons">
-                    <a href="courses.html" class="btn btn-yellow">View CBET Courses</a>
-                    <a href="contact.html" class="btn btn-outline">Talk to Us</a>
-                </div>
-            </div>
-        </div>
-
-        <!-- Controls -->
+    <section class="hero" id="heroSlider" aria-label="Hero Slider" style="display:none;">
         <button class="slider-arrow prev" aria-label="Previous">&#8249;</button>
         <button class="slider-arrow next" aria-label="Next">&#8250;</button>
-        <div class="slider-dots">
-            <button class="dot active" aria-label="Slide 1"></button>
-            <button class="dot" aria-label="Slide 2"></button>
-            <button class="dot" aria-label="Slide 3"></button>
-        </div>
+        <div class="slider-dots" id="sliderDots"></div>
     </section>
+
 
     <!-- ══════════════════════════════════════════════════════════
      QUICK LINKS BAR
@@ -118,23 +70,50 @@
     <section class="stats" aria-label="College Statistics">
         <div class="container">
             <div class="stat-item">
-                <h3 class="stat-number" data-target="1200" data-suffix="+">0</h3>
+                <h3 class="stat-number" id="statStudents" data-target="0" data-suffix="+">0</h3>
                 <p>Students Enrolled</p>
             </div>
             <div class="stat-item">
-                <h3 class="stat-number" data-target="20" data-suffix="+">0</h3>
+                <h3 class="stat-number" id="statCourses" data-target="0" data-suffix="+">0</h3>
                 <p>Courses Offered</p>
             </div>
             <div class="stat-item">
-                <h3 class="stat-number" data-target="15" data-suffix="+">0</h3>
+                <h3 class="stat-number" id="statYears" data-target="0" data-suffix="+">0</h3>
                 <p>Years of Excellence</p>
             </div>
             <div class="stat-item">
-                <h3 class="stat-number" data-target="95" data-suffix="%">0</h3>
+                <h3 class="stat-number" id="statEmployment" data-target="90" data-suffix="%">0</h3>
                 <p>Graduate Employment Rate</p>
             </div>
         </div>
     </section>
+
+    <!-- ══════════════════════════════════════════════════════════
+     PRINCIPAL'S MESSAGE (Unified Card)
+══════════════════════════════════════════════════════════ -->
+    <section class="principal-section" id="principalMessageSection" style="display:none;">
+        <div class="principal-card">
+            <!-- Gold accent bar -->
+            <div class="principal-accent"></div>
+
+            <div class="principal-inner">
+                <!-- Left: Text content -->
+                <div class="principal-text">
+                    <h2 class="principal-heading">A Message from the Chief Principal</h2>
+                    <div class="principal-body" id="principalMessageBody">
+                        <p>Loading...</p>
+                    </div>
+                    <div class="principal-signature" id="principalSignature"></div>
+                </div>
+
+                <!-- Right: Photo -->
+                <div class="principal-photo-col">
+                    <img id="principalPhoto" src="" alt="Chief Principal" class="principal-photo" />
+                </div>
+            </div>
+        </div>
+    </section>
+
 
     <!-- ══════════════════════════════════════════════════════════
      WHY CHOOSE US
@@ -188,7 +167,7 @@
     </section>
 
     <!-- ══════════════════════════════════════════════════════════
-     DEPARTMENTS PREVIEW
+     DEPARTMENTS PREVIEW (Dynamic)
 ══════════════════════════════════════════════════════════ -->
     <section class="courses-preview section-padding">
         <div class="container text-center">
@@ -196,65 +175,28 @@
             <div class="section-title-bar"></div>
             <p class="section-subtitle" data-i18n="courses-sub">Explore our TVETA-accredited programmes</p>
 
-            <div class="courses-grid">
+            <div class="courses-grid" id="departmentsGrid">
+                <!-- Dynamically loaded from API -->
                 <div class="course-card">
                     <div class="course-card-header">
                         <div class="dept-icon">💻</div>
-                        <h3>Information Communication Technology</h3>
+                        <h3>Loading...</h3>
                     </div>
                     <div class="course-card-body">
-                        <p>Train in networking, software development, computer support and ICT systems management.</p>
-                        <span class="course-tag">KNEC</span>
-                        <span class="course-tag">CBET</span>
-                        <span class="course-tag">2–3 Years</span>
+                        <p>Fetching departments...</p>
                     </div>
-                    <div class="course-card-footer">
-                        <a href="courses.html">View Courses &rarr;</a>
-                    </div>
-                </div>
-
-                <div class="course-card">
-                    <div class="course-card-header">
-                        <div class="dept-icon">📊</div>
-                        <h3>Business Studies</h3>
-                    </div>
-                    <div class="course-card-body">
-                        <p>Programmes in accounting, business administration, secretarial studies and supply chain
-                            management.</p>
-                        <span class="course-tag">KNEC</span>
-                        <span class="course-tag">KASNEB</span>
-                        <span class="course-tag">2–3 Years</span>
-                    </div>
-                    <div class="course-card-footer">
-                        <a href="courses.html">View Courses &rarr;</a>
-                    </div>
-                </div>
-
-                <div class="course-card">
-                    <div class="course-card-header">
-                        <div class="dept-icon">⚙️</div>
-                        <h3>Engineering</h3>
-                    </div>
-                    <div class="course-card-body">
-                        <p>Hands-on technical training in electrical, mechanical, civil and automotive engineering
-                            trades.</p>
-                        <span class="course-tag">KNEC</span>
-                        <span class="course-tag">CDACC</span>
-                        <span class="course-tag">2–3 Years</span>
-                    </div>
-                    <div class="course-card-footer">
-                        <a href="courses.html">View Courses &rarr;</a>
-                    </div>
+                    <div class="course-card-footer"><a href="courses.html">View Courses &rarr;</a></div>
                 </div>
             </div>
 
             <br />
-            <a href="courses.html" class="btn btn-green">View All Departments &rarr;</a>
+            <a href="departments.html" class="btn btn-green">View All Departments &rarr;</a>
         </div>
     </section>
 
+
     <!-- ══════════════════════════════════════════════════════════
-     NEWS SECTION
+     NEWS SECTION (Dynamic)
 ══════════════════════════════════════════════════════════ -->
     <section class="news-section section-padding">
         <div class="container text-center">
@@ -262,49 +204,13 @@
             <div class="section-title-bar"></div>
             <p class="section-subtitle" data-i18n="news-sub">Stay updated with happenings at Kigumo TVC</p>
 
-            <div class="news-grid">
+            <div class="news-grid" id="newsGrid">
+                <!-- Dynamically loaded from API -->
                 <div class="news-card">
-                    <div class="news-img">🎓</div>
+                    <div class="news-img">📰</div>
                     <div class="news-body">
-                        <div class="news-meta">
-                            <span class="news-category">Graduation</span>
-                            <span>April 2025</span>
-                        </div>
-                        <h3>Class of 2024 Graduation Ceremony Held Successfully</h3>
-                        <p>Over 300 graduates received their certificates at the annual graduation ceremony held at the
-                            college grounds.</p>
-                    </div>
-                    <div class="news-card-footer">
-                        <a href="news.html">Read More &rarr;</a>
-                    </div>
-                </div>
-
-                <div class="news-card">
-                    <div class="news-img">🤝</div>
-                    <div class="news-body">
-                        <div class="news-meta">
-                            <span class="news-category">Partnership</span>
-                            <span>March 2025</span>
-                        </div>
-                        <h3>Kigumo TVC Signs MOU with Leading Industry Partners</h3>
-                        <p>The college has signed memoranda of understanding with three leading companies for student
-                            industrial attachment.</p>
-                    </div>
-                    <div class="news-card-footer">
-                        <a href="news.html">Read More &rarr;</a>
-                    </div>
-                </div>
-
-                <div class="news-card">
-                    <div class="news-img">📅</div>
-                    <div class="news-body">
-                        <div class="news-meta">
-                            <span class="news-category">Intake</span>
-                            <span>January 2025</span>
-                        </div>
-                        <h3>January 2025 Intake — Applications Now Open</h3>
-                        <p>Applications are now open for all programmes. Walk in to our admissions office or apply
-                            through KUCCPS.</p>
+                        <h3>Loading latest news...</h3>
+                        <p>Fetching articles from the college newsroom.</p>
                     </div>
                     <div class="news-card-footer">
                         <a href="news.html">Read More &rarr;</a>
@@ -316,6 +222,7 @@
             <a href="news.html" class="btn btn-green">View All News &rarr;</a>
         </div>
     </section>
+
 
     <!-- ══════════════════════════════════════════════════════════
      CTA BANNER
@@ -332,87 +239,126 @@
     </section>
 
     <!-- ══════════════════════════════════════════════════════════
+     PARTNERS SLIDER
+══════════════════════════════════════════════════════════ -->
+    <section class="partners-section" id="partnersSection" style="display:none;">
+        <div class="container">
+            <h3 class="partners-title">Our Partners &amp; Accreditors</h3>
+            <div class="partners-slider-wrapper">
+                <div class="partners-track" id="partnersTrack"></div>
+            </div>
+        </div>
+    </section>
+
+   <!-- ══════════════════════════════════════════════════════════
      FOOTER
 ══════════════════════════════════════════════════════════ -->
-    <footer class="footer">
-        <div class="container">
-            <div class="footer-grid">
+<footer class="footer">
+  <div class="footer-wave"></div>
+  <div class="container">
+    <div class="footer-grid">
 
-                <div class="footer-brand">
-                    <img src="assets/images/logo.jpeg" alt="Kigumo TVC Logo" />
-                    <h3>Kigumo Technical &amp; Vocational College</h3>
-                    <p>A TVETA-accredited institution committed to empowering youth through quality technical and
-                        vocational education in Kirinyaga County, Kenya.</p>
-                    <br />
-                    <div class="social-links">
-                        <a href="#" aria-label="Facebook">f</a>
-                        <a href="#" aria-label="Twitter">t</a>
-                        <a href="#" aria-label="YouTube">▶</a>
-                        <a href="#" aria-label="WhatsApp">w</a>
-                    </div>
-                </div>
-
-                <div>
-                    <h4>Quick Links</h4>
-                    <ul class="footer-links">
-                        <li><a href="index.html">Home</a></li>
-                        <li><a href="about.html">About Us</a></li>
-                        <li><a href="courses.html">Courses</a></li>
-                        <li><a href="admissions.html">Admissions</a></li>
-                        <li><a href="downloads.html">Downloads</a></li>
-                        <li><a href="news.html">News</a></li>
-                        <li><a href="contact.html">Contact</a></li>
-                    </ul>
-                </div>
-
-                <div>
-                    <h4>Portals</h4>
-                    <ul class="footer-links">
-                        <li><a href="/portal/login.html">Student Portal</a></li>
-                        <li><a href="/portal/login.html">Lecturer Portal</a></li>
-                        <li><a href="/portal/login.html">Admin Panel</a></li>
-                    </ul>
-                    <br />
-                    <h4>Legal</h4>
-                    <ul class="footer-links">
-                        <li><a href="privacy.html">Privacy Policy</a></li>
-                        <li><a href="terms.html">Terms &amp; Conditions</a></li>
-                    </ul>
-                </div>
-
-                <div>
-                    <h4>Contact Us</h4>
-                    <ul class="footer-contact">
-                        <li>
-                            <span class="fc-icon">📍</span>
-                            <span>Kigumo Town, Kirinyaga County, Kenya</span>
-                        </li>
-                        <li>
-                            <span class="fc-icon">📞</span>
-                            <span>+254 700 000 000</span>
-                        </li>
-                        <li>
-                            <span class="fc-icon">✉️</span>
-                            <span>info@kigumotvc.ac.ke</span>
-                        </li>
-                        <li>
-                            <span class="fc-icon">🕐</span>
-                            <span>Mon – Fri: 8:00 AM – 5:00 PM</span>
-                        </li>
-                    </ul>
-                </div>
-
-            </div>
+      <!-- Brand Column -->
+      <div class="footer-brand">
+        <div class="footer-logo">
+          <img src="assets/images/logo.jpeg" alt="Kigumo TVC Logo" />
         </div>
-
-        <div class="footer-bottom">
-            <div class="container"
-                style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
-                <span>&copy; 2025 Kigumo Technical &amp; Vocational College. All rights reserved.</span>
-                <span>Developed by Francis Kienji &mdash; <a href="#">Kigumo TVC</a></span>
-            </div>
+        <h3>Kigumo Technical &amp; Vocational College</h3>
+        <p class="footer-tagline">Skills for Self-Reliance</p>
+        <p class="footer-desc">A TVETA-accredited public TVET institution committed to empowering youth through quality technical and vocational education in Kirinyaga County, Kenya.</p>
+        
+        <div class="footer-social">
+          <a href="#" aria-label="Facebook" title="Facebook">
+            <svg viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+          </a>
+          <a href="#" aria-label="Twitter" title="Twitter">
+            <svg viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z"/></svg>
+          </a>
+          <a href="#" aria-label="YouTube" title="YouTube">
+            <svg viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M23.498 6.186a3.016 3.016 0 00-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 00.502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 002.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 002.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+          </a>
+          <a href="#" aria-label="WhatsApp" title="WhatsApp">
+            <svg viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+          </a>
         </div>
-    </footer>
+      </div>
+
+      <!-- Quick Links -->
+      <div class="footer-col">
+        <h4>Quick Links</h4>
+        <ul class="footer-links">
+          <li><a href="index.html">🏠 Home</a></li>
+          <li><a href="about.html">ℹ️ About Us</a></li>
+          <li><a href="courses.html">📚 Courses</a></li>
+          <li><a href="admissions.html">📝 Admissions</a></li>
+          <li><a href="departments.html">🏛️ Departments</a></li>
+          <li><a href="news.html">📰 News & Events</a></li>
+          <li><a href="downloads.html">📥 Downloads</a></li>
+          <li><a href="contact.html">📞 Contact Us</a></li>
+        </ul>
+      </div>
+
+      <!-- Portals & Resources -->
+      <div class="footer-col">
+        <h4>Portals</h4>
+        <ul class="footer-links">
+          <li><a href="/portal/login.html">🎓 Student Portal</a></li>
+          <li><a href="/portal/login.html">👨‍🏫 Lecturer Portal</a></li>
+          <li><a href="/portal/login.html">⚙️ Admin Panel</a></li>
+        </ul>
+        
+        <h4 style="margin-top:1.5rem;">Resources</h4>
+        <ul class="footer-links">
+          <li><a href="downloads.html">📄 Application Forms</a></li>
+          <li><a href="downloads.html">📋 Academic Calendar</a></li>
+          <li><a href="about.html#charter">📜 Service Charter</a></li>
+          <li><a href="#">🔗 KUCCPS Portal</a></li>
+          <li><a href="#">🔗 TVETA Website</a></li>
+        </ul>
+      </div>
+
+      <!-- Contact Info -->
+      <div class="footer-col">
+        <h4>Contact Us</h4>
+        <ul class="footer-contact">
+          <li>
+            <span class="fc-icon">
+              <svg viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+            </span>
+            <span>Kigumo Town, Kirinyaga County<br>P.O. Box 123-456, Kutus</span>
+          </li>
+          <li>
+            <span class="fc-icon">
+              <svg viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/></svg>
+            </span>
+            <span>+254 700 000 000</span>
+          </li>
+          <li>
+            <span class="fc-icon">
+              <svg viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+            </span>
+            <span>info@kigumotvc.ac.ke</span>
+          </li>
+          <li>
+            <span class="fc-icon">
+              <svg viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/></svg>
+            </span>
+            <span>Mon – Fri: 8:00 AM – 5:00 PM<br>Sat: 9:00 AM – 12:00 PM</span>
+          </li>
+        </ul>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Bottom Bar -->
+  <div class="footer-bottom">
+    <div class="container">
+      <span>&copy; 2026 Kigumo Technical &amp; Vocational College. All rights reserved.</span>
+      <span>Developed by <strong>Francis Kienji</strong> — Kigumo TVC</span>
+    </div>
+  </div>
+</footer>
 
     <script src="assets/js/main.js"></script>
     <!-- Load shared navbar -->
