@@ -1,10 +1,5 @@
 /**
  * Database Connection Pool
- * 
- * Creates and exports a MySQL2 promise-based connection pool.
- * All queries should use this pool via db.execute().
- * 
- * @module db
  */
 
 const mysql = require('mysql2/promise');
@@ -14,54 +9,64 @@ const { wrapPoolWithLogging } = require('./utils/dbLogger');
 const logger = require('./utils/logger');
 
 // ── Pool Configuration ─────────────────────────────────────
-
-// Read CA certificate if SSL is enabled
-let sslConfig = null;
-if (process.env.DB_SSL === 'true') {
-  const caPath = process.env.DB_SSL_CA_PATH;
-  if (!caPath) {
-    logger.warn('DB_SSL is enabled but DB_SSL_CA_PATH is not set. SSL will be enabled without CA verification.');
-    sslConfig = { rejectUnauthorized: false };
-  } else {
-    try {
-      const caCertPath = path.resolve(caPath);
-      if (!fs.existsSync(caCertPath)) {
-        logger.error(`❌ SSL CA certificate not found at: ${caCertPath}`);
-        throw new Error(`CA certificate not found at ${caCertPath}`);
-      }
-      const caCert = fs.readFileSync(caCertPath, 'utf8');
-      sslConfig = { ca: caCert, rejectUnauthorized: true };
-      logger.info('✅ SSL/TLS configured with CA certificate for TiDB Cloud');
-    } catch (err) {
-      logger.error(`❌ Failed to configure SSL: ${err.message}`);
-      throw err;
-    }
-  }
-}
-
 const poolConfig = {
   host: process.env.DB_HOST || 'localhost',
   user: process.env.DB_USER || 'root',
   password: process.env.DB_PASSWORD || '',
   database: process.env.DB_NAME || 'kigumo_tvc',
-  port: parseInt(process.env.DB_PORT) || 4000,          // TiDB uses 4000
+  port: parseInt(process.env.DB_PORT) || 4000,
   waitForConnections: true,
-  connectionLimit: 5,                                   // TiDB Serverless free tier sweet spot
+  connectionLimit: 10,
   queueLimit: 0,
   enableKeepAlive: true,
-  keepAliveInitialDelay: 10000,                         // 10 seconds
-  connectTimeout: 15000,                                // 15 seconds                            // 20 seconds to get a connection                                       // 60 seconds query timeout
-  ssl: sslConfig
+  keepAliveInitialDelay: 10000,
+  connectTimeout: 15000,
 };
 
+// ── SSL/TLS Configuration for TiDB Cloud ───────────────────
+if (process.env.DB_SSL === 'true') {
+  let sslConfig = null;
+
+  // 1. Try to load from CA file path
+  const caPath = process.env.DB_SSL_CA_PATH;
+  if (caPath) {
+    try {
+      const caCertPath = path.resolve(caPath);
+      if (fs.existsSync(caCertPath)) {
+        const caCert = fs.readFileSync(caCertPath, 'utf8');
+        sslConfig = { ca: caCert, rejectUnauthorized: true };
+        logger.info('✅ SSL/TLS configured from CA file');
+      }
+    } catch (err) {
+      logger.warn('Could not load CA file, falling back to env variable');
+    }
+  }
+
+  // 2. Fallback: Base64‑encoded CA certificate from environment variable
+  if (!sslConfig && process.env.DB_SSL_CA_BASE64) {
+    try {
+      const caCert = Buffer.from(process.env.DB_SSL_CA_BASE64, 'base64').toString('utf8');
+      sslConfig = { ca: caCert, rejectUnauthorized: true };
+      logger.info('✅ SSL/TLS configured from Base64 env variable');
+    } catch (err) {
+      logger.error('Failed to decode Base64 CA certificate');
+    }
+  }
+
+  // 3. Last resort: insecure (not recommended)
+  if (!sslConfig) {
+    logger.warn('⚠️ No CA certificate available – SSL will be less secure');
+    sslConfig = { rejectUnauthorized: false };
+  }
+
+  poolConfig.ssl = sslConfig;
+}
+
 // ── Create Pool ────────────────────────────────────────────
-
 let pool;
-
 try {
   pool = mysql.createPool(poolConfig);
 
-  // Test connection on startup
   pool.getConnection()
     .then(connection => {
       logger.info('✅ Database connected successfully', {
@@ -77,7 +82,6 @@ try {
         host: poolConfig.host,
         database: poolConfig.database
       });
-      // Don't crash - let the application start and retry
     });
 
 } catch (err) {
@@ -85,11 +89,10 @@ try {
     error: err.message,
     code: err.code
   });
-  throw err; // This one should crash - configuration error
+  throw err;
 }
 
 // ── Warm up frequently used tables ────────────────────────
-
 async function warmupTables() {
   const tables = [
     'users', 'courses', 'departments', 'fees', 'intake_dates',
@@ -102,24 +105,16 @@ async function warmupTables() {
   for (const table of tables) {
     try {
       await pool.execute(`SELECT COUNT(*) FROM ${table}`);
-    } catch (e) {
-      // ignore missing tables or any errors
-    }
+    } catch (e) { /* ignore */ }
   }
   logger.info('✅ Database tables warmed up');
 }
-
-// Run warmup after pool creation
 warmupTables().catch(() => {});
 
-// ── Wrap pool with query logging ──────────────────────────
-
-// Only log queries in development or when LOG_LEVEL=DEBUG
+// ── Query logging (development only) ───────────────────────
 if (process.env.NODE_ENV !== 'production' || process.env.LOG_LEVEL === 'DEBUG') {
   pool = wrapPoolWithLogging(pool);
   logger.info('Database query logging enabled');
 }
-
-// ── Export ─────────────────────────────────────────────────
 
 module.exports = pool;

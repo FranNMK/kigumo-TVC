@@ -1,11 +1,43 @@
+# ── Dependencies ──────────────────────────────────────────
 node_modules/
-.env
-uploads/
 
-# Logs
+# ── Environment & Secrets ─────────────────────────────────
+.env
+.env.local
+.env.*.local
+
+# ── Logs ──────────────────────────────────────────────────
 logs/
 *.log
 
-# SSL Certificates (never commit these)
-server/certs/*.pem
-server/certs/tidb-ca.pem
+# ── Uploads (user files go to Cloudinary) ─────────────────
+uploads/
+
+# ── Certificates (now stored as env variable) ─────────────
+server/certs/
+
+# ── Temporary Scripts (testing/cleanup) ───────────────────
+test-cloudinary.js
+clean-cloudinary.js
+server/test-login.js
+*.b64
+
+# ── Operating System ──────────────────────────────────────
+.DS_Store
+Thumbs.db
+
+# ── IDE / Editor ──────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# ── Build / Dist (if any) ─────────────────────────────────
+dist/
+build/
+
+# ── Misc ──────────────────────────────────────────────────
+*.pid
+*.seed
+*.gz
