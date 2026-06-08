@@ -28,7 +28,7 @@
       <div class="top-bar">
         <div class="container">
           <div class="top-bar-left">
-            <span>📞 +254 700 000 000</span>
+            <span>📞  +254 769-394 273</span>
             <span>✉️ <a href="mailto:info@kigumotvc.ac.ke">info@kigumotvc.ac.ke</a></span>
           </div>
           <div class="top-bar-right">
@@ -143,23 +143,44 @@
     const overlay = document.getElementById("nav-overlay");
     const navLinks = document.getElementById("nav-links");
 
-    if (hamburger && navLinks) {
-      hamburger.addEventListener("click", () => {
-        navLinks.classList.add("open");
-        overlay.classList.add("active");
-      });
+    if (!hamburger || !navLinks) return;
+
+    function openNav() {
+      navLinks.classList.add("open");
+      overlay.classList.add("open");
+      hamburger.classList.add("open"); // ← triggers X animation
+      document.body.style.overflow = "hidden";
     }
-    if (closeBtn && navLinks) {
-      closeBtn.addEventListener("click", () => {
-        navLinks.classList.remove("open");
-        overlay.classList.remove("active");
-      });
+
+    function closeNav() {
+      navLinks.classList.remove("open");
+      overlay.classList.remove("open");
+      hamburger.classList.remove("open"); // ← removes X animation
+      document.body.style.overflow = "";
     }
-    if (overlay && navLinks) {
-      overlay.addEventListener("click", () => {
-        navLinks.classList.remove("open");
-        overlay.classList.remove("active");
-      });
+
+    // Toggle on hamburger click (open/close)
+    hamburger.addEventListener("click", () => {
+      if (navLinks.classList.contains("open")) {
+        closeNav();
+      } else {
+        openNav();
+      }
+    });
+
+    // Close when clicking the dark overlay
+    if (overlay) {
+      overlay.addEventListener("click", closeNav);
+    }
+
+    // Close when clicking any nav link
+    navLinks.querySelectorAll("a").forEach((link) => {
+      link.addEventListener("click", closeNav);
+    });
+
+    // Close when clicking the X button
+    if (closeBtn) {
+      closeBtn.addEventListener("click", closeNav);
     }
   }
 

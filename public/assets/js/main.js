@@ -2,6 +2,124 @@
    KIGUMO TVC — Main JavaScript
    ============================================================ */
 
+// ── Loading Screen (Premium) ─────────────────────────────────
+(function () {
+  const loadingScreen = document.getElementById("loadingScreen");
+  const loadingBar = document.getElementById("loadingBar");
+  const loadingPercent = document.getElementById("loadingPercent");
+  const loadingStatus = document.getElementById("loadingStatus");
+
+  if (!loadingScreen) return;
+
+  // Skip if already loaded this session
+  if (sessionStorage.getItem("siteLoaded")) {
+    loadingScreen.style.display = "none";
+    return;
+  }
+
+  let progress = 0;
+
+  // Status messages that cycle during loading
+  const statusMessages = [
+    "Establishing connection...",
+    "Loading college data...",
+    "Preparing departments...",
+    "Fetching latest news...",
+    "Setting up your experience...",
+    "Almost ready...",
+  ];
+  let statusIndex = 0;
+
+  function updateProgress(increment) {
+    progress = Math.min(progress + increment, 95);
+    loadingBar.style.width = progress + "%";
+    loadingPercent.textContent = Math.floor(progress) + "%";
+  }
+
+  // Cycle through status messages
+  const statusInterval = setInterval(() => {
+    statusIndex = (statusIndex + 1) % statusMessages.length;
+    loadingStatus.textContent = statusMessages[statusIndex];
+  }, 2500);
+
+  // Simulate realistic loading progress
+  const progressSteps = [
+    { at: 500, to: 15 },
+    { at: 1500, to: 35 },
+    { at: 3000, to: 55 },
+    { at: 5000, to: 75 },
+    { at: 8000, to: 90 },
+  ];
+
+  progressSteps.forEach((step) => {
+    setTimeout(() => {
+      if (progress < step.to) updateProgress(step.to - progress);
+    }, step.at);
+  });
+
+  // When page fully loads
+  window.addEventListener("load", () => {
+    clearInterval(statusInterval);
+    updateProgress(100 - progress);
+    loadingStatus.textContent = "Welcome! 🎉";
+    loadingPercent.textContent = "100%";
+    loadingBar.style.width = "100%";
+
+    setTimeout(() => {
+      loadingScreen.style.opacity = "0";
+      setTimeout(() => {
+        loadingScreen.style.display = "none";
+        sessionStorage.setItem("siteLoaded", "true");
+      }, 600);
+    }, 800);
+  });
+
+  // Safety fallback: hide after 18 seconds max
+  setTimeout(() => {
+    if (loadingScreen.style.display !== "none") {
+      clearInterval(statusInterval);
+      loadingStatus.textContent = "Welcome! 🎉";
+      loadingScreen.style.opacity = "0";
+      setTimeout(() => {
+        loadingScreen.style.display = "none";
+        sessionStorage.setItem("siteLoaded", "true");
+      }, 500);
+    }
+  }, 18000);
+
+  // Create floating particles
+  const particlesContainer = document.getElementById("loadingParticles");
+  if (particlesContainer) {
+    for (let i = 0; i < 20; i++) {
+      const particle = document.createElement("div");
+      particle.style.cssText = `
+        position:absolute;
+        width:${Math.random() * 4 + 2}px;
+        height:${Math.random() * 4 + 2}px;
+        background:rgba(245,197,24,${Math.random() * 0.4 + 0.1});
+        border-radius:50%;
+        top:${Math.random() * 100}%;
+        left:${Math.random() * 100}%;
+        animation:floatParticle ${Math.random() * 6 + 4}s linear infinite;
+        animation-delay:${Math.random() * 5}s;
+      `;
+      particlesContainer.appendChild(particle);
+    }
+
+    // Add particle animation style
+    const style = document.createElement("style");
+    style.textContent = `
+      @keyframes floatParticle {
+        0% { transform: translateY(0) translateX(0); opacity: 0; }
+        20% { opacity: 1; }
+        80% { opacity: 1; }
+        100% { transform: translateY(-100vh) translateX(${Math.random() * 100 - 50}px); opacity: 0; }
+      }
+    `;
+    document.head.appendChild(style);
+  }
+})();
+
 // ── Dynamic Slider ───────────────────────────────────────────
 (async function () {
   try {
