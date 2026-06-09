@@ -14,6 +14,55 @@ const db = require("../db");
 const logger = require("../utils/logger");
 
 /**
+ * GET /api/v1/departments/with-courses
+ * Returns all departments with their courses in a single query
+ */
+router.get("/with-courses", async (req, res) => {
+  try {
+    // Get all departments with HOD info
+    const [departments] = await db.execute(`
+  SELECT d.id, d.name, d.type, d.description, d.image_path,
+         u.full_name AS hod_name, u.email AS hod_email, u.photo_path AS hod_photo
+  FROM departments d
+  LEFT JOIN hod_assignments ha ON d.id = ha.department_id
+  LEFT JOIN users u ON ha.lecturer_id = u.id AND u.is_active = TRUE
+  ORDER BY d.type ASC, d.name ASC
+`);
+
+    // Get all courses for all departments
+    const [allCourses] = await db.execute(`
+      SELECT c.id, c.name, c.duration_years, c.examining_body, c.cbet_status, 
+             c.entry_requirements, c.description, c.department_id
+      FROM courses c
+      WHERE c.is_active = TRUE
+      ORDER BY c.name ASC
+    `);
+
+    // Group courses by department_id
+    const coursesByDept = {};
+    allCourses.forEach((course) => {
+      if (!coursesByDept[course.department_id]) {
+        coursesByDept[course.department_id] = [];
+      }
+      coursesByDept[course.department_id].push(course);
+    });
+
+    // Attach courses to each department
+    const result = departments.map((dept) => ({
+      ...dept,
+      courses: coursesByDept[dept.id] || [],
+    }));
+
+    res.json({ success: true, data: result });
+  } catch (err) {
+    logger.error("Error fetching departments with courses", {
+      error: err.message,
+    });
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+});
+
+/**
  * GET /api/v1/departments
  *
  * Returns all active departments with optional type filtering.
@@ -217,56 +266,6 @@ router.get("/:id/courses", async (req, res) => {
       message: "Failed to fetch department courses.",
       code: "SERVER_ERROR",
     });
-  }
-});
-
-/**
- * GET /api/v1/departments/with-courses
- * Returns all departments with their courses in a single query
- */
-router.get("/with-courses", async (req, res) => {
-  try {
-    // Get all departments with HOD info
-    const [departments] = await db.execute(`
-      SELECT 
-        d.id, d.name, d.type, d.description,
-        u.full_name AS hod_name, u.email AS hod_email, u.photo_path AS hod_photo
-      FROM departments d
-      LEFT JOIN hod_assignments ha ON d.id = ha.department_id
-      LEFT JOIN users u ON ha.lecturer_id = u.id AND u.is_active = TRUE
-      ORDER BY d.type ASC, d.name ASC
-    `);
-
-    // Get all courses for all departments
-    const [allCourses] = await db.execute(`
-      SELECT c.id, c.name, c.duration_years, c.examining_body, c.cbet_status, 
-             c.entry_requirements, c.description, c.department_id
-      FROM courses c
-      WHERE c.is_active = TRUE
-      ORDER BY c.name ASC
-    `);
-
-    // Group courses by department_id
-    const coursesByDept = {};
-    allCourses.forEach((course) => {
-      if (!coursesByDept[course.department_id]) {
-        coursesByDept[course.department_id] = [];
-      }
-      coursesByDept[course.department_id].push(course);
-    });
-
-    // Attach courses to each department
-    const result = departments.map((dept) => ({
-      ...dept,
-      courses: coursesByDept[dept.id] || [],
-    }));
-
-    res.json({ success: true, data: result });
-  } catch (err) {
-    logger.error("Error fetching departments with courses", {
-      error: err.message,
-    });
-    res.status(500).json({ success: false, message: "Server error" });
   }
 });
 

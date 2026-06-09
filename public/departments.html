@@ -2,102 +2,159 @@
 <html lang="en">
 
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description"
-        content="Explore departments at Kigumo Technical and Vocational College - academic programmes, courses, and support services" />
-    <meta name="theme-color" content="#1a7a1a" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Academic and Non-Academic Departments at Kigumo Technical and Vocational College">
+    <meta name="theme-color" content="#1a7a1a">
     <title>Departments - Kigumo Technical and Vocational College</title>
-    <link rel="icon" type="image/jpeg" href="assets/images/logo.jpeg" />
-    <link rel="stylesheet" href="assets/css/main.css" />
+    <link rel="icon" type="image/jpeg" href="assets/images/logo.jpeg">
+    <link rel="stylesheet" href="assets/css/main.css">
 
     <script type="text/javascript">
         function googleTranslateElementInit() {
-            new google.translate.TranslateElement(
-                { pageLanguage: 'en', includedLanguages: 'sw', layout: google.translate.TranslateElement.InlineLayout.SIMPLE },
-                'google_translate_element'
-            );
+            new google.translate.TranslateElement({
+                pageLanguage: 'en', includedLanguages: 'sw',
+                layout: google.translate.TranslateElement.InlineLayout.SIMPLE
+            }, 'google_translate_element');
         }
     </script>
     <script src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
 
     <style>
         .dept-hero {
-            background: linear-gradient(135deg, #0a1f0a 0%, #1a7a1a 60%, #0d3d0d 100%);
+            background: linear-gradient(135deg, #1a1a2e, #1a7a1a);
             color: #fff;
-            padding: 0;
+            padding: 4rem 2rem 2.5rem;
+            text-align: center;
         }
 
-        .dept-hero-inner {
-            max-width: 1200px;
-            margin: 0 auto;
-            display: flex;
-            align-items: center;
-            gap: 2.5rem;
-            padding: 3rem 1.5rem;
-        }
-
-        .dept-hero-text {
-            flex: 3;
-        }
-
-        .dept-hero-text .dept-label {
-            font-size: 0.8rem;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            color: #f5c518;
+        .dept-hero h1 {
+            font-size: 2.5rem;
             margin-bottom: 0.5rem;
         }
 
-        .dept-hero-text h1 {
-            font-size: 2rem;
-            font-weight: 800;
+        .dept-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 1.5rem 3rem;
+        }
+
+        /* ── Department Hero (60/40) ── */
+        .dept-hero-section {
+            display: grid;
+            grid-template-columns: 1.5fr 1fr;
+            gap: 2.5rem;
+            align-items: center;
+            margin-bottom: 2.5rem;
+        }
+
+        .dept-hero-text h2 {
+            font-size: 1.8rem;
+            color: #1a7a1a;
             margin-bottom: 0.3rem;
         }
 
-        .dept-hero-text .dept-sub {
-            color: rgba(255, 255, 255, 0.8);
-            font-size: 1rem;
+        .dept-hero-label {
+            display: inline-block;
+            background: #f5c518;
+            color: #1a1a2e;
+            padding: 4px 14px;
+            border-radius: 20px;
+            font-size: 0.78rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
             margin-bottom: 1rem;
         }
 
-        .dept-hero-img {
-            flex: 2;
-            min-width: 250px;
+        .dept-hero-text p {
+            color: #555;
+            line-height: 1.8;
+            font-size: 1rem;
         }
 
-        .dept-hero-img .placeholder-img {
+        .dept-hero-img {
             width: 100%;
             aspect-ratio: 4/3;
-            background: rgba(255, 255, 255, 0.1);
             border-radius: 12px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+            background: #e0e0e0;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 5rem;
+            font-size: 4rem;
+            overflow: hidden;
         }
 
-        .dept-tabs {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 1.5rem 1.5rem 0;
+        .dept-hero-img img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 12px;
+        }
+
+        /* ── HOD Bar ── */
+        .hod-bar {
             display: flex;
-            gap: 0.3rem;
+            align-items: center;
+            gap: 1rem;
+            background: #f0f7f0;
+            border-radius: 10px;
+            padding: 1rem 1.5rem;
+            margin-bottom: 2rem;
+            border-left: 4px solid #1a7a1a;
+        }
+
+        .hod-photo {
+            width: 55px;
+            height: 55px;
+            border-radius: 50%;
+            background: #e0e0e0;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+
+        .hod-photo img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .hod-info h4 {
+            color: #1a7a1a;
+            margin: 0;
+            font-size: 0.95rem;
+        }
+
+        .hod-info span {
+            color: #888;
+            font-size: 0.82rem;
+        }
+
+        /* ── Tabs ── */
+        .dept-tabs {
+            display: flex;
+            gap: 0;
             flex-wrap: wrap;
-            border-bottom: 1px solid #e0e0e0;
-            overflow-x: auto;
+            border-bottom: 2px solid #e0e0e0;
+            margin-bottom: 2rem;
+            position: sticky;
+            top: 60px;
+            background: #fff;
+            z-index: 100;
+            padding-top: 1.5rem;
         }
 
         .dept-tab {
-            padding: 0.7rem 1.5rem;
-            border: none;
-            background: transparent;
-            cursor: pointer;
+            padding: 0.9rem 1.4rem;
             font-size: 0.9rem;
             font-weight: 600;
+            cursor: pointer;
+            border: none;
+            background: none;
             color: #666;
-            border-bottom: 3px solid transparent;
             transition: all 0.3s;
+            border-bottom: 3px solid transparent;
             white-space: nowrap;
         }
 
@@ -107,23 +164,10 @@
 
         .dept-tab.active {
             color: #1a7a1a;
-            border-bottom-color: #1a7a1a;
+            border-bottom-color: #f5c518;
         }
 
-        .dept-content {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 2rem 1.5rem;
-        }
-
-        .tab-panel {
-            display: none;
-        }
-
-        .tab-panel.active {
-            display: block;
-        }
-
+        /* ── Overview Cards ── */
         .overview-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -134,9 +178,7 @@
             background: #fff;
             border-radius: 12px;
             padding: 1.8rem;
-            text-align: center;
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-            border-top: 4px solid #1a7a1a;
         }
 
         .overview-card .card-icon {
@@ -153,9 +195,10 @@
         .overview-card p {
             color: #555;
             font-size: 0.9rem;
-            line-height: 1.7;
+            line-height: 1.6;
         }
 
+        /* ── Course Grid ── */
         .course-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -165,133 +208,175 @@
         .course-card {
             background: #fff;
             border-radius: 10px;
-            padding: 1.3rem;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-            display: flex;
-            align-items: center;
-            gap: 1rem;
+            padding: 1.5rem;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
             transition: transform 0.2s;
+            border-top: 4px solid #1a7a1a;
+            position: relative;
         }
 
         .course-card:hover {
-            transform: translateY(-2px);
+            transform: translateY(-3px);
         }
 
-        .course-card-icon {
-            width: 50px;
-            height: 50px;
-            border-radius: 10px;
-            background: #e8f5e8;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.5rem;
-            flex-shrink: 0;
+        .course-card .exam-badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 15px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            margin-bottom: 0.8rem;
         }
 
-        .course-card-info h4 {
+        .exam-KNEC {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .exam-KASNEB {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .exam-CDACC {
+            background: #cce5ff;
+            color: #004085;
+        }
+
+        .course-card h4 {
             color: #1a1a2e;
-            font-size: 0.95rem;
-            margin-bottom: 0.2rem;
+            font-size: 1.05rem;
+            margin-bottom: 0.3rem;
         }
 
-        .course-card-info .meta {
-            font-size: 0.78rem;
+        .course-card .level {
             color: #888;
-            display: flex;
-            gap: 0.8rem;
-            align-items: center;
+            font-size: 0.8rem;
+            margin-bottom: 0.8rem;
         }
 
-        .course-card-info .badge-sm {
-            background: #e8f5e8;
+        .course-card .modules {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
             color: #1a7a1a;
-            padding: 2px 8px;
-            border-radius: 10px;
-            font-size: 0.7rem;
+            font-size: 0.85rem;
             font-weight: 600;
+        }
+
+        /* ── Non-Academic ── */
+        .non-acad-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.2rem;
+        }
+
+        .non-acad-card {
+            background: #fff;
+            border-radius: 10px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            border-top: 4px solid #f5c518;
+        }
+
+        .non-acad-card h4 {
+            color: #1a7a1a;
+            margin-bottom: 0.5rem;
+        }
+
+        .section-title {
+            color: #1a7a1a;
+            font-size: 1.5rem;
+            margin: 2.5rem 0 1.2rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 3px solid #f5c518;
+        }
+
+        .subtab-content {
+            display: none;
+        }
+
+        .subtab-content.active {
+            display: block;
         }
 
         @media (max-width: 992px) {
 
+            .overview-grid,
             .course-grid,
-            .overview-grid {
+            .non-acad-grid {
                 grid-template-columns: repeat(2, 1fr);
             }
 
-            .dept-hero-inner {
-                flex-direction: column;
+            .dept-hero-section {
+                grid-template-columns: 1fr;
+            }
+
+            .dept-hero-img {
+                aspect-ratio: 16/9;
             }
         }
 
         @media (max-width: 600px) {
 
+            .overview-grid,
             .course-grid,
-            .overview-grid {
+            .non-acad-grid {
                 grid-template-columns: 1fr;
             }
 
-            .dept-hero-text h1 {
-                font-size: 1.5rem;
+            .dept-tabs {
+                overflow-x: auto;
+                flex-wrap: nowrap;
             }
 
             .dept-tab {
-                padding: 0.5rem 1rem;
                 font-size: 0.8rem;
+                padding: 0.7rem 1rem;
+            }
+
+            .dept-hero h1 {
+                font-size: 1.6rem;
             }
         }
     </style>
 </head>
 
 <body>
+    <div id="google_translate_element" style="position:fixed;top:10px;right:10px;z-index:9999;"></div>
+    <header id="mainNavbar"></header>
 
-    <!-- HERO SECTION (top of page) -->
-    <section class="dept-hero" id="deptHero">
-        <div class="dept-hero-inner">
-            <!-- LEFT: text content -->
-            <div class="dept-hero-text">
-                <div class="dept-label" id="deptLabel">Department</div>
-                <h1 id="deptName">Loading...</h1>
-                <p class="dept-sub" id="deptSub">Loading department information...</p>
-            </div>
-            <!-- RIGHT: department image -->
-            <div class="dept-hero-img">
-                <div class="placeholder-img">
-                    <img id="deptImage" src="" alt=""
-                        style="width:100%;height:100%;object-fit:cover;border-radius:12px;display:none;" />
-                    <span id="deptEmoji" style="font-size:5rem;">🏛️</span>
-                </div>
-            </div>
-        </div>
+    <section class="dept-hero">
+        <h1>Our Departments</h1>
+        <p>Explore our academic programs and support services</p>
     </section>
 
-    <!-- TABS (below hero) -->
-    <div class="dept-tabs" id="deptTabs">
-        <button class="dept-tab active" data-tab="overview">Overview</button>
-    </div>
-
-    <!-- TAB CONTENT (below tabs) -->
-    <div class="dept-content">
-        <div class="tab-panel active" id="panel-overview">
-            <div class="overview-grid" id="overviewGrid"></div>
+    <div class="dept-container">
+        <!-- Department Tabs -->
+        <div class="dept-tabs" id="deptTabs">
+            <button class="dept-tab active" data-dept="all">🏛️ All Departments</button>
         </div>
+        <div id="tabContent"></div>
+
+        <!-- Non-Academic -->
+        <h2 class="section-title">🤝 Non-Academic Departments</h2>
+        <div class="non-acad-grid" id="nonAcademicGrid"></div>
     </div>
 
-    <!-- FOOTER (bottom of page) -->
     <footer id="mainFooter"></footer>
 
-    <!-- SCRIPTS -->
-    <script src="assets/js/navbar.js"></script>
     <script src="assets/js/navbar.js"></script>
     <script>
         buildNavbar('departments');
+        let allDeptData = [];
+        let activeTab = 'all';
 
         (async function () {
-            await loadSharedComponents();
+            await loadFooter();
             await loadDepartments();
         })();
 
-        async function loadSharedComponents() {
+        async function loadFooter() {
             try {
                 const res = await fetch('/');
                 const html = await res.text();
@@ -300,93 +385,144 @@
                 if (footer) document.getElementById('mainFooter').innerHTML = footer.outerHTML;
             } catch (e) { }
         }
+
         async function loadDepartments() {
             try {
                 const res = await fetch('/api/v1/departments/with-courses');
-                if (!res.ok) throw new Error('Failed to fetch departments');
+                if (!res.ok) throw new Error('Failed');
                 const data = await res.json();
+                if (!data.success) return;
+                allDeptData = data.data;
+                const academic = allDeptData.filter(d => d.type === 'academic');
+                document.getElementById('deptTabs').innerHTML =
+                    '<button class="dept-tab active" data-dept="all">🏛️ All Departments</button>' +
+                    academic.map(d => `<button class="dept-tab" data-dept="${d.id}">${escapeHtml(d.name)}</button>`).join('');
 
-                if (!data.success || !data.data) return;
-
-                const departments = data.data;
-                const academic = departments.filter(d => d.type === 'academic');
-                const nonAcademic = departments.filter(d => d.type === 'non_academic');
-
-                renderAcademicDepts(academic);
-                renderNonAcademicDepts(nonAcademic);
-
+                document.querySelectorAll('.dept-tab').forEach(tab => {
+                    tab.addEventListener('click', function () {
+                        document.querySelectorAll('.dept-tab').forEach(t => t.classList.remove('active'));
+                        this.classList.add('active');
+                        activeTab = this.dataset.dept;
+                        renderContent();
+                    });
+                });
+                renderContent();
+                renderNonAcademic();
             } catch (e) {
-                console.log('Departments fetch failed');
-                document.getElementById('academicDepts').innerHTML = '<p style="text-align:center;color:#888;">Unable to load departments.</p>';
-                document.getElementById('nonAcademicDepts').innerHTML = '';
+                document.getElementById('tabContent').innerHTML = '<p style="text-align:center;color:#888;padding:2rem;">Unable to load departments.</p>';
             }
         }
 
-        function renderAcademicDepts(departments) {
-            const container = document.getElementById('academicDepts');
-
-            if (departments.length === 0) {
-                container.innerHTML = '<p style="text-align:center;color:#888;">No academic departments found.</p>';
-                return;
+        function renderContent() {
+            const container = document.getElementById('tabContent');
+            if (activeTab === 'all') {
+                const academic = allDeptData.filter(d => d.type === 'academic');
+                container.innerHTML = academic.map(dept => renderDepartment(dept)).join('');
+            } else {
+                const dept = allDeptData.find(d => d.id == activeTab);
+                container.innerHTML = dept ? renderDepartment(dept) : '';
             }
-
-            container.innerHTML = departments.map(dept => {
-                const coursesHtml = dept.courses && dept.courses.length > 0
-                    ? `
-          <p style="font-weight:600;color:#1a1a2e;margin-top:1rem;">Courses Offered:</p>
-          <ul class="course-list">
-            ${dept.courses.map(c => `
-              <li>
-                <a href="courses.html#course-${c.id}">
-                  ${escapeHtml(c.name)} (${c.duration_years} Year${c.duration_years > 1 ? 's' : ''})
-                </a>
-                ${c.cbet_status ? '<span style="background:#f5c518;color:#1a1a2e;padding:2px 8px;border-radius:4px;font-size:0.75rem;margin-left:6px;">CBET</span>' : ''}
-              </li>
-            `).join('')}
-          </ul>
-        `
-                    : '<p style="color:#888;">No courses listed yet.</p>';
-
-                return `
-      <div class="dept-card" id="dept-${dept.id}">
-        <h3>${escapeHtml(dept.name)}</h3>
-        <p class="description">${escapeHtml(dept.description || 'Department of ' + dept.name)}</p>
-        ${dept.hod_name ? `
-          <div class="hod-info">
-            <div class="hod-photo-sm">
-              ${dept.hod_photo ? `<img src="${dept.hod_photo.startsWith('http') ? dept.hod_photo : '/uploads/' + dept.hod_photo}" alt="${escapeHtml(dept.hod_name)}">` : '👤'}
-            </div>
-            <div class="hod-details">
-              <div class="hod-name">${escapeHtml(dept.hod_name)}</div>
-              <div class="hod-label">Head of Department</div>
-            </div>
-          </div>
-        ` : ''}
-        ${coursesHtml}
-      </div>
-    `;
-            }).join('');
+            // Activate first subtab of each department
+            container.querySelectorAll('.dept-tab[data-subtab]').forEach((t, i, all) => {
+                if (i === 0 || all[i - 1].closest('[id^="dept-"]') !== t.closest('[id^="dept-"]')) {
+                    t.classList.add('active');
+                }
+            });
+            container.querySelectorAll('.subtab-content:first-of-type').forEach(c => c.classList.add('active'));
         }
-        function renderNonAcademicDepts(departments) {
-            const container = document.getElementById('nonAcademicDepts');
 
-            if (departments.length === 0) {
-                container.innerHTML = '<p style="text-align:center;color:#888;padding:2rem;">No non-academic departments found.</p>';
-                return;
+        function renderDepartment(dept) {
+            const icons = { 'information': '💻', 'business': '📊', 'engineering': '⚙️', 'hospitality': '🍽️', 'applied science': '🔬', 'social work': '🤝' };
+            let icon = '🏛️';
+            for (const [k, v] of Object.entries(icons)) { if (dept.name.toLowerCase().includes(k)) { icon = v; break; } }
+
+            const bodies = {};
+            if (dept.courses) dept.courses.forEach(c => { if (!bodies[c.examining_body]) bodies[c.examining_body] = []; bodies[c.examining_body].push(c); });
+            const bodyKeys = Object.keys(bodies);
+
+            let coursesHtml = '';
+            if (bodyKeys.length > 0) {
+                coursesHtml = `
+                <div class="dept-tabs" style="margin-top:1rem;position:static;top:auto;border-bottom:1px solid #e0e0e0;">
+                    <button class="dept-tab active" data-subtab="overview-${dept.id}">📋 Overview</button>
+                    ${bodyKeys.map(b => `<button class="dept-tab" data-subtab="${b}-${dept.id}">${b} Courses</button>`).join('')}
+                </div>
+                <div class="subtab-content" id="subtab-overview-${dept.id}">
+                    <div class="overview-grid" style="margin-top:1.5rem;">
+                        <div class="overview-card"><div class="card-icon">🔭</div><h3>Vision</h3><p>To be a leading center of excellence in ${escapeHtml(dept.name)} training.</p></div>
+                        <div class="overview-card"><div class="card-icon">🎯</div><h3>Mission</h3><p>To provide quality, practical training in ${escapeHtml(dept.name)}.</p></div>
+                        <div class="overview-card"><div class="card-icon">📈</div><h3>Key Objective</h3><p>To equip students with hands-on skills that meet TVETA standards.</p></div>
+                    </div>
+                </div>`;
+                bodyKeys.forEach(b => {
+                    coursesHtml += `
+                    <div class="subtab-content" id="subtab-${b}-${dept.id}">
+                        <div class="course-grid" style="margin-top:1.5rem;">
+                            ${bodies[b].map(c => `
+                                <div class="course-card">
+                                    <span class="exam-badge exam-${b}">${b}</span>
+                                    <h4>${escapeHtml(c.name)}</h4>
+                                    <div class="level">Duration: ${c.duration_years} Year${c.duration_years > 1 ? 's' : ''}</div>
+                                    <div class="modules">📚 ${c.cbet_status ? 'CBET Curriculum' : 'Standard Curriculum'}</div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>`;
+                });
+            } else {
+                coursesHtml = '<p style="color:#888;margin-top:1rem;">No courses listed for this department yet.</p>';
             }
 
-            container.innerHTML = departments.map(dept => `
-            <div class="non-acad-card" id="dept-${dept.id}">
-                <h3>${escapeHtml(dept.name)}</h3>
-                <p style="color:#555;line-height:1.6;">${escapeHtml(dept.description || '')}</p>
+            return `
+            <div id="dept-${dept.id}" style="margin-bottom:2rem;">
+                <div class="dept-hero-section">
+                    <div class="dept-hero-text">
+                        <span class="dept-hero-label">${escapeHtml(dept.name)}</span>
+                        <h2>${icon} ${escapeHtml(dept.name)}</h2>
+                        <p>${escapeHtml(dept.description || '')}</p>
+                    </div>
+                    <div class="dept-hero-img">
+  ${dept.image_path
+                    ? `<img src="${dept.image_path}" alt="${escapeHtml(dept.name)}" loading="lazy" />`
+                    : icon}
+</div>
+                </div>
                 ${dept.hod_name ? `
-                    <p style="margin-top:0.8rem;color:#1a7a1a;font-weight:500;">
-                        📋 Head: ${escapeHtml(dept.hod_name)}
-                    </p>
-                ` : ''}
-            </div>
-        `).join('');
+                <div class="hod-bar">
+                    <div class="hod-photo">${dept.hod_photo ? `<img src="${dept.hod_photo.startsWith('http') ? dept.hod_photo : '/uploads/' + dept.hod_photo}" alt="${escapeHtml(dept.hod_name)}">` : '👤'}</div>
+                    <div class="hod-info"><h4>${escapeHtml(dept.hod_name)}</h4><span>Head of Department</span></div>
+                </div>` : ''}
+                ${coursesHtml}
+            </div>`;
         }
+
+        function renderNonAcademic() {
+            const nonAcademic = allDeptData.filter(d => d.type === 'non_academic');
+            const container = document.getElementById('nonAcademicGrid');
+            container.innerHTML = nonAcademic.length === 0
+                ? '<p style="text-align:center;color:#888;">No non-academic departments found.</p>'
+                : nonAcademic.map(d => `
+                    <div class="non-acad-card">
+                        <h4>${escapeHtml(d.name)}</h4>
+                        <p style="color:#555;font-size:0.9rem;line-height:1.6;">${escapeHtml(d.description || '')}</p>
+                        ${d.hod_name ? `<p style="color:#1a7a1a;font-weight:500;font-size:0.85rem;">📋 Head: ${escapeHtml(d.hod_name)}</p>` : ''}
+                    </div>
+                `).join('');
+        }
+
+        // Sub-tab click delegation
+        document.addEventListener('click', function (e) {
+            if (e.target.dataset.subtab) {
+                const parent = e.target.closest('[id^="dept-"]');
+                if (parent) {
+                    parent.querySelectorAll('.dept-tab[data-subtab]').forEach(t => t.classList.remove('active'));
+                    e.target.classList.add('active');
+                    parent.querySelectorAll('.subtab-content').forEach(c => c.classList.remove('active'));
+                    const target = document.getElementById('subtab-' + e.target.dataset.subtab);
+                    if (target) target.classList.add('active');
+                }
+            }
+        });
 
         function escapeHtml(str) {
             if (!str) return '';
