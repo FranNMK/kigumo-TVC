@@ -686,10 +686,71 @@
 
     // ── DOWNLOADS ──
     async function loadDownloads() {
-      const r = await fetch('/api/v1/downloads'), d = await r.json();
-      let h = '<table><tr><th>Title</th><th>Category</th></tr>';
-      if (d.success && d.data) d.data.forEach(dl => { h += `<tr><td>${escapeHtml(dl.title)}</td><td>${dl.category}</td></tr>` });
+      const r = await fetch(`${API}/downloads`), d = await r.json();
+      let h = '<button class="btn btn-green btn-sm" onclick="openDownloadForm()">+ Add Download</button><table><tr><th>Title</th><th>Category</th><th>Size</th><th>Date</th><th>Actions</th></tr>';
+      if (d.success && d.data) d.data.forEach(dl => {
+        const size = dl.file_size ? (dl.file_size / 1024).toFixed(1) + ' KB' : 'N/A';
+        h += `<tr><td>${escapeHtml(dl.title)}</td><td>${dl.category}</td><td>${size}</td><td>${new Date(dl.uploaded_at).toLocaleDateString()}</td><td><button class="btn btn-yellow btn-sm" onclick="editDownload(${dl.id})">Edit</button> <button class="btn btn-red btn-sm" onclick="deleteDownload(${dl.id})">Del</button></td></tr>`;
+      });
       h += '</table>'; document.getElementById('downloadsContent').innerHTML = h;
+    }
+
+    function openDownloadForm() {
+      openModal(`<h3>Add Download</h3><form onsubmit="addDownload(event)" enctype="multipart/form-data">
+    <div class="form-group"><label>Title</label><input name="title" required></div>
+    <div class="form-group"><label>Category</label><select name="category" required>
+      <option value="admission">Admission</option><option value="academic">Academic</option><option value="legal">Legal/Compliance</option><option value="student_welfare">Student Welfare</option>
+    </select></div>
+    <div class="form-group"><label>File (PDF, DOCX, etc.)</label><input type="file" name="file" required></div>
+    <button class="btn btn-green">Upload</button> <button type="button" class="btn btn-red" onclick="closeModal()">Cancel</button>
+  </form>`);
+    }
+
+    async function addDownload(e) {
+      e.preventDefault();
+      const progressInterval = startProgressAnimation();
+      try {
+        const f = new FormData(e.target);
+        const r = await fetch(`${API}/downloads`, { method: 'POST', body: f });
+        clearInterval(progressInterval);
+        const result = await r.json();
+        if (result.success) { finishProgress(true, 'Download added!'); closeModal(); loadDownloads(); }
+        else { finishProgress(false, result.message); }
+      } catch (err) { clearInterval(progressInterval); finishProgress(false, 'Network error'); }
+    }
+
+    async function editDownload(id) {
+      const r = await fetch(`${API}/downloads`);
+      const d = await r.json();
+      const dl = d.data?.find(x => x.id == id);
+      if (!dl) return alert('Download not found');
+      openModal(`<h3>Edit Download</h3><form onsubmit="updateDownload(event, ${id})" enctype="multipart/form-data">
+    <div class="form-group"><label>Title</label><input name="title" value="${escapeHtml(dl.title)}" required></div>
+    <div class="form-group"><label>Category</label><select name="category" required>
+      ${['admission', 'academic', 'legal', 'student_welfare'].map(c => `<option value="${c}" ${dl.category === c ? 'selected' : ''}>${c}</option>`).join('')}
+    </select></div>
+    <div class="form-group"><label>File (leave empty to keep current)</label><input type="file" name="file"></div>
+    <button class="btn btn-green">Save</button> <button type="button" class="btn btn-red" onclick="closeModal()">Cancel</button>
+  </form>`);
+    }
+
+    async function updateDownload(e, id) {
+      e.preventDefault();
+      const progressInterval = startProgressAnimation();
+      try {
+        const f = new FormData(e.target);
+        const r = await fetch(`${API}/downloads/${id}`, { method: 'PUT', body: f });
+        clearInterval(progressInterval);
+        const result = await r.json();
+        if (result.success) { finishProgress(true, 'Download updated!'); closeModal(); loadDownloads(); }
+        else { finishProgress(false, result.message); }
+      } catch (err) { clearInterval(progressInterval); finishProgress(false, 'Network error'); }
+    }
+
+    async function deleteDownload(id) {
+      if (!confirm('Move to recycle bin?')) return;
+      await fetch(`${API}/downloads/${id}`, { method: 'DELETE' });
+      loadDownloads();
     }
 
     // ── GALLERY ──

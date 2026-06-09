@@ -23,56 +23,56 @@
     .downloads-hero {
       background: linear-gradient(135deg, #1a1a2e, #1a7a1a);
       color: #fff;
-      padding: 3rem 2rem;
+      padding: 4rem 2rem 3rem;
       text-align: center;
     }
-    .downloads-container {
-      max-width: 1100px;
-      margin: 0 auto;
-      padding: 2rem 1.5rem;
-    }
-    .category-section {
-      margin-bottom: 2.5rem;
-    }
+    .downloads-hero h1 { font-size: 2.2rem; font-weight: 800; margin-bottom: 0.5rem; }
+    .downloads-container { max-width: 1100px; margin: 0 auto; padding: 2rem 1.5rem; }
+    .category-section { margin-bottom: 2.5rem; }
     .category-title {
-      color: #1a7a1a;
-      font-size: 1.6rem;
-      border-bottom: 3px solid #f5c518;
-      padding-bottom: 0.5rem;
-      margin-bottom: 1rem;
+      color: #1a7a1a; font-size: 1.4rem; border-bottom: 3px solid #f5c518;
+      padding-bottom: 0.5rem; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;
     }
     .download-item {
-      background: #fff;
-      border-radius: 8px;
-      padding: 1rem 1.5rem;
-      margin-bottom: 0.8rem;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-      transition: transform 0.2s;
+      background: #fff; border-radius: 10px; padding: 1.2rem 1.5rem; margin-bottom: 0.8rem;
+      display: flex; justify-content: space-between; align-items: center;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.05); transition: transform 0.2s, box-shadow 0.2s;
     }
-    .download-item:hover { transform: translateY(-2px); }
-    .download-info h3 {
-      margin: 0 0 0.3rem;
-      color: #1a1a2e;
-    }
-    .download-info .meta {
-      color: #888;
-      font-size: 0.85rem;
-    }
+    .download-item:hover { transform: translateY(-2px); box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+    .download-info h3 { margin: 0 0 0.3rem; color: #1a1a2e; font-size: 1rem; }
+    .download-info .meta { color: #888; font-size: 0.82rem; }
     .download-btn {
-      background: #1a7a1a;
-      color: #fff;
-      padding: 0.5rem 1.2rem;
-      border-radius: 6px;
-      text-decoration: none;
-      font-weight: 600;
-      white-space: nowrap;
+      background: #1a7a1a; color: #fff; padding: 0.6rem 1.4rem; border-radius: 8px;
+      text-decoration: none; font-weight: 600; white-space: nowrap; transition: all 0.3s;
+      cursor: pointer; border: none; font-size: 0.9rem;
     }
-    .download-btn:hover { background: #145214; }
+    .download-btn:hover { background: #145214; transform: scale(1.03); }
+    .download-btn.downloading { background: #f5c518; color: #1a1a2e; pointer-events: none; }
+
+    /* Loading skeleton */
+    .skeleton { background: linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 8px; }
+    .skeleton-card { height: 70px; margin-bottom: 0.8rem; }
+    @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+
+    /* Download progress overlay */
+    .progress-overlay {
+      display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.5); z-index: 9999; justify-content: center; align-items: center;
+    }
+    .progress-overlay.active { display: flex; }
+    .progress-card {
+      background: #fff; border-radius: 16px; padding: 2rem; text-align: center;
+      min-width: 320px; max-width: 90vw; box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+    }
+    .progress-card h3 { color: #1a7a1a; margin-bottom: 1.5rem; }
+    .progress-bar-bg { background: #e0e0e0; border-radius: 12px; height: 8px; overflow: hidden; margin-bottom: 0.8rem; }
+    .progress-bar-fill { background: linear-gradient(90deg, #1a7a1a, #f5c518); height: 100%; width: 0%; border-radius: 12px; transition: width 0.3s; }
+    .progress-percent { font-size: 0.9rem; color: #666; margin-bottom: 0.3rem; }
+    .progress-status { font-size: 0.8rem; color: #999; }
+
     @media (max-width: 600px) {
       .download-item { flex-direction: column; align-items: flex-start; gap: 0.8rem; }
+      .download-btn { width: 100%; text-align: center; }
     }
   </style>
 </head>
@@ -84,7 +84,23 @@
   </div>
 
   <div class="downloads-container" id="downloadsContainer">
-    <p style="text-align:center;color:#888;">Loading documents...</p>
+    <!-- Loading skeleton -->
+    <div class="skeleton skeleton-card"></div>
+    <div class="skeleton skeleton-card"></div>
+    <div class="skeleton skeleton-card"></div>
+    <div class="skeleton skeleton-card"></div>
+  </div>
+
+  <!-- Download Progress Overlay -->
+  <div class="progress-overlay" id="progressOverlay">
+    <div class="progress-card">
+      <h3 id="progressTitle">Downloading...</h3>
+      <div id="progressFilename" style="color:#888;font-size:0.85rem;margin-bottom:1rem;"></div>
+      <div class="progress-bar-bg"><div class="progress-bar-fill" id="progressBar"></div></div>
+      <div class="progress-percent" id="progressPercent">0%</div>
+      <div class="progress-status" id="progressStatus">Starting download...</div>
+      <button class="download-btn" style="margin-top:1rem;background:#c00;" onclick="cancelDownload()">Cancel</button>
+    </div>
   </div>
 
   <footer id="mainFooter"></footer>
@@ -93,20 +109,20 @@
   <script>
     buildNavbar('downloads');
 
-    fetch('/')
-      .then(res => res.text())
-      .then(html => {
-        const doc = new DOMParser().parseFromString(html, 'text/html');
-        const footer = doc.querySelector('footer');
-        if (footer) document.getElementById('mainFooter').innerHTML = footer.outerHTML;
-      }).catch(() => {});
+    fetch('/').then(r => r.text()).then(html => {
+      const doc = new DOMParser().parseFromString(html, 'text/html');
+      const footer = doc.querySelector('footer');
+      if (footer) document.getElementById('mainFooter').innerHTML = footer.outerHTML;
+    }).catch(() => {});
+
+    let downloadAbortController = null;
 
     async function loadDownloads() {
       try {
         const res = await fetch('/api/v1/downloads');
         const data = await res.json();
-        if (!data.success || !data.data) {
-          document.getElementById('downloadsContainer').innerHTML = '<p style="text-align:center;">No downloads available.</p>';
+        if (!data.success || !data.data || data.data.length === 0) {
+          document.getElementById('downloadsContainer').innerHTML = '<p style="text-align:center;color:#888;padding:3rem;">No downloads available at this time.</p>';
           return;
         }
 
@@ -121,25 +137,124 @@
         for (const [cat, title] of Object.entries(categories)) {
           const items = data.data.filter(d => d.category === cat);
           if (items.length === 0) continue;
-          html += `<div class="category-section" id="${cat}">
-            <h2 class="category-title">${title}</h2>`;
+          html += `<div class="category-section" id="${cat}"><h2 class="category-title">${title}</h2>`;
           items.forEach(item => {
-            const size = item.file_size ? (item.file_size / 1024).toFixed(1) + ' MB' : 'Unknown size';
+            const size = item.file_size ? formatSize(item.file_size) : 'Unknown size';
+            const date = new Date(item.uploaded_at).toLocaleDateString('en-KE', { year: 'numeric', month: 'long', day: 'numeric' });
             html += `
             <div class="download-item">
               <div class="download-info">
                 <h3>${escapeHtml(item.title)}</h3>
-                <div class="meta">📅 ${new Date(item.uploaded_at).toLocaleDateString('en-KE')} &bull; 💾 ${size}</div>
+                <div class="meta">📅 ${date} &bull; 💾 ${size}</div>
               </div>
-              <a href="/uploads/${item.file_path}" class="download-btn" download>Download</a>
+              <button class="download-btn" onclick="startDownload(${item.id}, '${escapeHtml(item.title)}')">⬇ Download</button>
             </div>`;
           });
           html += `</div>`;
         }
-        document.getElementById('downloadsContainer').innerHTML = html || '<p style="text-align:center;">No documents available.</p>';
+        document.getElementById('downloadsContainer').innerHTML = html || '<p style="text-align:center;padding:3rem;">No documents available.</p>';
       } catch (err) {
-        document.getElementById('downloadsContainer').innerHTML = '<p style="text-align:center;color:red;">Failed to load downloads.</p>';
+        document.getElementById('downloadsContainer').innerHTML = '<p style="text-align:center;color:#c00;padding:3rem;">Failed to load downloads. Please try again later.</p>';
       }
+    }
+
+    async function startDownload(id, title) {
+      const overlay = document.getElementById('progressOverlay');
+      const bar = document.getElementById('progressBar');
+      const percent = document.getElementById('progressPercent');
+      const status = document.getElementById('progressStatus');
+      const filename = document.getElementById('progressFilename');
+
+      overlay.classList.add('active');
+      document.getElementById('progressTitle').textContent = 'Preparing Download...';
+      filename.textContent = title;
+      bar.style.width = '0%';
+      percent.textContent = '0%';
+      status.textContent = 'Connecting...';
+
+      downloadAbortController = new AbortController();
+
+      try {
+        // Step 1: Get file info
+        const infoRes = await fetch(`/api/v1/downloads`);
+        const infoData = await infoRes.json();
+        const file = infoData.data?.find(d => d.id == id);
+        if (!file) throw new Error('File not found');
+
+        const downloadUrl = file.file_path.startsWith('http') ? file.file_path : `/uploads/${file.file_path}`;
+
+        // Step 2: Start download with progress
+        status.textContent = 'Downloading...';
+        document.getElementById('progressTitle').textContent = 'Downloading';
+
+        const response = await fetch(`/api/v1/downloads/download/${id}`, {
+          signal: downloadAbortController.signal
+        });
+
+        if (!response.ok) throw new Error('Download failed');
+
+        const contentLength = response.headers.get('content-length');
+        const total = parseInt(contentLength, 10);
+        let loaded = 0;
+
+        const reader = response.body.getReader();
+        const chunks = [];
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          chunks.push(value);
+          loaded += value.length;
+          if (total) {
+            const pct = Math.round((loaded / total) * 100);
+            bar.style.width = pct + '%';
+            percent.textContent = pct + '%';
+            status.textContent = formatSize(loaded) + ' / ' + formatSize(total);
+          }
+        }
+
+        // Complete
+        bar.style.width = '100%';
+        percent.textContent = '100%';
+        status.textContent = '✅ Download complete!';
+        document.getElementById('progressTitle').textContent = 'Done! 🎉';
+
+        // Create blob and trigger download
+        const blob = new Blob(chunks);
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = file.original_filename || title;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        window.URL.revokeObjectURL(url);
+
+        setTimeout(() => overlay.classList.remove('active'), 1500);
+
+      } catch (err) {
+        if (err.name === 'AbortError') {
+          status.textContent = 'Download cancelled';
+        } else {
+          status.textContent = '❌ Download failed';
+          document.getElementById('progressTitle').textContent = 'Error';
+        }
+        setTimeout(() => overlay.classList.remove('active'), 2000);
+      }
+    }
+
+    function cancelDownload() {
+      if (downloadAbortController) {
+        downloadAbortController.abort();
+        downloadAbortController = null;
+      }
+    }
+
+    function formatSize(bytes) {
+      if (!bytes) return 'Unknown';
+      if (bytes < 1024) return bytes + ' B';
+      if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
+      return (bytes / 1048576).toFixed(1) + ' MB';
     }
 
     function escapeHtml(str) {

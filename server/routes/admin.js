@@ -15,7 +15,7 @@ const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 50 * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
-    const allowed = /jpeg|jpg|png|gif|webp/;
+    const allowed = /jpeg|jpg|png|gif|webp|pdf|docx|doc|xlsx|xls|pptx|ppt|zip|rar/;
     cb(null, allowed.test(path.extname(file.originalname).toLowerCase()));
   },
 });
@@ -495,4 +495,94 @@ router.patch("/partners/:id/toggle", async (req, res) => {
   );
   res.json({ success: true });
 });
+
+// ── DOWNLOADS CRUD ──
+// GET all downloads (admin view)
+router.get('/downloads', async (req, res) => {
+  try {
+    const [rows] = await db.execute(
+      'SELECT id, title, category, file_path, file_size, original_filename, uploaded_at FROM downloads ORDER BY category, uploaded_at DESC'
+    );
+    res.json({ success: true, data: rows });
+  } catch (err) {
+    logger.error('Admin downloads fetch error', { error: err.message });
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+// CREATE download
+router.post('/downloads', upload.single('file'), async (req, res) => {
+  try {
+    const { title, category } = req.body;
+    if (!title || !category || !req.file) {
+      return res.status(400).json({ success: false, message: 'Title, category, and file are required' });
+    }
+
+    const cloudinaryResult = await uploadFile(
+      `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`,
+      { folder: 'kigumo-tvc/downloads', resource_type: 'raw' }
+    );
+
+    await db.execute(
+      'INSERT INTO downloads (title, category, file_path, file_size, original_filename, uploaded_by) VALUES (?,?,?,?,?,?)',
+      [title, category, cloudinaryResult.secure_url, req.file.size, req.file.originalname, req.session.user.id]
+    );
+
+    res.json({ success: true, message: 'Download added' });
+  } catch (err) {
+    logger.error('Download create error', { error: err.message });
+    res.status(500).json({ success: false, message: 'Upload failed: ' + err.message });
+  }
+});
+
+// UPDATE download
+router.put('/downloads/:id', upload.single('file'), async (req, res) => {
+  try {
+    const { title, category } = req.body;
+    const [[existing]] = await db.execute('SELECT * FROM downloads WHERE id = ?', [req.params.id]);
+    if (!existing) return res.status(404).json({ success: false, message: 'Download not found' });
+
+    let file_path = existing.file_path;
+    let file_size = existing.file_size;
+    let original_filename = existing.original_filename;
+
+    if (req.file) {
+      const cloudinaryResult = await uploadFile(
+        `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`,
+        { folder: 'kigumo-tvc/downloads', resource_type: 'raw' }
+      );
+      file_path = cloudinaryResult.secure_url;
+      file_size = req.file.size;
+      original_filename = req.file.originalname;
+    }
+
+    await db.execute(
+      'UPDATE downloads SET title=?, category=?, file_path=?, file_size=?, original_filename=? WHERE id=?',
+      [title || existing.title, category || existing.category, file_path, file_size, original_filename, req.params.id]
+    );
+
+    res.json({ success: true, message: 'Download updated' });
+  } catch (err) {
+    logger.error('Download update error', { error: err.message });
+    res.status(500).json({ success: false, message: 'Update failed' });
+  }
+});
+
+// DELETE download
+router.delete('/downloads/:id', async (req, res) => {
+  try {
+    const [[row]] = await db.execute('SELECT * FROM downloads WHERE id = ?', [req.params.id]);
+    if (!row) return res.status(404).json({ success: false, message: 'Download not found' });
+
+    await db.execute('INSERT INTO recycle_bin (original_table, original_id, data_snapshot, deleted_by) VALUES (?,?,?,?)',
+      ['downloads', row.id, JSON.stringify(row), req.session.user.id]);
+    await db.execute('DELETE FROM downloads WHERE id = ?', [req.params.id]);
+
+    res.json({ success: true, message: 'Download moved to recycle bin' });
+  } catch (err) {
+    logger.error('Download delete error', { error: err.message });
+    res.status(500).json({ success: false, message: 'Delete failed' });
+  }
+});
+
 module.exports = router;
