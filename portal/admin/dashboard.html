@@ -569,9 +569,151 @@
     // ── DEPARTMENTS ──
     async function loadDepartments() {
       const r = await fetch('/api/v1/departments'), d = await r.json();
-      let h = '<table><tr><th>Name</th><th>Type</th><th>HOD</th></tr>';
-      if (d.success && d.data) d.data.forEach(d => { h += `<tr><td>${escapeHtml(d.name)}</td><td>${d.type}</td><td>${escapeHtml(d.hod_name || 'None')}</td></tr>` });
+      let h = '<button class="btn btn-green btn-sm" onclick="openDeptForm()">+ Add Department</button><table><tr><th>Name</th><th>Type</th><th>HOD</th><th>Active</th><th>Actions</th></tr>';
+      if (d.success && d.data) d.data.forEach(dept => {
+        h += `<tr><td>${escapeHtml(dept.name)}</td><td>${dept.type}</td><td>${escapeHtml(dept.hod_name || 'None')}</td><td>${dept.is_active !== false ? '✅' : '❌'}</td><td><button class="btn btn-yellow btn-sm" onclick="editDept(${dept.id})">Edit</button> <button class="btn btn-red btn-sm" onclick="deleteDept(${dept.id})">Del</button></td></tr>`;
+      });
       h += '</table>'; document.getElementById('departmentsContent').innerHTML = h;
+    }
+
+    function openDeptForm() {
+      openModal(`<h3>Add Department</h3><form onsubmit="addDept(event)">
+    <div class="form-group"><label>Department Name</label><input name="name" required></div>
+    <div class="form-group"><label>Type</label><select name="type" required>
+      <option value="academic">Academic</option><option value="non_academic">Non-Academic</option>
+    </select></div>
+    <div class="form-group"><label>Description</label><textarea name="description" rows="3"></textarea></div>
+    <button class="btn btn-green">Save</button> <button type="button" class="btn btn-red" onclick="closeModal()">Cancel</button>
+  </form>`);
+    }
+
+    async function addDept(e) {
+      e.preventDefault();
+      const f = new FormData(e.target);
+      const payload = { name: f.get('name'), type: f.get('type'), description: f.get('description') };
+
+      showProgress('Adding department...');
+      updateProgress(30, 'Saving...');
+
+      try {
+        const r = await fetch(`${API}/departments`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+        const result = await r.json();
+        if (result.success) {
+          finishProgress(true, 'Department added successfully!');
+          closeModal();
+          loadDepartments();
+        }
+        else { finishProgress(false, result.message); }
+      } catch (err) { finishProgress(false, 'Network error. Please try again.'); }
+    }
+
+
+    async function editDept(id) {
+      const r = await fetch('/api/v1/departments'), d = await r.json();
+      const dept = d.data?.find(x => x.id == id);
+      if (!dept) return alert('Department not found');
+      openModal(`<h3>Edit Department</h3><form onsubmit="updateDept(event, ${id})">
+    <div class="form-group"><label>Department Name</label><input name="name" value="${escapeHtml(dept.name)}" required></div>
+    <div class="form-group"><label>Type</label><select name="type" required>
+      <option value="academic" ${dept.type === 'academic' ? 'selected' : ''}>Academic</option>
+      <option value="non_academic" ${dept.type === 'non_academic' ? 'selected' : ''}>Non-Academic</option>
+    </select></div>
+    <div class="form-group"><label>Description</label><textarea name="description" rows="3">${escapeHtml(dept.description || '')}</textarea></div>
+    <div class="form-group"><label>Current HOD: <strong>${escapeHtml(dept.hod_name || 'None assigned')}</strong></label>
+      <button type="button" class="btn btn-yellow btn-sm" onclick="closeModal();openHodForm(${id}, '${escapeHtml(dept.name)}', ${dept.hod_id || 0})">Change HOD</button>
+    </div>
+    <button class="btn btn-green">Save Department</button> <button type="button" class="btn btn-red" onclick="closeModal()">Cancel</button>
+  </form>`);
+    }
+
+    async function openHodForm(deptId, deptName, currentHodId) {
+      // Fetch all lecturers and HODs
+      const r = await fetch('/api/v1/users?role=lecturer');
+      const hodR = await fetch('/api/v1/users?role=hod');
+      const [lectData, hodData] = await Promise.all([r.json(), hodR.json()]);
+
+      let allLecturers = [];
+      if (lectData.success && lectData.data) allLecturers = allLecturers.concat(lectData.data);
+      if (hodData.success && hodData.data) allLecturers = allLecturers.concat(hodData.data);
+
+      // Remove duplicates by ID
+      const seen = new Set();
+      allLecturers = allLecturers.filter(u => {
+        if (seen.has(u.id)) return false;
+        seen.add(u.id);
+        return true;
+      }).sort((a, b) => a.full_name.localeCompare(b.full_name));
+
+      const options = allLecturers.map(u =>
+        `<option value="${u.id}" ${u.id == currentHodId ? 'selected' : ''}>${escapeHtml(u.full_name)} (${u.role})</option>`
+      ).join('');
+
+      openModal(`<h3>Assign HOD for ${escapeHtml(deptName)}</h3><form onsubmit="assignHod(event, ${deptId})">
+    <div class="form-group"><label>Select Lecturer</label><select name="lecturer_id" required>
+      <option value="">-- Select Lecturer --</option>
+      ${options}
+    </select></div>
+    <div class="form-group"><label>Assignment Date</label><input type="date" name="assigned_at" value="${new Date().toISOString().split('T')[0]}" required></div>
+    <button class="btn btn-green">Assign HOD</button> <button type="button" class="btn btn-red" onclick="closeModal()">Cancel</button>
+  </form>`);
+    }
+
+    async function assignHod(e, deptId) {
+      e.preventDefault();
+      const f = new FormData(e.target);
+      const payload = { lecturer_id: f.get('lecturer_id'), assigned_at: f.get('assigned_at') };
+
+      showProgress('Assigning HOD...');
+      updateProgress(40, 'Updating department...');
+
+      try {
+        const r = await fetch(`${API}/departments/${deptId}/hod`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const result = await r.json();
+        if (result.success) {
+          finishProgress(true, 'HOD assigned successfully!');
+          closeModal();
+          loadDepartments();
+        }
+        else { finishProgress(false, result.message); }
+      } catch (err) { finishProgress(false, 'Network error.'); }
+    }
+
+    async function updateDept(e, id) {
+      e.preventDefault();
+      const f = new FormData(e.target);
+      const payload = { name: f.get('name'), type: f.get('type'), description: f.get('description') };
+
+      showProgress('Updating department...');
+      updateProgress(30, 'Saving changes...');
+
+      try {
+        const r = await fetch(`${API}/departments/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+        const result = await r.json();
+        if (result.success) {
+          finishProgress(true, 'Department updated successfully!');
+          closeModal();
+          loadDepartments();
+        }
+        else { finishProgress(false, result.message); }
+      } catch (err) { finishProgress(false, 'Network error. Please try again.'); }
+    }
+
+
+    async function deleteDept(id) {
+      if (!confirm('Move this department to recycle bin? This will not delete courses or users in it.')) return;
+
+      showProgress('Moving to recycle bin...');
+
+      try {
+        const r = await fetch(`${API}/departments/${id}`, { method: 'DELETE' });
+        const result = await r.json();
+        if (result.success) { finishProgress(true, 'Department moved to recycle bin!'); loadDepartments(); }
+        else { finishProgress(false, result.message); }
+      } catch (err) { finishProgress(false, 'Network error.'); }
     }
 
     // ── COURSES ──
@@ -684,12 +826,12 @@
       loadNews();
     }
 
-       // ── DOWNLOADS ──
+    // ── DOWNLOADS ──
     let downloadsSubTab = 'files'; // 'files' or 'categories'
 
     async function loadDownloads() {
       const container = document.getElementById('downloadsContent');
-      
+
       // Sub-tab buttons
       let html = `
         <div style="display:flex;gap:0.5rem;margin-bottom:1rem;">
@@ -733,10 +875,10 @@
       fetch(`${API}/download-categories`)
         .then(r => r.json())
         .then(d => {
-          const catOptions = d.success && d.data 
+          const catOptions = d.success && d.data
             ? d.data.map(c => `<option value="${escapeHtml(c.name)}">${escapeHtml(c.display_name || c.name)}</option>`).join('')
             : '<option value="admission">Admission</option><option value="academic">Academic</option><option value="legal">Legal</option><option value="student_welfare">Student Welfare</option>';
-          
+
           openModal(`<h3>Add Download</h3><form onsubmit="addDownload(event)" enctype="multipart/form-data">
     <div class="form-group"><label>Title</label><input name="title" required></div>
     <div class="form-group"><label>Category</label><select name="category" required>

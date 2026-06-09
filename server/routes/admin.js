@@ -516,12 +516,10 @@ router.post("/downloads", upload.single("file"), async (req, res) => {
   try {
     const { title, category } = req.body;
     if (!title || !category || !req.file) {
-      return res
-        .status(400)
-        .json({
-          success: false,
-          message: "Title, category, and file are required",
-        });
+      return res.status(400).json({
+        success: false,
+        message: "Title, category, and file are required",
+      });
     }
 
     const cloudinaryResult = await uploadFile(
@@ -684,6 +682,139 @@ router.delete("/download-categories/:name", async (req, res) => {
     res.json({ success: true, message: "Category deleted" });
   } catch (err) {
     logger.error("Category delete error", { error: err.message });
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+});
+
+// ── DEPARTMENTS CRUD ──
+router.post("/departments", async (req, res) => {
+  try {
+    const { name, type, description } = req.body;
+    if (!name || !type)
+      return res
+        .status(400)
+        .json({ success: false, message: "Name and type are required" });
+    await db.execute(
+      "INSERT INTO departments (name, type, description) VALUES (?,?,?)",
+      [name, type, description || ""],
+    );
+    res.json({ success: true, message: "Department added" });
+  } catch (err) {
+    logger.error("Dept create error", { error: err.message });
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+});
+
+router.put("/departments/:id", async (req, res) => {
+  try {
+    const { name, type, description } = req.body;
+    await db.execute(
+      "UPDATE departments SET name=?, type=?, description=? WHERE id=?",
+      [name, type, description, req.params.id],
+    );
+    res.json({ success: true, message: "Department updated" });
+  } catch (err) {
+    logger.error("Dept update error", { error: err.message });
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+});
+
+router.delete("/departments/:id", async (req, res) => {
+  try {
+    const [[row]] = await db.execute("SELECT * FROM departments WHERE id = ?", [
+      req.params.id,
+    ]);
+    if (!row)
+      return res
+        .status(404)
+        .json({ success: false, message: "Department not found" });
+    await db.execute(
+      "INSERT INTO recycle_bin (original_table, original_id, data_snapshot, deleted_by) VALUES (?,?,?,?)",
+      ["departments", row.id, JSON.stringify(row), req.session.user.id],
+    );
+    await db.execute("DELETE FROM departments WHERE id = ?", [req.params.id]);
+    res.json({ success: true, message: "Department moved to recycle bin" });
+  } catch (err) {
+    logger.error("Dept delete error", { error: err.message });
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+});
+
+// ── HOD ASSIGNMENT ──
+router.put("/departments/:id/hod", async (req, res) => {
+  try {
+    const { lecturer_id, assigned_at } = req.body;
+    const deptId = req.params.id;
+
+    if (!lecturer_id)
+      return res
+        .status(400)
+        .json({ success: false, message: "Lecturer is required" });
+
+    // Get department info
+    const [[dept]] = await db.execute(
+      "SELECT * FROM departments WHERE id = ?",
+      [deptId],
+    );
+    if (!dept)
+      return res
+        .status(404)
+        .json({ success: false, message: "Department not found" });
+
+    // Get lecturer info
+    const [[lecturer]] = await db.execute(
+      'SELECT * FROM users WHERE id = ? AND role IN ("lecturer","hod")',
+      [lecturer_id],
+    );
+    if (!lecturer)
+      return res
+        .status(400)
+        .json({
+          success: false,
+          message: "Selected user is not a lecturer or HOD",
+        });
+
+    // For academic departments: check if lecturer is already HOD of another academic dept
+    if (dept.type === "academic") {
+      const [existingHod] = await db.execute(
+        `SELECT ha.id, d.name FROM hod_assignments ha 
+         JOIN departments d ON ha.department_id = d.id 
+         WHERE ha.lecturer_id = ? AND ha.department_id != ? AND d.type = 'academic'`,
+        [lecturer_id, deptId],
+      );
+      if (existingHod.length > 0) {
+        return res.status(400).json({
+          success: false,
+          message: `This lecturer is already HOD of ${existingHod[0].name}. One lecturer can only be HOD of one academic department.`,
+        });
+      }
+    }
+
+    // Remove existing HOD for this department (if any)
+    await db.execute("DELETE FROM hod_assignments WHERE department_id = ?", [
+      deptId,
+    ]);
+
+    // Assign new HOD
+    await db.execute(
+      "INSERT INTO hod_assignments (department_id, lecturer_id, assigned_at) VALUES (?,?,?)",
+      [
+        deptId,
+        lecturer_id,
+        assigned_at || new Date().toISOString().split("T")[0],
+      ],
+    );
+
+    // Update user role to HOD if they're currently a lecturer
+    if (lecturer.role === "lecturer") {
+      await db.execute('UPDATE users SET role = "hod" WHERE id = ?', [
+        lecturer_id,
+      ]);
+    }
+
+    res.json({ success: true, message: "HOD assigned successfully" });
+  } catch (err) {
+    logger.error("HOD assignment error", { error: err.message });
     res.status(500).json({ success: false, message: "Server error" });
   }
 });
