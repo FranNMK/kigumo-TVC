@@ -684,26 +684,68 @@
       loadNews();
     }
 
-    // ── DOWNLOADS ──
+       // ── DOWNLOADS ──
+    let downloadsSubTab = 'files'; // 'files' or 'categories'
+
     async function loadDownloads() {
+      const container = document.getElementById('downloadsContent');
+      
+      // Sub-tab buttons
+      let html = `
+        <div style="display:flex;gap:0.5rem;margin-bottom:1rem;">
+          <button class="btn btn-sm ${downloadsSubTab === 'files' ? 'btn-green' : ''}" 
+            style="background:${downloadsSubTab === 'files' ? '#1a7a1a' : '#6c757d'};color:#fff;"
+            onclick="switchDownloadsTab('files')">📁 Files</button>
+          <button class="btn btn-sm ${downloadsSubTab === 'categories' ? 'btn-green' : ''}" 
+            style="background:${downloadsSubTab === 'categories' ? '#1a7a1a' : '#6c757d'};color:#fff;"
+            onclick="switchDownloadsTab('categories')">🏷️ Categories</button>
+        </div>
+      `;
+
+      if (downloadsSubTab === 'files') {
+        html += await loadDownloadFiles();
+      } else {
+        html += await loadDownloadCategories();
+      }
+
+      container.innerHTML = html;
+    }
+
+    function switchDownloadsTab(tab) {
+      downloadsSubTab = tab;
+      loadDownloads();
+    }
+
+    // ── FILES SUB-TAB ──
+    async function loadDownloadFiles() {
       const r = await fetch(`${API}/downloads`), d = await r.json();
       let h = '<button class="btn btn-green btn-sm" onclick="openDownloadForm()">+ Add Download</button><table><tr><th>Title</th><th>Category</th><th>Size</th><th>Date</th><th>Actions</th></tr>';
       if (d.success && d.data) d.data.forEach(dl => {
         const size = dl.file_size ? (dl.file_size / 1024).toFixed(1) + ' KB' : 'N/A';
         h += `<tr><td>${escapeHtml(dl.title)}</td><td>${dl.category}</td><td>${size}</td><td>${new Date(dl.uploaded_at).toLocaleDateString()}</td><td><button class="btn btn-yellow btn-sm" onclick="editDownload(${dl.id})">Edit</button> <button class="btn btn-red btn-sm" onclick="deleteDownload(${dl.id})">Del</button></td></tr>`;
       });
-      h += '</table>'; document.getElementById('downloadsContent').innerHTML = h;
+      h += '</table>';
+      return h;
     }
 
     function openDownloadForm() {
-      openModal(`<h3>Add Download</h3><form onsubmit="addDownload(event)" enctype="multipart/form-data">
+      // Fetch categories dynamically for the dropdown
+      fetch(`${API}/download-categories`)
+        .then(r => r.json())
+        .then(d => {
+          const catOptions = d.success && d.data 
+            ? d.data.map(c => `<option value="${escapeHtml(c.name)}">${escapeHtml(c.display_name || c.name)}</option>`).join('')
+            : '<option value="admission">Admission</option><option value="academic">Academic</option><option value="legal">Legal</option><option value="student_welfare">Student Welfare</option>';
+          
+          openModal(`<h3>Add Download</h3><form onsubmit="addDownload(event)" enctype="multipart/form-data">
     <div class="form-group"><label>Title</label><input name="title" required></div>
     <div class="form-group"><label>Category</label><select name="category" required>
-      <option value="admission">Admission</option><option value="academic">Academic</option><option value="legal">Legal/Compliance</option><option value="student_welfare">Student Welfare</option>
+      ${catOptions}
     </select></div>
     <div class="form-group"><label>File (PDF, DOCX, etc.)</label><input type="file" name="file" required></div>
     <button class="btn btn-green">Upload</button> <button type="button" class="btn btn-red" onclick="closeModal()">Cancel</button>
   </form>`);
+        });
     }
 
     async function addDownload(e) {
@@ -720,14 +762,20 @@
     }
 
     async function editDownload(id) {
-      const r = await fetch(`${API}/downloads`);
-      const d = await r.json();
+      const [r1, r2] = await Promise.all([fetch(`${API}/downloads`), fetch(`${API}/download-categories`)]);
+      const d = await r1.json();
+      const cats = await r2.json();
       const dl = d.data?.find(x => x.id == id);
       if (!dl) return alert('Download not found');
+
+      const catOptions = cats.success && cats.data
+        ? cats.data.map(c => `<option value="${escapeHtml(c.name)}" ${dl.category === c.name ? 'selected' : ''}>${escapeHtml(c.display_name || c.name)}</option>`).join('')
+        : '';
+
       openModal(`<h3>Edit Download</h3><form onsubmit="updateDownload(event, ${id})" enctype="multipart/form-data">
     <div class="form-group"><label>Title</label><input name="title" value="${escapeHtml(dl.title)}" required></div>
     <div class="form-group"><label>Category</label><select name="category" required>
-      ${['admission', 'academic', 'legal', 'student_welfare'].map(c => `<option value="${c}" ${dl.category === c ? 'selected' : ''}>${c}</option>`).join('')}
+      ${catOptions}
     </select></div>
     <div class="form-group"><label>File (leave empty to keep current)</label><input type="file" name="file"></div>
     <button class="btn btn-green">Save</button> <button type="button" class="btn btn-red" onclick="closeModal()">Cancel</button>
@@ -751,6 +799,60 @@
       if (!confirm('Move to recycle bin?')) return;
       await fetch(`${API}/downloads/${id}`, { method: 'DELETE' });
       loadDownloads();
+    }
+
+    // ── CATEGORIES SUB-TAB ──
+    async function loadDownloadCategories() {
+      const r = await fetch(`${API}/download-categories`), d = await r.json();
+      let h = '<button class="btn btn-green btn-sm" onclick="openCategoryForm()">+ Add Category</button><table><tr><th>Name</th><th>Display Name</th><th>Files</th><th>Actions</th></tr>';
+      if (d.success && d.data) d.data.forEach(c => {
+        h += `<tr><td>${escapeHtml(c.name)}</td><td>${escapeHtml(c.display_name || c.name)}</td><td>${c.file_count || 0}</td><td><button class="btn btn-yellow btn-sm" onclick="editCategory('${escapeHtml(c.name)}', '${escapeHtml(c.display_name || '')}')">Edit</button> <button class="btn btn-red btn-sm" onclick="deleteCategory('${escapeHtml(c.name)}')">Del</button></td></tr>`;
+      });
+      h += '</table>';
+      return h;
+    }
+
+    function openCategoryForm() {
+      openModal(`<h3>Add Category</h3><form onsubmit="addCategory(event)">
+    <div class="form-group"><label>Category Key (e.g., exams, research)</label><input name="name" required></div>
+    <div class="form-group"><label>Display Name (e.g., Examination Papers)</label><input name="display_name" required></div>
+    <button class="btn btn-green">Save</button> <button type="button" class="btn btn-red" onclick="closeModal()">Cancel</button>
+  </form>`);
+    }
+
+    async function addCategory(e) {
+      e.preventDefault();
+      const f = new FormData(e.target);
+      const payload = { name: f.get('name'), display_name: f.get('display_name') };
+      const r = await fetch(`${API}/download-categories`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+      const result = await r.json();
+      if (result.success) { closeModal(); loadDownloads(); }
+      else { alert(result.message); }
+    }
+
+    function editCategory(name, displayName) {
+      openModal(`<h3>Edit Category</h3><form onsubmit="updateCategory(event, '${escapeHtml(name)}')">
+    <div class="form-group"><label>Display Name</label><input name="display_name" value="${escapeHtml(displayName)}" required></div>
+    <button class="btn btn-green">Save</button> <button type="button" class="btn btn-red" onclick="closeModal()">Cancel</button>
+  </form>`);
+    }
+
+    async function updateCategory(e, name) {
+      e.preventDefault();
+      const f = new FormData(e.target);
+      const payload = { display_name: f.get('display_name') };
+      const r = await fetch(`${API}/download-categories/${name}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+      const result = await r.json();
+      if (result.success) { closeModal(); loadDownloads(); }
+      else { alert(result.message); }
+    }
+
+    async function deleteCategory(name) {
+      if (!confirm(`Delete category "${name}"? This will not delete the files in it.`)) return;
+      const r = await fetch(`${API}/download-categories/${name}`, { method: 'DELETE' });
+      const result = await r.json();
+      if (result.success) { loadDownloads(); }
+      else { alert(result.message); }
     }
 
     // ── GALLERY ──
