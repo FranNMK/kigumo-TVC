@@ -687,16 +687,19 @@ router.delete("/download-categories/:name", async (req, res) => {
 });
 
 // ── DEPARTMENTS CRUD ──
-router.post("/departments", async (req, res) => {
+router.post("/departments", upload.single("image"), async (req, res) => {
   try {
     const { name, type, description } = req.body;
     if (!name || !type)
-      return res
-        .status(400)
-        .json({ success: false, message: "Name and type are required" });
+      return res.status(400).json({ success: false, message: "Name and type are required" });
+    
+    const image_path = req.file 
+      ? await uploadToCloudinary(req.file, "kigumo-tvc/departments") 
+      : null;
+    
     await db.execute(
-      "INSERT INTO departments (name, type, description) VALUES (?,?,?)",
-      [name, type, description || ""],
+      "INSERT INTO departments (name, type, description, image_path) VALUES (?,?,?,?)",
+      [name, type, description || "", image_path]
     );
     res.json({ success: true, message: "Department added" });
   } catch (err) {
@@ -705,12 +708,18 @@ router.post("/departments", async (req, res) => {
   }
 });
 
-router.put("/departments/:id", async (req, res) => {
+router.put("/departments/:id", upload.single("image"), async (req, res) => {
   try {
     const { name, type, description } = req.body;
+    const [[existing]] = await db.execute("SELECT * FROM departments WHERE id = ?", [req.params.id]);
+    
+    const image_path = req.file 
+      ? await uploadToCloudinary(req.file, "kigumo-tvc/departments") 
+      : existing?.image_path || null;
+    
     await db.execute(
-      "UPDATE departments SET name=?, type=?, description=? WHERE id=?",
-      [name, type, description, req.params.id],
+      "UPDATE departments SET name=?, type=?, description=?, image_path=? WHERE id=?",
+      [name, type, description, image_path, req.params.id]
     );
     res.json({ success: true, message: "Department updated" });
   } catch (err) {
@@ -718,7 +727,6 @@ router.put("/departments/:id", async (req, res) => {
     res.status(500).json({ success: false, message: "Server error" });
   }
 });
-
 router.delete("/departments/:id", async (req, res) => {
   try {
     const [[row]] = await db.execute("SELECT * FROM departments WHERE id = ?", [

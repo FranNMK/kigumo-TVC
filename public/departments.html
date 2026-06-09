@@ -276,7 +276,11 @@
                 <p class="dept-sub" id="deptSub">Loading department information...</p>
             </div>
             <div class="dept-hero-img">
-                <div class="placeholder-img" id="deptImagePlaceholder">🏛️</div>
+                <div class="placeholder-img" id="deptImagePlaceholder">
+                    <img id="deptImage" src="" alt=""
+                        style="width:100%;height:100%;object-fit:cover;border-radius:12px;display:none;" />
+                    <span id="deptEmoji" style="font-size:5rem;">🏛️</span>
+                </div>
             </div>
         </div>
     </section>
@@ -408,6 +412,8 @@
                     });
                 });
 
+
+
                 // After all panels are built, switch to target tab if specified
                 if (targetTab) {
                     setTimeout(() => {
@@ -429,6 +435,24 @@
 
             } catch (e) { console.log('Failed to load department'); }
         }
+
+
+        // After fetching deptData...
+        const dept = deptData.data;
+
+        // Update hero image
+        const deptImage = document.getElementById('deptImage');
+        const deptEmoji = document.getElementById('deptEmoji');
+        if (dept.image_path) {
+            deptImage.src = dept.image_path;
+            deptImage.style.display = 'block';
+            deptEmoji.style.display = 'none';
+        } else {
+            deptImage.style.display = 'none';
+            deptEmoji.style.display = 'block';
+            deptEmoji.textContent = getDeptEmoji(dept.name);
+        }
+        
         function renderOverview(dept) {
             const vision = dept.description || 'To be a centre of excellence in technical and vocational training, producing skilled graduates who drive economic transformation.';
             const mission = 'To provide quality, competency-based training that equips learners with practical skills, knowledge, and attitudes for employment, self-reliance, and lifelong learning.';

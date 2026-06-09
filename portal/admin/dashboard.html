@@ -566,23 +566,23 @@
     async function addLecturer(e) { e.preventDefault(); const f = new FormData(e.target); const r = await fetch(`${API}/users/add-lecturer`, { method: 'POST', body: f }); alert((await r.json()).message); closeModal(); loadUsers(); }
     async function deactivateUser(id) { if (!confirm('Deactivate this user?')) return; await fetch(`${API}/users/${id}/deactivate`, { method: 'PATCH' }); loadUsers(); }
 
-    // ── DEPARTMENTS ──
     async function loadDepartments() {
       const r = await fetch('/api/v1/departments'), d = await r.json();
-      let h = '<button class="btn btn-green btn-sm" onclick="openDeptForm()">+ Add Department</button><table><tr><th>Name</th><th>Type</th><th>HOD</th><th>Active</th><th>Actions</th></tr>';
+      let h = '<button class="btn btn-green btn-sm" onclick="openDeptForm()">+ Add Department</button><table><tr><th>Image</th><th>Name</th><th>Type</th><th>HOD</th><th>Active</th><th>Actions</th></tr>';
       if (d.success && d.data) d.data.forEach(dept => {
-        h += `<tr><td>${escapeHtml(dept.name)}</td><td>${dept.type}</td><td>${escapeHtml(dept.hod_name || 'None')}</td><td>${dept.is_active !== false ? '✅' : '❌'}</td><td><button class="btn btn-yellow btn-sm" onclick="editDept(${dept.id})">Edit</button> <button class="btn btn-red btn-sm" onclick="deleteDept(${dept.id})">Del</button></td></tr>`;
+        h += `<tr><td>${dept.image_path ? '<img src="' + dept.image_path + '" style="height:40px;width:60px;object-fit:cover;border-radius:4px;">' : '🏛️'}</td><td>${escapeHtml(dept.name)}</td><td>${dept.type}</td><td>${escapeHtml(dept.hod_name || 'None')}</td><td>${dept.is_active !== false ? '✅' : '❌'}</td><td><button class="btn btn-yellow btn-sm" onclick="editDept(${dept.id})">Edit</button> <button class="btn btn-red btn-sm" onclick="deleteDept(${dept.id})">Del</button></td></tr>`;
       });
       h += '</table>'; document.getElementById('departmentsContent').innerHTML = h;
     }
 
     function openDeptForm() {
-      openModal(`<h3>Add Department</h3><form onsubmit="addDept(event)">
+      openModal(`<h3>Add Department</h3><form onsubmit="addDept(event)" enctype="multipart/form-data">
     <div class="form-group"><label>Department Name</label><input name="name" required></div>
     <div class="form-group"><label>Type</label><select name="type" required>
       <option value="academic">Academic</option><option value="non_academic">Non-Academic</option>
     </select></div>
     <div class="form-group"><label>Description</label><textarea name="description" rows="3"></textarea></div>
+    <div class="form-group"><label>Department Image</label><input type="file" name="image" accept="image/*"></div>
     <button class="btn btn-green">Save</button> <button type="button" class="btn btn-red" onclick="closeModal()">Cancel</button>
   </form>`);
     }
@@ -590,13 +590,12 @@
     async function addDept(e) {
       e.preventDefault();
       const f = new FormData(e.target);
-      const payload = { name: f.get('name'), type: f.get('type'), description: f.get('description') };
 
       showProgress('Adding department...');
-      updateProgress(30, 'Saving...');
+      updateProgress(30, 'Uploading image...');
 
       try {
-        const r = await fetch(`${API}/departments`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+        const r = await fetch(`${API}/departments`, { method: 'POST', body: f });
         const result = await r.json();
         if (result.success) {
           finishProgress(true, 'Department added successfully!');
@@ -612,13 +611,17 @@
       const r = await fetch('/api/v1/departments'), d = await r.json();
       const dept = d.data?.find(x => x.id == id);
       if (!dept) return alert('Department not found');
-      openModal(`<h3>Edit Department</h3><form onsubmit="updateDept(event, ${id})">
+      openModal(`<h3>Edit Department</h3><form onsubmit="updateDept(event, ${id})" enctype="multipart/form-data">
     <div class="form-group"><label>Department Name</label><input name="name" value="${escapeHtml(dept.name)}" required></div>
     <div class="form-group"><label>Type</label><select name="type" required>
       <option value="academic" ${dept.type === 'academic' ? 'selected' : ''}>Academic</option>
       <option value="non_academic" ${dept.type === 'non_academic' ? 'selected' : ''}>Non-Academic</option>
     </select></div>
     <div class="form-group"><label>Description</label><textarea name="description" rows="3">${escapeHtml(dept.description || '')}</textarea></div>
+    <div class="form-group"><label>Department Image</label>
+      ${dept.image_path ? `<div style="margin-bottom:0.5rem;"><img src="${dept.image_path}" style="max-height:100px;border-radius:8px;"></div><small style="color:#888;">Current image shown above. Upload new to replace.</small>` : ''}
+      <input type="file" name="image" accept="image/*">
+    </div>
     <div class="form-group"><label>Current HOD: <strong>${escapeHtml(dept.hod_name || 'None assigned')}</strong></label>
       <button type="button" class="btn btn-yellow btn-sm" onclick="closeModal();openHodForm(${id}, '${escapeHtml(dept.name)}', ${dept.hod_id || 0})">Change HOD</button>
     </div>
@@ -685,13 +688,12 @@
     async function updateDept(e, id) {
       e.preventDefault();
       const f = new FormData(e.target);
-      const payload = { name: f.get('name'), type: f.get('type'), description: f.get('description') };
 
       showProgress('Updating department...');
       updateProgress(30, 'Saving changes...');
 
       try {
-        const r = await fetch(`${API}/departments/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+        const r = await fetch(`${API}/departments/${id}`, { method: 'PUT', body: f });
         const result = await r.json();
         if (result.success) {
           finishProgress(true, 'Department updated successfully!');
