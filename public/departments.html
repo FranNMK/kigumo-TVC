@@ -61,25 +61,6 @@
             margin-bottom: 1rem;
         }
 
-        .dept-hero-text .hod-info {
-            display: flex;
-            align-items: center;
-            gap: 0.8rem;
-            margin-top: 1rem;
-            padding: 0.8rem;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 8px;
-        }
-
-        .dept-hero-text .hod-info .hod-name {
-            font-weight: 600;
-        }
-
-        .dept-hero-text .hod-info .hod-title {
-            font-size: 0.85rem;
-            opacity: 0.8;
-        }
-
         .dept-hero-img {
             flex: 2;
             min-width: 250px;
@@ -96,7 +77,6 @@
             font-size: 5rem;
         }
 
-        /* Tabs */
         .dept-tabs {
             max-width: 1200px;
             margin: 0 auto;
@@ -130,7 +110,6 @@
             border-bottom-color: #1a7a1a;
         }
 
-        /* Content */
         .dept-content {
             max-width: 1200px;
             margin: 0 auto;
@@ -145,7 +124,6 @@
             display: block;
         }
 
-        /* Overview Cards */
         .overview-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -178,7 +156,6 @@
             line-height: 1.7;
         }
 
-        /* Course Cards */
         .course-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -268,15 +245,18 @@
 
 <body>
 
+    <!-- HERO SECTION (top of page) -->
     <section class="dept-hero" id="deptHero">
         <div class="dept-hero-inner">
+            <!-- LEFT: text content -->
             <div class="dept-hero-text">
                 <div class="dept-label" id="deptLabel">Department</div>
                 <h1 id="deptName">Loading...</h1>
                 <p class="dept-sub" id="deptSub">Loading department information...</p>
             </div>
+            <!-- RIGHT: department image -->
             <div class="dept-hero-img">
-                <div class="placeholder-img" id="deptImagePlaceholder">
+                <div class="placeholder-img">
                     <img id="deptImage" src="" alt=""
                         style="width:100%;height:100%;object-fit:cover;border-radius:12px;display:none;" />
                     <span id="deptEmoji" style="font-size:5rem;">🏛️</span>
@@ -285,238 +265,135 @@
         </div>
     </section>
 
-    <!-- Tabs -->
+    <!-- TABS (below hero) -->
     <div class="dept-tabs" id="deptTabs">
         <button class="dept-tab active" data-tab="overview">Overview</button>
     </div>
 
-    <!-- Content -->
+    <!-- TAB CONTENT (below tabs) -->
     <div class="dept-content">
         <div class="tab-panel active" id="panel-overview">
             <div class="overview-grid" id="overviewGrid"></div>
         </div>
     </div>
 
+    <!-- FOOTER (bottom of page) -->
     <footer id="mainFooter"></footer>
 
+    <!-- SCRIPTS -->
+    <script src="assets/js/navbar.js"></script>
     <script src="assets/js/navbar.js"></script>
     <script>
         buildNavbar('departments');
 
-        // Load footer
-        fetch('/').then(r => r.text()).then(html => {
-            const doc = new DOMParser().parseFromString(html, 'text/html');
-            const footer = doc.querySelector('footer');
-            if (footer) document.getElementById('mainFooter').innerHTML = footer.outerHTML;
-        }).catch(() => { });
+        (async function () {
+            await loadSharedComponents();
+            await loadDepartments();
+        })();
 
-        // Get department ID from URL hash (e.g., #dept-1)
-        function getDeptIdFromHash() {
-            const hash = window.location.hash;
-            const match = hash.match(/dept-(\d+)/);
-            return match ? match[1] : null;
-        }
-
-        async function initPage() {
-            const deptId = getDeptIdFromHash();
-            const tabParam = getTabFromHash();
-
-            if (deptId) {
-                await loadDepartment(deptId, tabParam);
-            } else {
-                try {
-                    const res = await fetch('/api/v1/departments?type=academic');
-                    const d = await res.json();
-                    if (d.success && d.data && d.data.length > 0) {
-                        history.replaceState(null, '', `#dept-${d.data[0].id}`);
-                        await loadDepartment(d.data[0].id, tabParam);
-                    }
-                } catch (e) {
-                    document.getElementById('deptName').textContent = 'Departments';
-                    document.getElementById('deptSub').textContent = 'Unable to load department data.';
-                }
-            }
-        }
-
-        function getTabFromHash() {
-            const hash = window.location.hash;
-            const match = hash.match(/tab=([^&]+)/);
-            return match ? match[1] : null;
-        }
-
-        // Listen for hash changes (when user clicks different department in navbar)
-        window.addEventListener('hashchange', () => {
-            const deptId = getDeptIdFromHash();
-            if (deptId) loadDepartment(deptId);
-        });
-
-        async function loadDepartment(id) {
-            if (!id) return;
+        async function loadSharedComponents() {
             try {
-                const [deptRes, courseRes] = await Promise.all([
-                    fetch(`/api/v1/departments/${id}`),
-                    fetch(`/api/v1/departments/${id}/courses`)
-                ]);
-                const deptData = await deptRes.json();
-                const courseData = await courseRes.json();
-
-                if (!deptData.success || !deptData.data) {
-                    document.getElementById('deptName').textContent = 'Department Not Found';
-                    return;
-                }
-
-                const dept = deptData.data;
-                const courses = courseData.success ? courseData.data : [];
-
-                // Update hero
-                document.getElementById('deptLabel').textContent = dept.type === 'academic' ? 'Academic Department' : 'Support Department';
-                document.getElementById('deptName').textContent = dept.name;
-                document.getElementById('deptSub').textContent = dept.description || 'Explore our programmes and courses.';
-                document.getElementById('deptImagePlaceholder').textContent = getDeptEmoji(dept.name);
-
-                // Build tabs based on examining bodies
-                const examiningBodies = [...new Set(courses.map(c => c.examining_body))];
-                const tabsContainer = document.getElementById('deptTabs');
-                tabsContainer.innerHTML = '<button class="dept-tab active" data-tab="overview">Overview</button>';
-                examiningBodies.forEach(body => {
-                    tabsContainer.innerHTML += `<button class="dept-tab" data-tab="body-${body}">${body} Courses</button>`;
-                });
-
-                // Clear old panels
-                const content = document.querySelector('.dept-content');
-                content.querySelectorAll('.tab-panel').forEach(p => p.remove());
-
-                // Overview panel
-                const overviewPanel = document.createElement('div');
-                overviewPanel.className = 'tab-panel active';
-                overviewPanel.id = 'panel-overview';
-                overviewPanel.innerHTML = renderOverview(dept);
-                content.appendChild(overviewPanel);
-
-                // Course panels per examining body
-                examiningBodies.forEach(body => {
-                    const panel = document.createElement('div');
-                    panel.className = 'tab-panel';
-                    panel.id = `panel-body-${body}`;
-                    const bodyCourses = courses.filter(c => c.examining_body === body);
-                    panel.innerHTML = renderCourseGrid(bodyCourses);
-                    content.appendChild(panel);
-                });
-                // Tab click handlers
-                tabsContainer.querySelectorAll('.dept-tab').forEach(tab => {
-                    tab.addEventListener('click', () => {
-                        tabsContainer.querySelectorAll('.dept-tab').forEach(t => t.classList.remove('active'));
-                        tab.classList.add('active');
-                        content.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
-                        document.getElementById('panel-' + tab.dataset.tab).classList.add('active');
-                    });
-                });
-
-
-
-                // After all panels are built, switch to target tab if specified
-                if (targetTab) {
-                    setTimeout(() => {
-                        let targetTabBtn;
-
-                        if (targetTab === 'courses') {
-                            // Open the first course tab (not Overview)
-                            targetTabBtn = tabsContainer.querySelector('.dept-tab:not([data-tab="overview"])');
-                        } else {
-                            // Open specific tab
-                            targetTabBtn = tabsContainer.querySelector(`[data-tab="${targetTab}"]`);
-                        }
-
-                        if (targetTabBtn) {
-                            targetTabBtn.click();
-                        }
-                    }, 100);
-                }
-
-            } catch (e) { console.log('Failed to load department'); }
+                const res = await fetch('/');
+                const html = await res.text();
+                const doc = new DOMParser().parseFromString(html, 'text/html');
+                const footer = doc.querySelector('footer');
+                if (footer) document.getElementById('mainFooter').innerHTML = footer.outerHTML;
+            } catch (e) { }
         }
+        async function loadDepartments() {
+            try {
+                const res = await fetch('/api/v1/departments/with-courses');
+                if (!res.ok) throw new Error('Failed to fetch departments');
+                const data = await res.json();
 
+                if (!data.success || !data.data) return;
 
-        // After fetching deptData...
-        const dept = deptData.data;
+                const departments = data.data;
+                const academic = departments.filter(d => d.type === 'academic');
+                const nonAcademic = departments.filter(d => d.type === 'non_academic');
 
-        // Update hero image
-        const deptImage = document.getElementById('deptImage');
-        const deptEmoji = document.getElementById('deptEmoji');
-        if (dept.image_path) {
-            deptImage.src = dept.image_path;
-            deptImage.style.display = 'block';
-            deptEmoji.style.display = 'none';
-        } else {
-            deptImage.style.display = 'none';
-            deptEmoji.style.display = 'block';
-            deptEmoji.textContent = getDeptEmoji(dept.name);
-        }
-        
-        function renderOverview(dept) {
-            const vision = dept.description || 'To be a centre of excellence in technical and vocational training, producing skilled graduates who drive economic transformation.';
-            const mission = 'To provide quality, competency-based training that equips learners with practical skills, knowledge, and attitudes for employment, self-reliance, and lifelong learning.';
-            const objective = 'To produce innovative, ethical, and self-driven professionals who contribute meaningfully to national and global development through industry-relevant competencies.';
+                renderAcademicDepts(academic);
+                renderNonAcademicDepts(nonAcademic);
 
-            return `
-        <div class="overview-grid">
-          <div class="overview-card">
-            <div class="card-icon">🔭</div>
-            <h3>Vision</h3>
-            <p>${escapeHtml(vision)}</p>
-          </div>
-          <div class="overview-card">
-            <div class="card-icon">🎯</div>
-            <h3>Mission</h3>
-            <p>${escapeHtml(mission)}</p>
-          </div>
-          <div class="overview-card">
-            <div class="card-icon">🏆</div>
-            <h3>Key Objective</h3>
-            <p>${escapeHtml(objective)}</p>
-          </div>
-        </div>`;
-        }
-
-        function renderCourseGrid(courses) {
-            if (!courses || courses.length === 0) {
-                return '<p style="text-align:center;color:#888;padding:2rem;">No courses found in this category.</p>';
+            } catch (e) {
+                console.log('Departments fetch failed');
+                document.getElementById('academicDepts').innerHTML = '<p style="text-align:center;color:#888;">Unable to load departments.</p>';
+                document.getElementById('nonAcademicDepts').innerHTML = '';
             }
-            return `<div class="course-grid">${courses.map(c => `
-        <div class="course-card">
-          <div class="course-card-icon">📘</div>
-          <div class="course-card-info">
-            <h4>${escapeHtml(c.name)}</h4>
-            <div class="meta">
-              <span>📚 ${c.module_count || c.duration_years * 2 || 'N/A'} modules</span>
-              <span>⏱️ ${c.duration_years} yr(s)</span>
-              ${c.cbet_status ? '<span class="badge-sm">CBET</span>' : ''}
+        }
+
+        function renderAcademicDepts(departments) {
+            const container = document.getElementById('academicDepts');
+
+            if (departments.length === 0) {
+                container.innerHTML = '<p style="text-align:center;color:#888;">No academic departments found.</p>';
+                return;
+            }
+
+            container.innerHTML = departments.map(dept => {
+                const coursesHtml = dept.courses && dept.courses.length > 0
+                    ? `
+          <p style="font-weight:600;color:#1a1a2e;margin-top:1rem;">Courses Offered:</p>
+          <ul class="course-list">
+            ${dept.courses.map(c => `
+              <li>
+                <a href="courses.html#course-${c.id}">
+                  ${escapeHtml(c.name)} (${c.duration_years} Year${c.duration_years > 1 ? 's' : ''})
+                </a>
+                ${c.cbet_status ? '<span style="background:#f5c518;color:#1a1a2e;padding:2px 8px;border-radius:4px;font-size:0.75rem;margin-left:6px;">CBET</span>' : ''}
+              </li>
+            `).join('')}
+          </ul>
+        `
+                    : '<p style="color:#888;">No courses listed yet.</p>';
+
+                return `
+      <div class="dept-card" id="dept-${dept.id}">
+        <h3>${escapeHtml(dept.name)}</h3>
+        <p class="description">${escapeHtml(dept.description || 'Department of ' + dept.name)}</p>
+        ${dept.hod_name ? `
+          <div class="hod-info">
+            <div class="hod-photo-sm">
+              ${dept.hod_photo ? `<img src="${dept.hod_photo.startsWith('http') ? dept.hod_photo : '/uploads/' + dept.hod_photo}" alt="${escapeHtml(dept.hod_name)}">` : '👤'}
+            </div>
+            <div class="hod-details">
+              <div class="hod-name">${escapeHtml(dept.hod_name)}</div>
+              <div class="hod-label">Head of Department</div>
             </div>
           </div>
-        </div>`).join('')}</div>`;
+        ` : ''}
+        ${coursesHtml}
+      </div>
+    `;
+            }).join('');
         }
+        function renderNonAcademicDepts(departments) {
+            const container = document.getElementById('nonAcademicDepts');
 
-        function getDeptEmoji(name) {
-            const map = {
-                'information': '💻', 'business': '📊', 'engineering': '⚙️',
-                'hospitality': '🍽️', 'applied science': '🔬', 'social work': '🤝',
-                'research': '🔍'
-            };
-            const lower = (name || '').toLowerCase();
-            for (const [k, v] of Object.entries(map)) {
-                if (lower.includes(k)) return v;
+            if (departments.length === 0) {
+                container.innerHTML = '<p style="text-align:center;color:#888;padding:2rem;">No non-academic departments found.</p>';
+                return;
             }
-            return '🏛️';
+
+            container.innerHTML = departments.map(dept => `
+            <div class="non-acad-card" id="dept-${dept.id}">
+                <h3>${escapeHtml(dept.name)}</h3>
+                <p style="color:#555;line-height:1.6;">${escapeHtml(dept.description || '')}</p>
+                ${dept.hod_name ? `
+                    <p style="margin-top:0.8rem;color:#1a7a1a;font-weight:500;">
+                        📋 Head: ${escapeHtml(dept.hod_name)}
+                    </p>
+                ` : ''}
+            </div>
+        `).join('');
         }
 
-        function escapeHtml(s) {
+        function escapeHtml(str) {
+            if (!str) return '';
             const div = document.createElement('div');
-            div.textContent = s || '';
+            div.textContent = str;
             return div.innerHTML;
         }
-
-        // Init
-        initPage();
     </script>
 </body>
 
