@@ -2,335 +2,497 @@
 <html lang="en">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Academic and Non-Academic Departments at Kigumo Technical and Vocational College">
-    <meta name="theme-color" content="#1a7a1a">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description"
+        content="Explore departments at Kigumo Technical and Vocational College - academic programmes, courses, and support services" />
+    <meta name="theme-color" content="#1a7a1a" />
     <title>Departments - Kigumo Technical and Vocational College</title>
-
-    <link rel="icon" type="image/jpeg" href="assets/images/logo.jpeg">
-    <link rel="stylesheet" href="assets/css/main.css">
+    <link rel="icon" type="image/jpeg" href="assets/images/logo.jpeg" />
+    <link rel="stylesheet" href="assets/css/main.css" />
 
     <script type="text/javascript">
         function googleTranslateElementInit() {
-            new google.translate.TranslateElement({
-                pageLanguage: 'en',
-                includedLanguages: 'sw',
-                layout: google.translate.TranslateElement.InlineLayout.SIMPLE
-            }, 'google_translate_element');
+            new google.translate.TranslateElement(
+                { pageLanguage: 'en', includedLanguages: 'sw', layout: google.translate.TranslateElement.InlineLayout.SIMPLE },
+                'google_translate_element'
+            );
         }
     </script>
-    
     <script src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
 
     <style>
         .dept-hero {
-            background: linear-gradient(135deg, #1a1a2e, #1a7a1a);
+            background: linear-gradient(135deg, #0a1f0a 0%, #1a7a1a 60%, #0d3d0d 100%);
             color: #fff;
-            padding: 4rem 2rem 2.5rem;
-            text-align: center;
+            padding: 0;
         }
 
-        .dept-hero h1 {
-            font-size: 2.5rem;
+        .dept-hero-inner {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            gap: 2.5rem;
+            padding: 3rem 1.5rem;
+        }
+
+        .dept-hero-text {
+            flex: 3;
+        }
+
+        .dept-hero-text .dept-label {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: #f5c518;
             margin-bottom: 0.5rem;
         }
 
-        .dept-container {
-            max-width: 1100px;
+        .dept-hero-text h1 {
+            font-size: 2rem;
+            font-weight: 800;
+            margin-bottom: 0.3rem;
+        }
+
+        .dept-hero-text .dept-sub {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .dept-hero-text .hod-info {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            margin-top: 1rem;
+            padding: 0.8rem;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+        }
+
+        .dept-hero-text .hod-info .hod-name {
+            font-weight: 600;
+        }
+
+        .dept-hero-text .hod-info .hod-title {
+            font-size: 0.85rem;
+            opacity: 0.8;
+        }
+
+        .dept-hero-img {
+            flex: 2;
+            min-width: 250px;
+        }
+
+        .dept-hero-img .placeholder-img {
+            width: 100%;
+            aspect-ratio: 4/3;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 5rem;
+        }
+
+        /* Tabs */
+        .dept-tabs {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1.5rem 1.5rem 0;
+            display: flex;
+            gap: 0.3rem;
+            flex-wrap: wrap;
+            border-bottom: 1px solid #e0e0e0;
+            overflow-x: auto;
+        }
+
+        .dept-tab {
+            padding: 0.7rem 1.5rem;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #666;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+            white-space: nowrap;
+        }
+
+        .dept-tab:hover {
+            color: #1a7a1a;
+        }
+
+        .dept-tab.active {
+            color: #1a7a1a;
+            border-bottom-color: #1a7a1a;
+        }
+
+        /* Content */
+        .dept-content {
+            max-width: 1200px;
             margin: 0 auto;
             padding: 2rem 1.5rem;
         }
 
-        .dept-section-title {
-            color: #1a7a1a;
-            font-size: 1.8rem;
-            margin: 2.5rem 0 1.5rem;
-            padding-bottom: 0.5rem;
-            border-bottom: 3px solid #f5c518;
+        .tab-panel {
+            display: none;
         }
 
-        .dept-card {
+        .tab-panel.active {
+            display: block;
+        }
+
+        /* Overview Cards */
+        .overview-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem;
+        }
+
+        .overview-card {
+            background: #fff;
+            border-radius: 12px;
+            padding: 1.8rem;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            border-top: 4px solid #1a7a1a;
+        }
+
+        .overview-card .card-icon {
+            font-size: 2.2rem;
+            margin-bottom: 0.8rem;
+        }
+
+        .overview-card h3 {
+            color: #1a7a1a;
+            font-size: 1.1rem;
+            margin-bottom: 0.6rem;
+        }
+
+        .overview-card p {
+            color: #555;
+            font-size: 0.9rem;
+            line-height: 1.7;
+        }
+
+        /* Course Cards */
+        .course-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.2rem;
+        }
+
+        .course-card {
             background: #fff;
             border-radius: 10px;
-            padding: 1.8rem;
-            margin-bottom: 1.5rem;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
-            border-left: 4px solid #1a7a1a;
-        }
-
-        .dept-card h3 {
-            color: #1a7a1a;
-            font-size: 1.3rem;
-            margin-bottom: 0.3rem;
-        }
-
-        .dept-card .description {
-            color: #555;
-            line-height: 1.7;
-            margin: 0.8rem 0;
-        }
-
-        .dept-card .hod-info {
+            padding: 1.3rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
             display: flex;
             align-items: center;
-            gap: 0.8rem;
-            margin: 1rem 0;
-            padding: 0.8rem;
-            background: #f8f9fa;
-            border-radius: 8px;
+            gap: 1rem;
+            transition: transform 0.2s;
         }
 
-        .dept-card .hod-photo-sm {
+        .course-card:hover {
+            transform: translateY(-2px);
+        }
+
+        .course-card-icon {
             width: 50px;
             height: 50px;
-            border-radius: 50%;
-            background: #e0e0e0;
-            overflow: hidden;
+            border-radius: 10px;
+            background: #e8f5e8;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
             flex-shrink: 0;
         }
 
-        .dept-card .hod-photo-sm img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        .dept-card .hod-details .hod-name {
-            font-weight: 600;
+        .course-card-info h4 {
             color: #1a1a2e;
+            font-size: 0.95rem;
+            margin-bottom: 0.2rem;
         }
 
-        .dept-card .hod-details .hod-label {
-            font-size: 0.85rem;
+        .course-card-info .meta {
+            font-size: 0.78rem;
+            color: #888;
+            display: flex;
+            gap: 0.8rem;
+            align-items: center;
+        }
+
+        .course-card-info .badge-sm {
+            background: #e8f5e8;
             color: #1a7a1a;
-        }
-
-        .course-list {
-            margin-top: 1rem;
-            padding-left: 1.2rem;
-        }
-
-        .course-list li {
-            margin-bottom: 0.5rem;
-            color: #555;
-        }
-
-        .course-list a {
-            color: #1a7a1a;
-            text-decoration: none;
-            font-weight: 500;
-        }
-
-        .course-list a:hover {
-            text-decoration: underline;
-        }
-
-        .non-acad-card {
-            background: #fff;
+            padding: 2px 8px;
             border-radius: 10px;
-            padding: 1.5rem;
-            margin-bottom: 1.5rem;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
-            border-top: 4px solid #f5c518;
+            font-size: 0.7rem;
+            font-weight: 600;
         }
 
-        .non-acad-card h3 {
-            color: #1a7a1a;
-            margin-bottom: 0.3rem;
-        }
+        @media (max-width: 992px) {
 
-        .loading-skeleton {
-            background: #e0e0e0;
-            border-radius: 8px;
-            animation: pulse 1.5s infinite;
-            height: 120px;
-            margin-bottom: 1rem;
-        }
-
-        @keyframes pulse {
-
-            0%,
-            100% {
-                opacity: 1;
+            .course-grid,
+            .overview-grid {
+                grid-template-columns: repeat(2, 1fr);
             }
 
-            50% {
-                opacity: 0.5;
+            .dept-hero-inner {
+                flex-direction: column;
             }
         }
 
-        @media (max-width: 768px) {
-            .dept-hero h1 {
-                font-size: 1.8rem;
+        @media (max-width: 600px) {
+
+            .course-grid,
+            .overview-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .dept-hero-text h1 {
+                font-size: 1.5rem;
+            }
+
+            .dept-tab {
+                padding: 0.5rem 1rem;
+                font-size: 0.8rem;
             }
         }
     </style>
 </head>
 
 <body>
-    <div id="google_translate_element" style="position:fixed;top:10px;right:10px;z-index:9999;"></div>
-    <header id="mainNavbar"></header>
 
-    <section class="dept-hero">
-        <h1>Our Departments</h1>
-        <p>Explore our academic programs and support services</p>
+    <section class="dept-hero" id="deptHero">
+        <div class="dept-hero-inner">
+            <div class="dept-hero-text">
+                <div class="dept-label" id="deptLabel">Department</div>
+                <h1 id="deptName">Loading...</h1>
+                <p class="dept-sub" id="deptSub">Loading department information...</p>
+            </div>
+            <div class="dept-hero-img">
+                <div class="placeholder-img" id="deptImagePlaceholder">🏛️</div>
+            </div>
+        </div>
     </section>
 
-    <div class="dept-container">
-        <!-- Academic Departments -->
-        <h2 class="dept-section-title">📚 Academic Departments</h2>
-        <div id="academicDepts">
-            <div class="loading-skeleton"></div>
-            <div class="loading-skeleton"></div>
-            <div class="loading-skeleton"></div>
-        </div>
+    <!-- Tabs -->
+    <div class="dept-tabs" id="deptTabs">
+        <button class="dept-tab active" data-tab="overview">Overview</button>
+    </div>
 
-        <!-- Non-Academic Departments -->
-        <h2 class="dept-section-title">🤝 Non-Academic Departments</h2>
-        <div id="nonAcademicDepts">
-            <div class="loading-skeleton"></div>
-            <div class="loading-skeleton"></div>
+    <!-- Content -->
+    <div class="dept-content">
+        <div class="tab-panel active" id="panel-overview">
+            <div class="overview-grid" id="overviewGrid"></div>
         </div>
     </div>
 
     <footer id="mainFooter"></footer>
 
-    <script>
-        (async function () {
-            await loadSharedComponents();
-            await loadDepartments();
-        })();
-
-        async function loadSharedComponents() {
-            try {
-                const res = await fetch('/');
-                const html = await res.text();
-                const doc = new DOMParser().parseFromString(html, 'text/html');
-                const nav = doc.querySelector('header');
-                const footer = doc.querySelector('footer');
-                if (nav) document.getElementById('mainNavbar').innerHTML = nav.outerHTML;
-                if (footer) document.getElementById('mainFooter').innerHTML = footer.outerHTML;
-            } catch (e) { }
-        }
-
-        async function loadDepartments() {
-            try {
-                // Fetch all departments
-                const res = await fetch('/api/v1/departments');
-                if (!res.ok) throw new Error('Failed to fetch departments');
-                const data = await res.json();
-
-                if (!data.success || !data.data) return;
-
-                const departments = data.data;
-                const academic = departments.filter(d => d.type === 'academic');
-                const nonAcademic = departments.filter(d => d.type === 'non_academic');
-
-                renderAcademicDepts(academic);
-                renderNonAcademicDepts(nonAcademic);
-
-            } catch (e) {
-                console.log('Departments fetch failed');
-                document.getElementById('academicDepts').innerHTML = '<p style="text-align:center;color:#888;">Unable to load departments. Please try again later.</p>';
-                document.getElementById('nonAcademicDepts').innerHTML = '';
-            }
-        }
-
-        async function renderAcademicDepts(departments) {
-            const container = document.getElementById('academicDepts');
-
-            if (departments.length === 0) {
-                container.innerHTML = '<p style="text-align:center;color:#888;">No academic departments found.</p>';
-                return;
-            }
-
-            // For each department, fetch its courses
-            const deptHtmlPromises = departments.map(async (dept) => {
-                let coursesHtml = '<p style="color:#888;">Loading courses...</p>';
-
-                try {
-                    const courseRes = await fetch(`/api/v1/departments/${dept.id}/courses`);
-                    if (courseRes.ok) {
-                        const courseData = await courseRes.json();
-                        if (courseData.success && courseData.data && courseData.data.length > 0) {
-                            coursesHtml = `
-                                <p style="font-weight:600;color:#1a1a2e;margin-top:1rem;">Courses Offered:</p>
-                                <ul class="course-list">
-                                    ${courseData.data.map(c => `
-                                        <li>
-                                            <a href="courses.html#course-${c.id}">
-                                                ${escapeHtml(c.name)} 
-                                                (${c.duration_years} Year${c.duration_years > 1 ? 's' : ''})
-                                            </a>
-                                            ${c.cbet_status ? '<span style="background:#f5c518;color:#1a1a2e;padding:2px 8px;border-radius:4px;font-size:0.75rem;margin-left:6px;">CBET</span>' : ''}
-                                        </li>
-                                    `).join('')}
-                                </ul>
-                            `;
-                        } else {
-                            coursesHtml = '<p style="color:#888;">No courses listed yet.</p>';
-                        }
-                    }
-                } catch (e) {
-                    coursesHtml = '<p style="color:#888;">Courses unavailable.</p>';
-                }
-
-                return `
-                    <div class="dept-card" id="dept-${dept.id}">
-                        <h3>${escapeHtml(dept.name)}</h3>
-                        <p class="description">${escapeHtml(dept.description || 'Department of ' + dept.name)}</p>
-                        ${dept.hod_name ? `
-                            <div class="hod-info">
-                                <div class="hod-photo-sm">
-                                    ${dept.hod_photo ? `<img src="/uploads/${dept.hod_photo}" alt="${escapeHtml(dept.hod_name)}">` : '👤'}
-                                </div>
-                                <div class="hod-details">
-                                    <div class="hod-name">${escapeHtml(dept.hod_name)}</div>
-                                    <div class="hod-label">Head of Department</div>
-                                </div>
-                            </div>
-                        ` : ''}
-                        ${coursesHtml}
-                    </div>
-                `;
-            });
-
-            const htmls = await Promise.all(deptHtmlPromises);
-            container.innerHTML = htmls.join('');
-        }
-
-        function renderNonAcademicDepts(departments) {
-            const container = document.getElementById('nonAcademicDepts');
-
-            if (departments.length === 0) {
-                container.innerHTML = '<p style="text-align:center;color:#888;">No non-academic departments found.</p>';
-                return;
-            }
-
-            container.innerHTML = departments.map(dept => `
-                <div class="non-acad-card" id="dept-${dept.id}">
-                    <h3>${escapeHtml(dept.name)}</h3>
-                    <p style="color:#555;line-height:1.6;">${escapeHtml(dept.description || '')}</p>
-                    ${dept.hod_name ? `
-                        <p style="margin-top:0.8rem;color:#1a7a1a;font-weight:500;">
-                            📋 Head: ${escapeHtml(dept.hod_name)}
-                        </p>
-                    ` : ''}
-                </div>
-            `).join('');
-        }
-
-        function escapeHtml(str) {
-            if (!str) return '';
-            const div = document.createElement('div');
-            div.textContent = str;
-            return div.innerHTML;
-        }
-    </script>
     <script src="assets/js/navbar.js"></script>
     <script>
         buildNavbar('departments');
+
+        // Load footer
+        fetch('/').then(r => r.text()).then(html => {
+            const doc = new DOMParser().parseFromString(html, 'text/html');
+            const footer = doc.querySelector('footer');
+            if (footer) document.getElementById('mainFooter').innerHTML = footer.outerHTML;
+        }).catch(() => { });
+
+        // Get department ID from URL hash (e.g., #dept-1)
+        function getDeptIdFromHash() {
+            const hash = window.location.hash;
+            const match = hash.match(/dept-(\d+)/);
+            return match ? match[1] : null;
+        }
+
+        async function initPage() {
+            const deptId = getDeptIdFromHash();
+            const tabParam = getTabFromHash();
+
+            if (deptId) {
+                await loadDepartment(deptId, tabParam);
+            } else {
+                try {
+                    const res = await fetch('/api/v1/departments?type=academic');
+                    const d = await res.json();
+                    if (d.success && d.data && d.data.length > 0) {
+                        history.replaceState(null, '', `#dept-${d.data[0].id}`);
+                        await loadDepartment(d.data[0].id, tabParam);
+                    }
+                } catch (e) {
+                    document.getElementById('deptName').textContent = 'Departments';
+                    document.getElementById('deptSub').textContent = 'Unable to load department data.';
+                }
+            }
+        }
+
+        function getTabFromHash() {
+            const hash = window.location.hash;
+            const match = hash.match(/tab=([^&]+)/);
+            return match ? match[1] : null;
+        }
+
+        // Listen for hash changes (when user clicks different department in navbar)
+        window.addEventListener('hashchange', () => {
+            const deptId = getDeptIdFromHash();
+            if (deptId) loadDepartment(deptId);
+        });
+
+        async function loadDepartment(id) {
+            if (!id) return;
+            try {
+                const [deptRes, courseRes] = await Promise.all([
+                    fetch(`/api/v1/departments/${id}`),
+                    fetch(`/api/v1/departments/${id}/courses`)
+                ]);
+                const deptData = await deptRes.json();
+                const courseData = await courseRes.json();
+
+                if (!deptData.success || !deptData.data) {
+                    document.getElementById('deptName').textContent = 'Department Not Found';
+                    return;
+                }
+
+                const dept = deptData.data;
+                const courses = courseData.success ? courseData.data : [];
+
+                // Update hero
+                document.getElementById('deptLabel').textContent = dept.type === 'academic' ? 'Academic Department' : 'Support Department';
+                document.getElementById('deptName').textContent = dept.name;
+                document.getElementById('deptSub').textContent = dept.description || 'Explore our programmes and courses.';
+                document.getElementById('deptImagePlaceholder').textContent = getDeptEmoji(dept.name);
+
+                // Build tabs based on examining bodies
+                const examiningBodies = [...new Set(courses.map(c => c.examining_body))];
+                const tabsContainer = document.getElementById('deptTabs');
+                tabsContainer.innerHTML = '<button class="dept-tab active" data-tab="overview">Overview</button>';
+                examiningBodies.forEach(body => {
+                    tabsContainer.innerHTML += `<button class="dept-tab" data-tab="body-${body}">${body} Courses</button>`;
+                });
+
+                // Clear old panels
+                const content = document.querySelector('.dept-content');
+                content.querySelectorAll('.tab-panel').forEach(p => p.remove());
+
+                // Overview panel
+                const overviewPanel = document.createElement('div');
+                overviewPanel.className = 'tab-panel active';
+                overviewPanel.id = 'panel-overview';
+                overviewPanel.innerHTML = renderOverview(dept);
+                content.appendChild(overviewPanel);
+
+                // Course panels per examining body
+                examiningBodies.forEach(body => {
+                    const panel = document.createElement('div');
+                    panel.className = 'tab-panel';
+                    panel.id = `panel-body-${body}`;
+                    const bodyCourses = courses.filter(c => c.examining_body === body);
+                    panel.innerHTML = renderCourseGrid(bodyCourses);
+                    content.appendChild(panel);
+                });
+                // Tab click handlers
+                tabsContainer.querySelectorAll('.dept-tab').forEach(tab => {
+                    tab.addEventListener('click', () => {
+                        tabsContainer.querySelectorAll('.dept-tab').forEach(t => t.classList.remove('active'));
+                        tab.classList.add('active');
+                        content.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+                        document.getElementById('panel-' + tab.dataset.tab).classList.add('active');
+                    });
+                });
+
+                // After all panels are built, switch to target tab if specified
+                if (targetTab) {
+                    setTimeout(() => {
+                        let targetTabBtn;
+
+                        if (targetTab === 'courses') {
+                            // Open the first course tab (not Overview)
+                            targetTabBtn = tabsContainer.querySelector('.dept-tab:not([data-tab="overview"])');
+                        } else {
+                            // Open specific tab
+                            targetTabBtn = tabsContainer.querySelector(`[data-tab="${targetTab}"]`);
+                        }
+
+                        if (targetTabBtn) {
+                            targetTabBtn.click();
+                        }
+                    }, 100);
+                }
+
+            } catch (e) { console.log('Failed to load department'); }
+        }
+        function renderOverview(dept) {
+            const vision = dept.description || 'To be a centre of excellence in technical and vocational training, producing skilled graduates who drive economic transformation.';
+            const mission = 'To provide quality, competency-based training that equips learners with practical skills, knowledge, and attitudes for employment, self-reliance, and lifelong learning.';
+            const objective = 'To produce innovative, ethical, and self-driven professionals who contribute meaningfully to national and global development through industry-relevant competencies.';
+
+            return `
+        <div class="overview-grid">
+          <div class="overview-card">
+            <div class="card-icon">🔭</div>
+            <h3>Vision</h3>
+            <p>${escapeHtml(vision)}</p>
+          </div>
+          <div class="overview-card">
+            <div class="card-icon">🎯</div>
+            <h3>Mission</h3>
+            <p>${escapeHtml(mission)}</p>
+          </div>
+          <div class="overview-card">
+            <div class="card-icon">🏆</div>
+            <h3>Key Objective</h3>
+            <p>${escapeHtml(objective)}</p>
+          </div>
+        </div>`;
+        }
+
+        function renderCourseGrid(courses) {
+            if (!courses || courses.length === 0) {
+                return '<p style="text-align:center;color:#888;padding:2rem;">No courses found in this category.</p>';
+            }
+            return `<div class="course-grid">${courses.map(c => `
+        <div class="course-card">
+          <div class="course-card-icon">📘</div>
+          <div class="course-card-info">
+            <h4>${escapeHtml(c.name)}</h4>
+            <div class="meta">
+              <span>📚 ${c.module_count || c.duration_years * 2 || 'N/A'} modules</span>
+              <span>⏱️ ${c.duration_years} yr(s)</span>
+              ${c.cbet_status ? '<span class="badge-sm">CBET</span>' : ''}
+            </div>
+          </div>
+        </div>`).join('')}</div>`;
+        }
+
+        function getDeptEmoji(name) {
+            const map = {
+                'information': '💻', 'business': '📊', 'engineering': '⚙️',
+                'hospitality': '🍽️', 'applied science': '🔬', 'social work': '🤝',
+                'research': '🔍'
+            };
+            const lower = (name || '').toLowerCase();
+            for (const [k, v] of Object.entries(map)) {
+                if (lower.includes(k)) return v;
+            }
+            return '🏛️';
+        }
+
+        function escapeHtml(s) {
+            const div = document.createElement('div');
+            div.textContent = s || '';
+            return div.innerHTML;
+        }
+
+        // Init
+        initPage();
     </script>
 </body>
 

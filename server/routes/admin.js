@@ -767,12 +767,10 @@ router.put("/departments/:id/hod", async (req, res) => {
       [lecturer_id],
     );
     if (!lecturer)
-      return res
-        .status(400)
-        .json({
-          success: false,
-          message: "Selected user is not a lecturer or HOD",
-        });
+      return res.status(400).json({
+        success: false,
+        message: "Selected user is not a lecturer or HOD",
+      });
 
     // For academic departments: check if lecturer is already HOD of another academic dept
     if (dept.type === "academic") {
@@ -815,6 +813,178 @@ router.put("/departments/:id/hod", async (req, res) => {
     res.json({ success: true, message: "HOD assigned successfully" });
   } catch (err) {
     logger.error("HOD assignment error", { error: err.message });
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+});
+
+// ── COURSES CRUD ──
+router.post("/courses", async (req, res) => {
+  try {
+    const {
+      name,
+      department_id,
+      duration_years,
+      examining_body,
+      cbet_status,
+      entry_requirements,
+      description,
+      fees,
+      intakes,
+    } = req.body;
+    if (!name || !department_id || !duration_years || !examining_body) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Missing required fields" });
+    }
+
+    // Insert course
+    const [result] = await db.execute(
+      "INSERT INTO courses (name, duration_years, department_id, examining_body, cbet_status, entry_requirements, description) VALUES (?,?,?,?,?,?,?)",
+      [
+        name,
+        duration_years,
+        department_id,
+        examining_body,
+        cbet_status ? 1 : 0,
+        entry_requirements || "",
+        description || "",
+      ],
+    );
+
+    // Insert fees
+    if (fees) {
+      for (const [year, fee] of Object.entries(fees)) {
+        await db.execute(
+          "INSERT INTO fees (course_id, year_of_study, tuition, examination, registration, id_card, other, other_label, last_updated) VALUES (?,?,?,?,?,?,?,?,CURDATE())",
+          [
+            result.insertId,
+            year,
+            fee.tuition || 0,
+            fee.examination || 0,
+            fee.registration || 0,
+            fee.id_card || 0,
+            fee.other || 0,
+            fee.other_label || "",
+          ],
+        );
+      }
+    }
+
+    // Insert intakes
+    if (intakes && Array.isArray(intakes)) {
+      for (const intake of intakes) {
+        if (intake.date) {
+          await db.execute(
+            "INSERT INTO intake_dates (course_id, intake_date, label) VALUES (?,?,?)",
+            [result.insertId, intake.date, intake.label || ""],
+          );
+        }
+      }
+    }
+
+    res.json({ success: true, message: "Course added", id: result.insertId });
+  } catch (err) {
+    logger.error("Course create error", { error: err.message });
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+});
+
+router.put("/courses/:id", async (req, res) => {
+  try {
+    const {
+      name,
+      department_id,
+      duration_years,
+      examining_body,
+      cbet_status,
+      entry_requirements,
+      description,
+      fees,
+      intakes,
+    } = req.body;
+
+    // Update course basic info
+    await db.execute(
+      "UPDATE courses SET name=?, department_id=?, duration_years=?, examining_body=?, cbet_status=?, entry_requirements=?, description=? WHERE id=?",
+      [
+        name,
+        department_id,
+        duration_years,
+        examining_body,
+        cbet_status ? 1 : 0,
+        entry_requirements || "",
+        description || "",
+        req.params.id,
+      ],
+    );
+
+    // Update fees: delete old, insert new
+    await db.execute("DELETE FROM fees WHERE course_id = ?", [req.params.id]);
+    if (fees) {
+      for (const [year, fee] of Object.entries(fees)) {
+        await db.execute(
+          "INSERT INTO fees (course_id, year_of_study, tuition, examination, registration, id_card, other, other_label, last_updated) VALUES (?,?,?,?,?,?,?,?,CURDATE())",
+          [
+            req.params.id,
+            year,
+            fee.tuition || 0,
+            fee.examination || 0,
+            fee.registration || 0,
+            fee.id_card || 0,
+            fee.other || 0,
+            fee.other_label || "",
+          ],
+        );
+      }
+    }
+
+    // Update intakes: delete old, insert new
+    await db.execute("DELETE FROM intake_dates WHERE course_id = ?", [
+      req.params.id,
+    ]);
+    if (intakes && Array.isArray(intakes)) {
+      for (const intake of intakes) {
+        if (intake.date) {
+          await db.execute(
+            "INSERT INTO intake_dates (course_id, intake_date, label) VALUES (?,?,?)",
+            [req.params.id, intake.date, intake.label || ""],
+          );
+        }
+      }
+    }
+
+    res.json({ success: true, message: "Course updated" });
+  } catch (err) {
+    logger.error("Course update error", { error: err.message });
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+});
+
+router.patch("/courses/:id/toggle", async (req, res) => {
+  await db.execute(
+    "UPDATE courses SET is_active = NOT is_active WHERE id = ?",
+    [req.params.id],
+  );
+  res.json({ success: true });
+});
+
+router.delete("/courses/:id", async (req, res) => {
+  try {
+    const [[row]] = await db.execute("SELECT * FROM courses WHERE id = ?", [
+      req.params.id,
+    ]);
+    if (!row)
+      return res
+        .status(404)
+        .json({ success: false, message: "Course not found" });
+    await db.execute(
+      "INSERT INTO recycle_bin (original_table, original_id, data_snapshot, deleted_by) VALUES (?,?,?,?)",
+      ["courses", row.id, JSON.stringify(row), req.session.user.id],
+    );
+    await db.execute("DELETE FROM courses WHERE id = ?", [req.params.id]);
+    res.json({ success: true, message: "Course moved to recycle bin" });
+  } catch (err) {
+    logger.error("Course delete error", { error: err.message });
     res.status(500).json({ success: false, message: "Server error" });
   }
 });

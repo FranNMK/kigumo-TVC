@@ -106,7 +106,7 @@
     </ul>
   </li>
 
-  <li><a href="/courses.html" class="${current === "courses" ? "active" : ""}">Courses</a></li>
+  <li><a href="/courses.html" class="${current === 'courses' ? 'active' : ''}">Our Programs</a></li>
   <li><a href="/admissions.html" class="${current === "admissions" ? "active" : ""}">Admissions</a></li>
   <li><a href="/news.html" class="${current === "news" ? "active" : ""}">News</a></li>
   <li><a href="/contact.html" class="${current === "contact" ? "active" : ""}">Contact</a></li>

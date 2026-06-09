@@ -451,7 +451,7 @@
           <p>${escapeHtml(dept.description ? dept.description.substring(0, 120) + "..." : "Academic department at Kigumo TVC.")}</p>
         </div>
         <div class="course-card-footer">
-          <a href="departments.html#dept-${dept.id}">View Courses &rarr;</a>
+          <a href="departments.html#dept-${dept.id}&tab=courses">View Courses &rarr;</a>
         </div>
       </div>
     `,

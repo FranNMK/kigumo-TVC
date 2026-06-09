@@ -717,13 +717,411 @@
     }
 
     // ── COURSES ──
+    let courseFormStep = 1;
+    let courseFormData = {};
+
     async function loadCourses() {
       const r = await fetch('/api/v1/courses'), d = await r.json();
-      let h = '<table><tr><th>Name</th><th>Dept</th><th>Exam Body</th></tr>';
-      if (d.success && d.data) d.data.forEach(c => { h += `<tr><td>${escapeHtml(c.name)}</td><td>${escapeHtml(c.department?.name || '')}</td><td>${c.examining_body}</td></tr>` });
+      let h = '<button class="btn btn-green btn-sm" onclick="openCourseForm()">+ Add Course</button><table><tr><th>Name</th><th>Dept</th><th>Exam Body</th><th>Duration</th><th>CBET</th><th>Active</th><th>Actions</th></tr>';
+      if (d.success && d.data) d.data.forEach(c => {
+        h += `<tr><td>${escapeHtml(c.name)}</td><td>${escapeHtml(c.department?.name || '')}</td><td>${c.examining_body}</td><td>${c.duration_years} yr(s)</td><td>${c.cbet_status ? '✅' : '❌'}</td><td>${c.is_active ? '✅' : '❌'}</td><td><button class="btn btn-yellow btn-sm" onclick="editCourse(${c.id})">Edit</button> <button class="btn btn-sm" style="background:#6c757d;color:#fff;" onclick="toggleCourse(${c.id})">Toggle</button> <button class="btn btn-red btn-sm" onclick="deleteCourse(${c.id})">Del</button></td></tr>`;
+      });
       h += '</table>'; document.getElementById('coursesContent').innerHTML = h;
     }
 
+    // ── Progressive Course Form ──
+    function openCourseForm() {
+      courseFormStep = 1;
+      courseFormData = {};
+      renderCourseFormStep();
+    }
+
+    function renderCourseFormStep() {
+      let formHtml = '';
+
+      if (courseFormStep === 1) {
+        // Step 1: Basic Info
+        formHtml = `<h3>Add Course - Step 1/3: Basic Info</h3><form onsubmit="courseStep1(event)">
+    <div class="form-group"><label>Course Name</label><input name="name" value="${escapeHtml(courseFormData.name || '')}" required></div>
+    <div class="form-group"><label>Department</label><select name="department_id" id="courseDeptSelect" required><option value="">Loading...</option></select></div>
+    
+<div class="form-group"><label>Course Level (Modules)</label><select name="duration_years" id="courseModules" onchange="updateModuleCount()" required>
+  <option value="2" ${courseFormData.duration_years == 2 ? 'selected' : ''}>Artisan (2 Modules)</option>
+  <option value="4" ${courseFormData.duration_years == 4 ? 'selected' : ''}>Certificate (4 Modules)</option>
+  <option value="6" ${courseFormData.duration_years == 6 ? 'selected' : ''}>Diploma (6 Modules)</option>
+</select></div>
+    <div class="form-group"><label>Examining Body</label><select name="examining_body" required>
+      <option value="KNEC" ${courseFormData.examining_body === 'KNEC' ? 'selected' : ''}>KNEC</option>
+      <option value="KASNEB" ${courseFormData.examining_body === 'KASNEB' ? 'selected' : ''}>KASNEB</option>
+      <option value="CDACC" ${courseFormData.examining_body === 'CDACC' ? 'selected' : ''}>CDACC</option>
+    </select></div>
+    <div class="form-group"><label>CBET Status</label><select name="cbet_status">
+      <option value="1" ${courseFormData.cbet_status ? 'selected' : ''}>Yes - CBET Programme</option>
+      <option value="0" ${!courseFormData.cbet_status ? 'selected' : ''}>No</option>
+    </select></div>
+    <div class="form-group"><label>Entry Requirements</label><textarea name="entry_requirements" rows="2">${escapeHtml(courseFormData.entry_requirements || '')}</textarea></div>
+    <div class="form-group"><label>Description</label><textarea name="description" rows="3">${escapeHtml(courseFormData.description || '')}</textarea></div>
+    <button class="btn btn-green">Next: Fees →</button> <button type="button" class="btn btn-red" onclick="closeModal()">Cancel</button>
+  </form>`;
+
+        // Load departments dropdown after modal opens
+        setTimeout(() => {
+          fetch('/api/v1/departments?type=academic').then(r => r.json()).then(d => {
+            if (d.success && d.data) {
+              const sel = document.getElementById('courseDeptSelect');
+              sel.innerHTML = d.data.map(dept => `<option value="${dept.id}" ${courseFormData.department_id == dept.id ? 'selected' : ''}>${escapeHtml(dept.name)}</option>`).join('');
+            }
+          });
+        }, 100);
+      }
+
+      else if (courseFormStep === 2) {
+
+        const modules = parseInt(courseFormData.duration_years) || 6;
+        formHtml = `<h3>Add Course - Step 2/${courseFormData.id ? '3' : '3'}: Fees Structure</h3>
+    <form onsubmit="${courseFormData.id ? 'editCourseStep2' : 'courseStep2'}(event)">
+    <p style="color:#666;margin-bottom:1rem;">Set fees for each module (Ksh). Default: 22,396 per module.</p>`;
+
+        for (let m = 1; m <= modules; m++) {
+          const fm = courseFormData.fees?.[m] || {};
+          formHtml += `
+    <div style="background:#f8f9fa;padding:0.8rem;border-radius:6px;margin-bottom:0.8rem;">
+      <strong style="color:#1a7a1a;">Module ${m}</strong>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;margin-top:0.5rem;">
+        <div class="form-group"><label>Tuition</label><input type="number" name="tuition_${m}" value="${fm.tuition || '22396'}" required></div>
+        <div class="form-group"><label>Examination</label><input type="number" name="exam_${m}" value="${fm.examination || '0'}"></div>
+        <div class="form-group"><label>Registration</label><input type="number" name="reg_${m}" value="${fm.registration || '0'}"></div>
+        <div class="form-group"><label>ID Card</label><input type="number" name="idcard_${m}" value="${fm.id_card || '0'}"></div>
+        <div class="form-group"><label>Other Fee</label><input type="number" name="other_${m}" value="${fm.other || '0'}"></div>
+        <div class="form-group"><label>Other Label</label><input name="other_label_${m}" value="${escapeHtml(fm.other_label || '')}" placeholder="e.g. Lab Fee"></div>
+      </div>
+      <div style="text-align:right;color:#1a7a1a;font-weight:600;margin-top:0.5rem;">
+        Module Total: Ksh <span id="moduleTotal_${m}">${calculateModuleTotal(fm)}</span>
+      </div>
+    </div>`;
+        }
+        formHtml += `
+    <button class="btn btn-green">Next: Intake Dates →</button> 
+    <button type="button" class="btn btn-yellow" onclick="courseFormStep=1;${courseFormData.id ? 'renderCourseEditForm' : 'renderCourseFormStep'}();">← Back</button>
+  </form>`;
+      }
+
+
+      else if (courseFormStep === 3) {
+        // Step 3: Intake Dates
+        formHtml = `<h3>Add Course - Step 3/3: Intake Dates</h3><form onsubmit="courseStep3(event)">
+    <p style="color:#666;margin-bottom:1rem;">Add intake dates for this course</p>
+    <div id="intakeDatesContainer">`;
+
+        const intakes = courseFormData.intakes || [{ date: '', label: '' }];
+        intakes.forEach((intake, i) => {
+          formHtml += `
+    <div class="intake-row" style="display:flex;gap:0.5rem;align-items:end;margin-bottom:0.5rem;">
+      <div class="form-group" style="flex:1;"><label>${i === 0 ? 'Intake Date' : ''}</label><input type="date" name="intake_date_${i}" value="${intake.date}" required></div>
+      <div class="form-group" style="flex:1;"><label>${i === 0 ? 'Label' : ''}</label><input name="intake_label_${i}" value="${escapeHtml(intake.label)}" placeholder="e.g. January 2026" required></div>
+      ${i > 0 ? '<button type="button" class="btn btn-red btn-sm" onclick="this.closest(\'.intake-row\').remove()" style="margin-bottom:0.6rem;">✕</button>' : ''}
+    </div>`;
+        });
+
+        formHtml += `
+    </div>
+    <button type="button" class="btn btn-sm" style="background:#6c757d;color:#fff;margin-bottom:1rem;" onclick="addIntakeRow()">+ Add Another Intake</button>
+    <br>
+    <button class="btn btn-green">Save Course</button> <button type="button" class="btn btn-yellow" onclick="courseFormStep=2;renderCourseFormStep();">← Back</button>
+  </form>`;
+      }
+
+      openModal(formHtml);
+    }
+
+    function addIntakeRow() {
+      if (!courseFormData.intakes) courseFormData.intakes = [];
+      courseFormData.intakes.push({ date: '', label: '' });
+      courseFormStep = 3;
+      renderCourseFormStep();
+    }
+
+    function courseStep1(e) {
+      e.preventDefault();
+      const f = new FormData(e.target);
+      courseFormData = {
+        name: f.get('name'),
+        department_id: f.get('department_id'),
+        duration_years: f.get('duration_years'),
+        examining_body: f.get('examining_body'),
+        cbet_status: f.get('cbet_status') === '1',
+        entry_requirements: f.get('entry_requirements'),
+        description: f.get('description'),
+        fees: courseFormData.fees || {},
+        intakes: courseFormData.intakes || [{ date: '', label: '' }]
+      };
+      courseFormStep = 2;
+      renderCourseFormStep();
+    }
+
+    function courseStep2(e) {
+      e.preventDefault();
+      const f = new FormData(e.target);
+      const modules = parseInt(courseFormData.duration_years) || 6;
+      courseFormData.fees = {};
+      for (let m = 1; m <= modules; m++) {
+        courseFormData.fees[m] = {
+          tuition: f.get(`tuition_${m}`),
+          examination: f.get(`exam_${m}`),
+          registration: f.get(`reg_${m}`),
+          id_card: f.get(`idcard_${m}`),
+          other: f.get(`other_${m}`) || '0',
+          other_label: f.get(`other_label_${m}`)
+        };
+      }
+      courseFormStep = 3;
+      renderCourseFormStep();
+    }
+
+    async function courseStep3(e) {
+      e.preventDefault();
+      const f = new FormData(e.target);
+      courseFormData.intakes = [];
+      let i = 0;
+      while (f.has(`intake_date_${i}`)) {
+        const date = f.get(`intake_date_${i}`);
+        const label = f.get(`intake_label_${i}`);
+        if (date && label) courseFormData.intakes.push({ date, label });
+        i++;
+      }
+
+      // Build final payload
+      const payload = {
+        name: courseFormData.name,
+        department_id: parseInt(courseFormData.department_id),
+        duration_years: parseInt(courseFormData.duration_years),
+        examining_body: courseFormData.examining_body,
+        cbet_status: courseFormData.cbet_status,
+        entry_requirements: courseFormData.entry_requirements,
+        description: courseFormData.description,
+        fees: courseFormData.fees,
+        intakes: courseFormData.intakes
+      };
+
+      const progressInterval = startProgressAnimation();
+      try {
+        const r = await fetch(`${API}/courses`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+        clearInterval(progressInterval);
+        const result = await r.json();
+        if (result.success) { finishProgress(true, 'Course added successfully!'); closeModal(); loadCourses(); }
+        else { finishProgress(false, result.message); }
+      } catch (err) { clearInterval(progressInterval); finishProgress(false, 'Network error'); }
+    }
+
+    // ── Edit Course ──
+    async function editCourse(id) {
+      showProgress('Loading course details...');
+      try {
+        const r = await fetch(`/api/v1/courses/${id}`);
+        const d = await r.json();
+        hideProgress();
+        if (!d.success || !d.data) return alert('Course not found');
+
+        const c = d.data;
+        // Pre-fill form data for progressive editing
+        courseFormData = {
+          id: c.id,
+          name: c.name,
+          department_id: c.department?.id,
+          duration_years: c.duration_years,
+          examining_body: c.examining_body,
+          cbet_status: c.cbet_status,
+          entry_requirements: c.entry_requirements,
+          description: c.description,
+          fees: {},
+          intakes: c.intake_dates?.map(i => ({ date: i.date?.substring(0, 10), label: i.label })) || []
+        };
+
+        // Map existing fees
+        if (c.fees) {
+          c.fees.forEach(f => {
+            courseFormData.fees[f.year_of_study] = {
+              tuition: f.tuition,
+              examination: f.examination,
+              registration: f.registration,
+              id_card: f.id_card,
+              other: f.other,
+              other_label: f.other_label
+            };
+          });
+        }
+
+        courseFormStep = 1;
+        renderCourseEditForm();
+      } catch (err) { hideProgress(); alert('Failed to load course'); }
+    }
+
+    function renderCourseEditForm() {
+      // Same as renderCourseFormStep but with PUT action
+      let formHtml = '';
+
+      if (courseFormStep === 1) {
+        formHtml = `<h3>Edit Course - Step 1/3: Basic Info</h3><form onsubmit="editCourseStep1(event)">
+    <div class="form-group"><label>Course Name</label><input name="name" value="${escapeHtml(courseFormData.name || '')}" required></div>
+    <div class="form-group"><label>Department</label><select name="department_id" id="courseDeptSelect" required><option value="">Loading...</option></select></div>
+    <div class="form-group"><label>Duration (Years)</label><input type="number" name="duration_years" value="${courseFormData.duration_years || '3'}" min="1" max="4" required></div>
+    <div class="form-group"><label>Examining Body</label><select name="examining_body" required>
+      <option value="KNEC" ${courseFormData.examining_body === 'KNEC' ? 'selected' : ''}>KNEC</option>
+      <option value="KASNEB" ${courseFormData.examining_body === 'KASNEB' ? 'selected' : ''}>KASNEB</option>
+      <option value="CDACC" ${courseFormData.examining_body === 'CDACC' ? 'selected' : ''}>CDACC</option>
+    </select></div>
+    <div class="form-group"><label>CBET Status</label><select name="cbet_status">
+      <option value="1" ${courseFormData.cbet_status ? 'selected' : ''}>Yes - CBET Programme</option>
+      <option value="0" ${!courseFormData.cbet_status ? 'selected' : ''}>No</option>
+    </select></div>
+    <div class="form-group"><label>Entry Requirements</label><textarea name="entry_requirements" rows="2">${escapeHtml(courseFormData.entry_requirements || '')}</textarea></div>
+    <div class="form-group"><label>Description</label><textarea name="description" rows="3">${escapeHtml(courseFormData.description || '')}</textarea></div>
+    <button class="btn btn-green">Next: Fees →</button> <button type="button" class="btn btn-red" onclick="closeModal()">Cancel</button>
+  </form>`;
+        setTimeout(() => {
+          fetch('/api/v1/departments?type=academic').then(r => r.json()).then(d => {
+            if (d.success && d.data) {
+              const sel = document.getElementById('courseDeptSelect');
+              sel.innerHTML = d.data.map(dept => `<option value="${dept.id}" ${courseFormData.department_id == dept.id ? 'selected' : ''}>${escapeHtml(dept.name)}</option>`).join('');
+            }
+          });
+        }, 100);
+      }
+      else if (courseFormStep === 2) {
+        const years = parseInt(courseFormData.duration_years) || 3;
+        formHtml = `<h3>Edit Course - Step 2/3: Fees Structure</h3><form onsubmit="editCourseStep2(event)">`;
+        for (let y = 1; y <= years; y++) {
+          const fy = courseFormData.fees?.[y] || {};
+          formHtml += `
+    <div style="background:#f8f9fa;padding:0.8rem;border-radius:6px;margin-bottom:0.8rem;">
+      <strong style="color:#1a7a1a;">Year ${y}</strong>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;margin-top:0.5rem;">
+        <div class="form-group"><label>Tuition</label><input type="number" name="tuition_${y}" value="${fy.tuition || '25000'}" required></div>
+        <div class="form-group"><label>Examination</label><input type="number" name="exam_${y}" value="${fy.examination || '5000'}" required></div>
+        <div class="form-group"><label>Registration</label><input type="number" name="reg_${y}" value="${fy.registration || '1000'}" required></div>
+        <div class="form-group"><label>ID Card</label><input type="number" name="idcard_${y}" value="${fy.id_card || '500'}"></div>
+        <div class="form-group"><label>Other Fee</label><input type="number" name="other_${y}" value="${fy.other || '0'}"></div>
+        <div class="form-group"><label>Other Label</label><input name="other_label_${y}" value="${escapeHtml(fy.other_label || '')}" placeholder="e.g. Lab Fee"></div>
+      </div>
+    </div>`;
+        }
+        formHtml += `<button class="btn btn-green">Next: Intake Dates →</button> <button type="button" class="btn btn-yellow" onclick="courseFormStep=1;renderCourseEditForm();">← Back</button></form>`;
+      }
+      else if (courseFormStep === 3) {
+        const intakes = courseFormData.intakes?.length ? courseFormData.intakes : [{ date: '', label: '' }];
+        formHtml = `<h3>Edit Course - Step 3/3: Intake Dates</h3><form onsubmit="editCourseStep3(event)">
+    <div id="intakeDatesContainer">`;
+        intakes.forEach((intake, i) => {
+          formHtml += `
+    <div class="intake-row" style="display:flex;gap:0.5rem;align-items:end;margin-bottom:0.5rem;">
+      <div class="form-group" style="flex:1;"><label>${i === 0 ? 'Intake Date' : ''}</label><input type="date" name="intake_date_${i}" value="${intake.date}" required></div>
+      <div class="form-group" style="flex:1;"><label>${i === 0 ? 'Label' : ''}</label><input name="intake_label_${i}" value="${escapeHtml(intake.label)}" placeholder="e.g. January 2026" required></div>
+      ${i > 0 ? '<button type="button" class="btn btn-red btn-sm" onclick="this.closest(\'.intake-row\').remove()" style="margin-bottom:0.6rem;">✕</button>' : ''}
+    </div>`;
+        });
+        formHtml += `</div>
+    <button type="button" class="btn btn-sm" style="background:#6c757d;color:#fff;margin-bottom:1rem;" onclick="addEditIntakeRow()">+ Add Another Intake</button>
+    <br>
+    <button class="btn btn-green">Update Course</button> <button type="button" class="btn btn-yellow" onclick="courseFormStep=2;renderCourseEditForm();">← Back</button></form>`;
+      }
+      openModal(formHtml);
+    }
+
+    function addEditIntakeRow() {
+      if (!courseFormData.intakes) courseFormData.intakes = [];
+      courseFormData.intakes.push({ date: '', label: '' });
+      courseFormStep = 3;
+      renderCourseEditForm();
+    }
+
+    function editCourseStep1(e) { e.preventDefault(); const f = new FormData(e.target); courseFormData.name = f.get('name'); courseFormData.department_id = f.get('department_id'); courseFormData.duration_years = f.get('duration_years'); courseFormData.examining_body = f.get('examining_body'); courseFormData.cbet_status = f.get('cbet_status') === '1'; courseFormData.entry_requirements = f.get('entry_requirements'); courseFormData.description = f.get('description'); courseFormStep = 2; renderCourseEditForm(); }
+
+    function editCourseStep2(e) {
+      e.preventDefault();
+      const f = new FormData(e.target);
+      const modules = parseInt(courseFormData.duration_years) || 6;
+      courseFormData.fees = {};
+      for (let m = 1; m <= modules; m++) {
+        courseFormData.fees[m] = {
+          tuition: f.get(`tuition_${m}`),
+          examination: f.get(`exam_${m}`),
+          registration: f.get(`reg_${m}`),
+          id_card: f.get(`idcard_${m}`),
+          other: f.get(`other_${m}`) || '0',
+          other_label: f.get(`other_label_${m}`)
+        };
+      }
+      courseFormStep = 3;
+      renderCourseEditForm();
+    }
+
+    async function editCourseStep3(e) {
+      e.preventDefault();
+      const f = new FormData(e.target);
+      courseFormData.intakes = [];
+      let i = 0;
+      while (f.has(`intake_date_${i}`)) {
+        const date = f.get(`intake_date_${i}`);
+        const label = f.get(`intake_label_${i}`);
+        if (date && label) courseFormData.intakes.push({ date, label });
+        i++;
+      }
+
+      const payload = {
+        name: courseFormData.name,
+        department_id: parseInt(courseFormData.department_id),
+        duration_years: parseInt(courseFormData.duration_years),
+        examining_body: courseFormData.examining_body,
+        cbet_status: courseFormData.cbet_status,
+        entry_requirements: courseFormData.entry_requirements,
+        description: courseFormData.description,
+        fees: courseFormData.fees,
+        intakes: courseFormData.intakes
+      };
+
+      const progressInterval = startProgressAnimation();
+      try {
+        const r = await fetch(`${API}/courses/${courseFormData.id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+        clearInterval(progressInterval);
+        const result = await r.json();
+        if (result.success) { finishProgress(true, 'Course updated successfully!'); closeModal(); loadCourses(); }
+        else { finishProgress(false, result.message); }
+      } catch (err) { clearInterval(progressInterval); finishProgress(false, 'Network error'); }
+    }
+
+    async function toggleCourse(id) {
+      await fetch(`${API}/courses/${id}/toggle`, { method: 'PATCH' });
+      loadCourses();
+    }
+
+    async function deleteCourse(id) {
+      if (!confirm('Move this course to recycle bin?')) return;
+      showProgress('Moving to recycle bin...');
+      try {
+        const r = await fetch(`${API}/courses/${id}`, { method: 'DELETE' });
+        const result = await r.json();
+        if (result.success) { finishProgress(true, 'Course moved to recycle bin!'); loadCourses(); }
+        else { finishProgress(false, result.message); }
+      } catch (err) { finishProgress(false, 'Network error.'); }
+    }
+
+
+    function calculateModuleTotal(fees) {
+      if (!fees) return '22,396';
+      const total = (parseFloat(fees.tuition) || 22396) + (parseFloat(fees.examination) || 0) +
+        (parseFloat(fees.registration) || 0) + (parseFloat(fees.id_card) || 0) +
+        (parseFloat(fees.other) || 0);
+      return total.toLocaleString();
+    }
+
+    function updateModuleCount() {
+      const sel = document.getElementById('courseModules');
+      if (sel) {
+        courseFormData.duration_years = parseInt(sel.value);
+        // If we're on step 2, re-render to show correct number of modules
+        if (courseFormStep === 2) renderCourseFormStep();
+      }
+    }
     // ── TIMETABLE ──
     async function loadTimetable() {
       const r = await fetch('/api/v1/timetable/all'), d = await r.json();
