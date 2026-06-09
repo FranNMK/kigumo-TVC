@@ -6,21 +6,23 @@ const logger = require("./utils/logger");
 const requestLogger = require("./middleware/requestLogger");
 
 const app = express();
+app.set('trust proxy', 1);
 
 app.use(requestLogger);
 
-const cors = require('cors');
+const cors = require("cors");
 
 // CORS configuration
 const corsOptions = {
   origin: [
-    'http://localhost:3000',
-    'http://localhost:8080',
-    process.env.RAILWAY_PUBLIC_DOMAIN || 'kigumo-tvc-production.up.railway.app'
-  ],
+    "http://localhost:3000",
+    "http://localhost:8080",
+    "https://kigumo-tvc-production.up.railway.app",
+    process.env.RAILWAY_PUBLIC_DOMAIN || "",
+  ].filter(Boolean),
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
 };
 
 app.use(cors(corsOptions));
@@ -51,7 +53,7 @@ app.use(
     cookie: {
       httpOnly: true, // Prevents client-side JS from reading cookie
       secure: process.env.NODE_ENV === "production", // HTTPS only in production
-      sameSite: "strict", // CSRF protection
+      sameSite: process.env.NODE_ENV === "production" ? "lax" : "strict", // CSRF protection
       maxAge: 30 * 60 * 1000, // 30 minutes
     },
   }),
@@ -81,9 +83,9 @@ app.use("/api/v1/downloads", require("./routes/downloads"));
 app.use("/api/v1/announcements", require("./routes/announcements"));
 app.use("/api/v1/management", require("./routes/management"));
 app.use("/api/v1/admin", require("./routes/admin"));
-app.use('/api/v1/stats', require('./routes/stats'));
-app.use('/api/v1/slides', require('./routes/slides'));
-app.use('/api/v1/partners', require('./routes/partners'));
+app.use("/api/v1/stats", require("./routes/stats"));
+app.use("/api/v1/slides", require("./routes/slides"));
+app.use("/api/v1/partners", require("./routes/partners"));
 
 // ── Portal Page Routes ─────────────────────────────────────
 // CRITICAL ADDITION: These routes serve portal HTML pages
