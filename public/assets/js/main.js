@@ -409,10 +409,10 @@
   }
 })();
 
-// ── Load Departments Preview ──────────────────────────────────
+// ── Load Departments Preview (WITH REAL IMAGES) ────────────────
 (async function () {
   try {
-    const res = await fetch("/api/v1/departments?type=academic");
+    const res = await fetch("/api/v1/departments");
     if (!res.ok) return;
     const data = await res.json();
 
@@ -421,44 +421,43 @@
     const grid = document.getElementById("departmentsGrid");
     if (!grid) return;
 
-    // Department icons map (fallback emoji based on department name)
-    const iconMap = {
-      information: "💻",
-      business: "📊",
-      engineering: "⚙️",
-      hospitality: "🍽️",
-      "applied science": "🔬",
-      "social work": "🤝",
-    };
-
-    function getIcon(name) {
-      const lower = name.toLowerCase();
-      for (const [key, icon] of Object.entries(iconMap)) {
-        if (lower.includes(key)) return icon;
-      }
-      return "🏛️";
+    // Filter only academic departments
+    const academicDepts = data.data.filter(d => d.type === 'academic');
+    
+    if (academicDepts.length === 0) {
+      grid.innerHTML = '<div class="course-card"><p>No academic departments found.</p></div>';
+      return;
     }
 
-    grid.innerHTML = data.data
+    grid.innerHTML = academicDepts
       .map(
         (dept) => `
       <div class="course-card">
         <div class="course-card-header">
-          <div class="dept-icon">${getIcon(dept.name)}</div>
-          <h3>${escapeHtml(dept.name)}</h3>
+          ${dept.image_path ? 
+            `<div class="dept-image-wrapper" style="width:100%;height:140px;overflow:hidden;border-radius:12px 12px 0 0;margin-bottom:16px;">
+               <img src="${dept.image_path}" alt="${escapeHtml(dept.name)}" style="width:100%;height:100%;object-fit:cover;" loading="lazy" onerror="this.onerror=null;this.parentElement.innerHTML='<div class=\'dept-icon\' style=\'font-size:3rem;text-align:center;padding:20px;\'>🏛️</div>'">
+             </div>` : 
+            `<div class="dept-icon" style="font-size:3rem;text-align:center;padding:20px;">🏛️</div>`
+          }
+          <h3 style="padding:0 20px;">${escapeHtml(dept.name)}</h3>
         </div>
         <div class="course-card-body">
           <p>${escapeHtml(dept.description ? dept.description.substring(0, 120) + "..." : "Academic department at Kigumo TVC.")}</p>
         </div>
         <div class="course-card-footer">
-          <a href="departments.html#dept-${dept.id}&tab=courses">View Courses &rarr;</a>
+          <a href="departments.html#dept-${dept.id}">View Department &rarr;</a>
         </div>
       </div>
     `,
       )
       .join("");
   } catch (e) {
-    console.log("Departments preview not loaded");
+    console.error("Departments preview error:", e);
+    const grid = document.getElementById("departmentsGrid");
+    if (grid) {
+      grid.innerHTML = '<div class="course-card"><p>Unable to load departments. Please refresh the page.</p></div>';
+    }
   }
 
   function escapeHtml(str) {
@@ -505,7 +504,7 @@
 
         // Use image if available, otherwise show emoji
         const imageHtml = article.image_path
-          ? `<img src="${article.image_path.startsWith("http") ? article.image_path : "/" + article.image_path.replace(/^\/uploads\//, "")}" alt="${escapeHtml(article.title)}" style="width:100%;height:100%;object-fit:cover;" loading="lazy" />`
+          ? `<img src="${article.image_path}" alt="${escapeHtml(article.title)}" style="width:100%;height:100%;object-fit:cover;" loading="lazy" onerror="this.style.display='none';this.parentElement.innerHTML='📰'">`
           : getCategoryEmoji(article.category);
 
         return `
@@ -589,7 +588,7 @@
         const linkClose = p.website_url ? "</a>" : "";
 
         if (imgSrc) {
-          return `${link}<div class="partner-item"><img src="${imgSrc}" alt="${escapeHtml(p.name)}" loading="lazy" /></div>${linkClose}`;
+          return `${link}<div class="partner-item"><img src="${imgSrc}" alt="${escapeHtml(p.name)}" loading="lazy" onerror="this.style.display='none';this.parentElement.innerHTML='${escapeHtml(p.name)}'" /></div>${linkClose}`;
         } else {
           return `${link}<div class="partner-item" style="font-weight:600;color:#1a7a1a;font-size:0.9rem;">${escapeHtml(p.name)}</div>${linkClose}`;
         }

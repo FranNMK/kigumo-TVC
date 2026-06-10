@@ -5,112 +5,172 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Academic and Non-Academic Departments at Kigumo Technical and Vocational College">
-    <meta name="theme-color" content="#1a7a1a">
+    <meta name="theme-color" content="#2c7a4d">
     <title>Departments - Kigumo Technical and Vocational College</title>
     <link rel="icon" type="image/jpeg" href="assets/images/logo.jpeg">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="assets/css/main.css">
-
+    
     <script type="text/javascript">
         function googleTranslateElementInit() {
             new google.translate.TranslateElement({
-                pageLanguage: 'en', includedLanguages: 'sw',
+                pageLanguage: 'en', 
+                includedLanguages: 'sw',
                 layout: google.translate.TranslateElement.InlineLayout.SIMPLE
             }, 'google_translate_element');
         }
     </script>
     <script src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
-
+    
     <style>
-        .dept-hero {
-            background: linear-gradient(135deg, #1a1a2e, #1a7a1a);
-            color: #fff;
-            padding: 4rem 2rem 2.5rem;
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #fefefe;
+            color: #1a2c3e;
+            line-height: 1.6;
+        }
+
+        /* Page Hero */
+        .page-hero {
+            background: linear-gradient(135deg, #0f2b3d, #2c7a4d);
+            color: white;
             text-align: center;
+            padding: 4rem 2rem 2.5rem;
         }
 
-        .dept-hero h1 {
+        .page-hero h1 {
             font-size: 2.5rem;
-            margin-bottom: 0.5rem;
+            font-weight: 700;
+            margin-bottom: 0.75rem;
         }
 
-        .dept-container {
-            max-width: 1200px;
+        .page-hero p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        /* Container */
+        .container {
+            max-width: 1280px;
             margin: 0 auto;
-            padding: 0 1.5rem 3rem;
+            padding: 0 24px;
         }
 
-        /* ── Department Hero (60/40) ── */
-        .dept-hero-section {
+        /* Department Content */
+        .dept-content {
+            animation: fadeIn 0.3s ease;
+            padding: 48px 0;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Hero Two-Column */
+        .dept-hero {
             display: grid;
             grid-template-columns: 1.5fr 1fr;
-            gap: 2.5rem;
+            gap: 48px;
             align-items: center;
-            margin-bottom: 2.5rem;
+            margin-bottom: 40px;
         }
 
-        .dept-hero-text h2 {
-            font-size: 1.8rem;
-            color: #1a7a1a;
-            margin-bottom: 0.3rem;
-        }
-
-        .dept-hero-label {
+        .hero-badge {
             display: inline-block;
-            background: #f5c518;
-            color: #1a1a2e;
-            padding: 4px 14px;
-            border-radius: 20px;
-            font-size: 0.78rem;
-            font-weight: 700;
+            background: #e8f3ec;
+            color: #2c7a4d;
+            padding: 4px 12px;
+            border-radius: 40px;
+            font-size: 0.85rem;
+            font-weight: 600;
             text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 1rem;
+            letter-spacing: 2px;
+            margin-bottom: 16px;
         }
 
-        .dept-hero-text p {
-            color: #555;
-            line-height: 1.8;
+        .dept-hero h2 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #0f2b3d;
+            margin-bottom: 20px;
+            line-height: 1.2;
+        }
+
+        .welcome-text {
+            background: #fafcfb;
+            border-left: 4px solid #2c7a4d;
+            border-radius: 16px;
+            padding: 20px 24px;
             font-size: 1rem;
+            color: #2c3e44;
+            line-height: 1.6;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.03);
         }
 
-        .dept-hero-img {
-            width: 100%;
+        .dept-image {
+            border-radius: 24px;
+            overflow: hidden;
+            box-shadow: 0 20px 35px -12px rgba(0,0,0,0.15);
+            transition: transform 0.2s ease;
+            background: #f0f2f5;
             aspect-ratio: 4/3;
-            border-radius: 12px;
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
-            background: #e0e0e0;
+        }
+
+        .dept-image:hover {
+            transform: scale(1.01);
+        }
+
+        .dept-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .placeholder-image {
+            width: 100%;
+            height: 100%;
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 4rem;
-            overflow: hidden;
+            color: #2c7a4d;
+            background: #eef6f2;
         }
 
-        .dept-hero-img img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            border-radius: 12px;
-        }
-
-        /* ── HOD Bar ── */
+        /* HOD Bar */
         .hod-bar {
+            background: #f0f7f0;
+            border-left: 4px solid #2c7a4d;
+            border-radius: 10px;
+            padding: 1rem 1.5rem;
+            margin-bottom: 40px;
             display: flex;
             align-items: center;
             gap: 1rem;
-            background: #f0f7f0;
-            border-radius: 10px;
-            padding: 1rem 1.5rem;
-            margin-bottom: 2rem;
-            border-left: 4px solid #1a7a1a;
+            flex-wrap: wrap;
         }
 
         .hod-photo {
             width: 55px;
             height: 55px;
             border-radius: 50%;
-            background: #e0e0e0;
             overflow: hidden;
+            background: #d4e6d4;
             flex-shrink: 0;
         }
 
@@ -120,261 +180,328 @@
             object-fit: cover;
         }
 
+        .hod-photo .placeholder-icon {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+        }
+
         .hod-info h4 {
-            color: #1a7a1a;
-            margin: 0;
+            color: #2c7a4d;
             font-size: 0.95rem;
+            font-weight: 600;
+            margin-bottom: 4px;
         }
 
         .hod-info span {
-            color: #888;
-            font-size: 0.82rem;
+            color: #4a5b6e;
+            font-size: 0.85rem;
         }
 
-        /* ── Tabs ── */
-        .dept-tabs {
+        /* Sub Tabs */
+        .sub-tabs-wrapper {
+            margin-bottom: 32px;
+            border-bottom: 1px solid #e2e8f0;
+            overflow-x: auto;
+        }
+
+        .sub-tabs {
             display: flex;
             gap: 0;
-            flex-wrap: wrap;
-            border-bottom: 2px solid #e0e0e0;
-            margin-bottom: 2rem;
-            position: sticky;
-            top: 60px;
-            background: #fff;
-            z-index: 100;
-            padding-top: 1.5rem;
+            min-width: max-content;
         }
 
-        .dept-tab {
-            padding: 0.9rem 1.4rem;
+        .sub-tab {
+            padding: 10px 20px;
             font-size: 0.9rem;
             font-weight: 600;
-            cursor: pointer;
-            border: none;
             background: none;
-            color: #666;
-            transition: all 0.3s;
-            border-bottom: 3px solid transparent;
-            white-space: nowrap;
+            border: none;
+            color: #4a5b6e;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border-bottom: 2px solid transparent;
         }
 
-        .dept-tab:hover {
-            color: #1a7a1a;
+        .sub-tab:hover {
+            color: #2c7a4d;
         }
 
-        .dept-tab.active {
-            color: #1a7a1a;
-            border-bottom-color: #f5c518;
+        .sub-tab.active {
+            color: #2c7a4d;
+            border-bottom-color: #2c7a4d;
         }
 
-        /* ── Overview Cards ── */
+        /* Sub Tab Content */
+        .subtab-pane {
+            display: none;
+            animation: fadeIn 0.25s ease;
+        }
+
+        .subtab-pane.active {
+            display: block;
+        }
+
+        /* Overview Grid */
         .overview-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 1.5rem;
+            gap: 32px;
+            margin: 32px 0 48px;
         }
 
         .overview-card {
-            background: #fff;
-            border-radius: 12px;
-            padding: 1.8rem;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            background: white;
+            border-radius: 24px;
+            padding: 32px 24px;
+            text-align: center;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.05);
+            transition: all 0.2s ease;
         }
 
-        .overview-card .card-icon {
-            font-size: 2.2rem;
-            margin-bottom: 0.8rem;
+        .overview-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 28px rgba(0,0,0,0.1);
+        }
+
+        .icon-circle {
+            width: 56px;
+            height: 56px;
+            background: #eef6f2;
+            border-radius: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+        }
+
+        .icon-circle svg {
+            width: 28px;
+            height: 28px;
+            stroke: #2c7a4d;
+            stroke-width: 1.7;
+            fill: none;
         }
 
         .overview-card h3 {
-            color: #1a7a1a;
-            font-size: 1.1rem;
-            margin-bottom: 0.6rem;
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: #0f2b3d;
+            margin-bottom: 12px;
         }
 
         .overview-card p {
-            color: #555;
-            font-size: 0.9rem;
+            font-size: 0.95rem;
+            color: #2c3e44;
             line-height: 1.6;
         }
 
-        /* ── Course Grid ── */
+        /* Course Grid */
         .course-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 1.2rem;
+            gap: 28px;
+            margin: 32px 0 48px;
         }
 
         .course-card {
-            background: #fff;
-            border-radius: 10px;
-            padding: 1.5rem;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-            transition: transform 0.2s;
-            border-top: 4px solid #1a7a1a;
-            position: relative;
+            background: white;
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.05);
+            transition: all 0.2s ease;
         }
 
         .course-card:hover {
             transform: translateY(-3px);
+            box-shadow: 0 12px 28px rgba(0,0,0,0.1);
         }
 
-        .course-card .exam-badge {
-            display: inline-block;
-            padding: 3px 10px;
-            border-radius: 15px;
-            font-size: 0.75rem;
-            font-weight: 700;
-            margin-bottom: 0.8rem;
-        }
-
-        .exam-KNEC {
-            background: #d4edda;
-            color: #155724;
-        }
-
-        .exam-KASNEB {
-            background: #fff3cd;
-            color: #856404;
-        }
-
-        .exam-CDACC {
-            background: #cce5ff;
-            color: #004085;
-        }
-
-        .course-card h4 {
-            color: #1a1a2e;
-            font-size: 1.05rem;
-            margin-bottom: 0.3rem;
-        }
-
-        .course-card .level {
-            color: #888;
-            font-size: 0.8rem;
-            margin-bottom: 0.8rem;
-        }
-
-        .course-card .modules {
+        .card-header {
             display: flex;
+            justify-content: space-between;
             align-items: center;
-            gap: 0.4rem;
-            color: #1a7a1a;
-            font-size: 0.85rem;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .exam-badge {
+            background: #eef2fa;
+            color: #1e4663;
+            padding: 4px 12px;
+            border-radius: 30px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .level-tag {
+            background: #f2f4f6;
+            color: #4a5b6e;
+            padding: 4px 12px;
+            border-radius: 30px;
+            font-size: 0.7rem;
             font-weight: 600;
         }
 
-        /* ── Non-Academic ── */
-        .non-acad-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 1.2rem;
+        .course-card h4 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #0f2b3d;
+            margin-bottom: 12px;
+            line-height: 1.3;
         }
 
-        .non-acad-card {
-            background: #fff;
-            border-radius: 10px;
-            padding: 1.5rem;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-            border-top: 4px solid #f5c518;
+        .course-meta {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #2c7a4d;
+            font-weight: 500;
+            font-size: 0.85rem;
+            margin-top: 12px;
         }
 
-        .non-acad-card h4 {
-            color: #1a7a1a;
-            margin-bottom: 0.5rem;
+        .course-meta svg {
+            width: 16px;
+            height: 16px;
+            stroke: #2c7a4d;
+            stroke-width: 1.8;
+            fill: none;
         }
 
-        .section-title {
-            color: #1a7a1a;
-            font-size: 1.5rem;
-            margin: 2.5rem 0 1.2rem;
-            padding-bottom: 0.5rem;
-            border-bottom: 3px solid #f5c518;
+        /* CTA Section */
+        .cta-section {
+            background: #eef6f2;
+            border-radius: 32px;
+            padding: 48px 32px;
+            text-align: center;
+            margin: 48px 0 64px;
         }
 
-        .subtab-content {
-            display: none;
+        .cta-section h3 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #0f2b3d;
+            margin-bottom: 16px;
         }
 
-        .subtab-content.active {
-            display: block;
+        .cta-section p {
+            color: #2c3e44;
+            margin-bottom: 32px;
         }
 
+        .apply-btn {
+            background: #2c7a4d;
+            color: white;
+            border: none;
+            padding: 12px 32px;
+            border-radius: 40px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .apply-btn:hover {
+            background: #1e5a38;
+            transform: scale(0.98);
+        }
+
+        /* Loading State */
+        .loading-spinner {
+            text-align: center;
+            padding: 80px 20px;
+        }
+
+        .spinner {
+            width: 48px;
+            height: 48px;
+            border: 3px solid #eef2f0;
+            border-top-color: #2c7a4d;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 16px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Error State */
+        .error-message {
+            text-align: center;
+            padding: 80px 20px;
+            color: #888;
+        }
+
+        /* No Courses */
+        .no-courses {
+            text-align: center;
+            padding: 48px 20px;
+            color: #888;
+            font-style: italic;
+        }
+
+        /* Responsive */
         @media (max-width: 992px) {
-
+            .dept-hero {
+                grid-template-columns: 1fr;
+                gap: 32px;
+            }
             .overview-grid,
-            .course-grid,
-            .non-acad-grid {
+            .course-grid {
                 grid-template-columns: repeat(2, 1fr);
             }
-
-            .dept-hero-section {
-                grid-template-columns: 1fr;
-            }
-
-            .dept-hero-img {
-                aspect-ratio: 16/9;
-            }
         }
 
-        @media (max-width: 600px) {
-
+        @media (max-width: 768px) {
+            .page-hero h1 { font-size: 2rem; }
+            .dept-hero h2 { font-size: 1.8rem; }
+            .sub-tab { padding: 8px 16px; font-size: 0.85rem; }
             .overview-grid,
-            .course-grid,
-            .non-acad-grid {
+            .course-grid {
                 grid-template-columns: 1fr;
             }
-
-            .dept-tabs {
-                overflow-x: auto;
-                flex-wrap: nowrap;
-            }
-
-            .dept-tab {
-                font-size: 0.8rem;
-                padding: 0.7rem 1rem;
-            }
-
-            .dept-hero h1 {
-                font-size: 1.6rem;
-            }
+            .overview-card h3 { font-size: 1.4rem; }
+            .cta-section { padding: 32px 24px; }
+            .cta-section h3 { font-size: 1.5rem; }
         }
     </style>
 </head>
 
 <body>
-    <div id="google_translate_element" style="position:fixed;top:10px;right:10px;z-index:9999;"></div>
+    <div id="google_translate_element" style="position:fixed;top:10px;right:10px;z-index:9999;background:white;padding:5px;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,0.1);z-index:10000;"></div>
     <header id="mainNavbar"></header>
 
-    <section class="dept-hero">
+    <section class="page-hero">
         <h1>Our Departments</h1>
         <p>Explore our academic programs and support services</p>
     </section>
 
-    <div class="dept-container">
-        <!-- Department Tabs -->
-        <div class="dept-tabs" id="deptTabs">
-            <button class="dept-tab active" data-dept="all">🏛️ All Departments</button>
+    <div class="container">
+        <div id="mainContent"></div>
+        <div class="cta-section">
+            <h3>Ready to Start Your Journey?</h3>
+            <p>Join Kigumo Technical and Vocational College and gain practical skills for your future career.</p>
+            <button class="apply-btn" onclick="window.location.href='/admissions.html'">Apply Now →</button>
         </div>
-        <div id="tabContent"></div>
-
-        <!-- Non-Academic -->
-        <h2 class="section-title">🤝 Non-Academic Departments</h2>
-        <div class="non-acad-grid" id="nonAcademicGrid"></div>
     </div>
 
     <footer id="mainFooter"></footer>
 
     <script src="assets/js/navbar.js"></script>
     <script>
+        // Build navbar first
         buildNavbar('departments');
-        let allDeptData = [];
-        let activeTab = 'all';
-
-        (async function () {
-            await loadFooter();
-            await loadDepartments();
-        })();
+        
+        let allDepartments = [];
+        let currentDeptId = null;
 
         async function loadFooter() {
             try {
@@ -383,153 +510,252 @@
                 const doc = new DOMParser().parseFromString(html, 'text/html');
                 const footer = doc.querySelector('footer');
                 if (footer) document.getElementById('mainFooter').innerHTML = footer.outerHTML;
-            } catch (e) { }
+            } catch (e) {
+                console.error('Footer load failed:', e);
+            }
         }
 
+        // Load all departments and check URL hash for specific department
         async function loadDepartments() {
+            const mainContent = document.getElementById('mainContent');
+            mainContent.innerHTML = `
+                <div class="loading-spinner">
+                    <div class="spinner"></div>
+                    <p>Loading departments...</p>
+                </div>
+            `;
+
             try {
                 const res = await fetch('/api/v1/departments/with-courses');
-                if (!res.ok) throw new Error('Failed');
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
                 const data = await res.json();
-                if (!data.success) return;
-                allDeptData = data.data;
-                const academic = allDeptData.filter(d => d.type === 'academic');
-                document.getElementById('deptTabs').innerHTML =
-                    '<button class="dept-tab active" data-dept="all">🏛️ All Departments</button>' +
-                    academic.map(d => `<button class="dept-tab" data-dept="${d.id}">${escapeHtml(d.name)}</button>`).join('');
-
-                document.querySelectorAll('.dept-tab').forEach(tab => {
-                    tab.addEventListener('click', function () {
-                        document.querySelectorAll('.dept-tab').forEach(t => t.classList.remove('active'));
-                        this.classList.add('active');
-                        activeTab = this.dataset.dept;
-                        renderContent();
-                    });
-                });
-                renderContent();
-                renderNonAcademic();
-            } catch (e) {
-                document.getElementById('tabContent').innerHTML = '<p style="text-align:center;color:#888;padding:2rem;">Unable to load departments.</p>';
-            }
-        }
-
-        function renderContent() {
-            const container = document.getElementById('tabContent');
-            if (activeTab === 'all') {
-                const academic = allDeptData.filter(d => d.type === 'academic');
-                container.innerHTML = academic.map(dept => renderDepartment(dept)).join('');
-            } else {
-                const dept = allDeptData.find(d => d.id == activeTab);
-                container.innerHTML = dept ? renderDepartment(dept) : '';
-            }
-            // Activate first subtab of each department
-            container.querySelectorAll('.dept-tab[data-subtab]').forEach((t, i, all) => {
-                if (i === 0 || all[i - 1].closest('[id^="dept-"]') !== t.closest('[id^="dept-"]')) {
-                    t.classList.add('active');
+                if (!data.success) throw new Error('API returned success=false');
+                
+                allDepartments = data.data;
+                
+                // Check URL hash for department ID (e.g., #dept-5)
+                let deptIdFromHash = null;
+                if (window.location.hash && window.location.hash.startsWith('#dept-')) {
+                    deptIdFromHash = parseInt(window.location.hash.replace('#dept-', ''));
                 }
-            });
-            container.querySelectorAll('.subtab-content:first-of-type').forEach(c => c.classList.add('active'));
+                
+                // If hash exists and matches a department, show that one
+                if (deptIdFromHash && allDepartments.find(d => d.id === deptIdFromHash)) {
+                    currentDeptId = deptIdFromHash;
+                    renderDepartmentContent(currentDeptId);
+                } 
+                // Otherwise show first academic department
+                else {
+                    const firstDept = allDepartments.find(d => d.type === 'academic') || allDepartments[0];
+                    if (firstDept) {
+                        currentDeptId = firstDept.id;
+                        renderDepartmentContent(currentDeptId);
+                    } else {
+                        mainContent.innerHTML = '<p class="error-message">No departments found.</p>';
+                    }
+                }
+            } catch (err) {
+                console.error('API Error:', err);
+                mainContent.innerHTML = `
+                    <div class="error-message">
+                        <p>⚠️ Unable to load departments. Please try again later.</p>
+                    </div>
+                `;
+            }
         }
 
-        function renderDepartment(dept) {
-            const icons = { 'information': '💻', 'business': '📊', 'engineering': '⚙️', 'hospitality': '🍽️', 'applied science': '🔬', 'social work': '🤝' };
-            let icon = '🏛️';
-            for (const [k, v] of Object.entries(icons)) { if (dept.name.toLowerCase().includes(k)) { icon = v; break; } }
-
-            const bodies = {};
-            if (dept.courses) dept.courses.forEach(c => { if (!bodies[c.examining_body]) bodies[c.examining_body] = []; bodies[c.examining_body].push(c); });
-            const bodyKeys = Object.keys(bodies);
-
-            let coursesHtml = '';
-            if (bodyKeys.length > 0) {
-                coursesHtml = `
-                <div class="dept-tabs" style="margin-top:1rem;position:static;top:auto;border-bottom:1px solid #e0e0e0;">
-                    <button class="dept-tab active" data-subtab="overview-${dept.id}">📋 Overview</button>
-                    ${bodyKeys.map(b => `<button class="dept-tab" data-subtab="${b}-${dept.id}">${b} Courses</button>`).join('')}
-                </div>
-                <div class="subtab-content" id="subtab-overview-${dept.id}">
-                    <div class="overview-grid" style="margin-top:1.5rem;">
-                        <div class="overview-card"><div class="card-icon">🔭</div><h3>Vision</h3><p>To be a leading center of excellence in ${escapeHtml(dept.name)} training.</p></div>
-                        <div class="overview-card"><div class="card-icon">🎯</div><h3>Mission</h3><p>To provide quality, practical training in ${escapeHtml(dept.name)}.</p></div>
-                        <div class="overview-card"><div class="card-icon">📈</div><h3>Key Objective</h3><p>To equip students with hands-on skills that meet TVETA standards.</p></div>
+        function renderDepartmentContent(deptId) {
+            const dept = allDepartments.find(d => d.id === deptId);
+            if (!dept) {
+                document.getElementById('mainContent').innerHTML = '<p class="error-message">Department not found.</p>';
+                return;
+            }
+            
+            const mainContent = document.getElementById('mainContent');
+            
+            // Group courses by examining_body (only for academic departments)
+            const coursesByBody = {};
+            let hasCourses = false;
+            
+            if (dept.type === 'academic' && dept.courses && dept.courses.length > 0) {
+                hasCourses = true;
+                dept.courses.forEach(course => {
+                    const body = course.examining_body;
+                    if (!coursesByBody[body]) coursesByBody[body] = [];
+                    coursesByBody[body].push(course);
+                });
+            }
+            
+            const examiningBodies = Object.keys(coursesByBody);
+            
+            mainContent.innerHTML = `
+                <div class="dept-content">
+                    <div class="dept-hero">
+                        <div>
+                            <span class="hero-badge">${dept.type === 'academic' ? 'Academic Department' : 'Support Department'}</span>
+                            <h2>${escapeHtml(dept.name)}</h2>
+                            <div class="welcome-text">
+                                ${escapeHtml(dept.description || 'Welcome to the ' + dept.name + ' department. We are committed to excellence in technical and vocational training.')}
+                            </div>
+                        </div>
+                        <div class="dept-image">
+                            ${dept.image_path ? 
+                                `<img src="${dept.image_path}" alt="${escapeHtml(dept.name)}" loading="lazy">` : 
+                                `<div class="placeholder-image">${dept.type === 'academic' ? '📚' : '🤝'}</div>`
+                            }
+                        </div>
                     </div>
-                </div>`;
-                bodyKeys.forEach(b => {
-                    coursesHtml += `
-                    <div class="subtab-content" id="subtab-${b}-${dept.id}">
-                        <div class="course-grid" style="margin-top:1.5rem;">
-                            ${bodies[b].map(c => `
-                                <div class="course-card">
-                                    <span class="exam-badge exam-${b}">${b}</span>
-                                    <h4>${escapeHtml(c.name)}</h4>
-                                    <div class="level">Duration: ${c.duration_years} Year${c.duration_years > 1 ? 's' : ''}</div>
-                                    <div class="modules">📚 ${c.cbet_status ? 'CBET Curriculum' : 'Standard Curriculum'}</div>
+                    
+                    ${dept.hod_name ? `
+                    <div class="hod-bar">
+                        <div class="hod-photo">
+                            ${dept.hod_photo ? 
+                                `<img src="${dept.hod_photo}" alt="${escapeHtml(dept.hod_name)}">` : 
+                                `<div class="placeholder-icon">👤</div>`
+                            }
+                        </div>
+                        <div class="hod-info">
+                            <h4>${escapeHtml(dept.hod_name)}</h4>
+                            <span>Head of Department</span>
+                        </div>
+                    </div>
+                    ` : ''}
+                    
+                    ${dept.type === 'academic' ? `
+                        ${hasCourses ? `
+                        <div class="sub-tabs-wrapper">
+                            <div class="sub-tabs" id="subTabs-${dept.id}">
+                                <button class="sub-tab active" data-subtab="overview-${dept.id}">Overview</button>
+                                ${examiningBodies.map(body => `
+                                    <button class="sub-tab" data-subtab="${body}-${dept.id}">${escapeHtml(body)}</button>
+                                `).join('')}
+                            </div>
+                        </div>
+                        
+                        <div id="subtabContainer-${dept.id}">
+                            <div class="subtab-pane active" id="overview-${dept.id}">
+                                <div class="overview-grid">
+                                    <div class="overview-card">
+                                        <div class="icon-circle">
+                                            <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.7">
+                                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                                <circle cx="12" cy="12" r="3"></circle>
+                                            </svg>
+                                        </div>
+                                        <h3>Vision</h3>
+                                        <p>To be a center of excellence in technical and vocational training, producing competent graduates for industry and enterprise.</p>
+                                    </div>
+                                    <div class="overview-card">
+                                        <div class="icon-circle">
+                                            <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.7">
+                                                <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+                                            </svg>
+                                        </div>
+                                        <h3>Mission</h3>
+                                        <p>To provide quality, industry-driven training that equips students with practical skills and entrepreneurial mindset.</p>
+                                    </div>
+                                    <div class="overview-card">
+                                        <div class="icon-circle">
+                                            <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.7">
+                                                <circle cx="12" cy="12" r="10"/>
+                                                <line x1="12" y1="8" x2="12" y2="12"/>
+                                                <line x1="12" y1="16" x2="12.01" y2="16"/>
+                                            </svg>
+                                        </div>
+                                        <h3>Key Objective</h3>
+                                        <p>To produce competent graduates who meet TVET standards and industry demands through hands-on training and innovation.</p>
+                                    </div>
+                                </div>
+                            </div>
+                            ${examiningBodies.map(body => `
+                                <div class="subtab-pane" id="${body}-${dept.id}">
+                                    <div class="course-grid">
+                                        ${coursesByBody[body].map(course => `
+                                            <div class="course-card">
+                                                <div class="card-header">
+                                                    <span class="exam-badge">${escapeHtml(course.examining_body)}</span>
+                                                    ${course.level ? `<span class="level-tag">${escapeHtml(course.level)}</span>` : ''}
+                                                </div>
+                                                <h4>${escapeHtml(course.name)}</h4>
+                                                <div class="course-meta">
+                                                    <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                                                        <rect x="2" y="4" width="20" height="16" rx="2"/>
+                                                        <line x1="8" y1="10" x2="16" y2="10"/>
+                                                    </svg>
+                                                    <span>${course.cbet_status ? 'CBET Curriculum' : 'Standard Curriculum'}</span>
+                                                    <span>•</span>
+                                                    <span>${course.duration_years} Year${course.duration_years > 1 ? 's' : ''}</span>
+                                                </div>
+                                                ${course.entry_requirements ? `<div class="course-meta" style="margin-top:8px;color:#4a5b6e;">📋 ${escapeHtml(course.entry_requirements.substring(0, 60))}${course.entry_requirements.length > 60 ? '...' : ''}</div>` : ''}
+                                            </div>
+                                        `).join('')}
+                                    </div>
                                 </div>
                             `).join('')}
                         </div>
-                    </div>`;
-                });
-            } else {
-                coursesHtml = '<p style="color:#888;margin-top:1rem;">No courses listed for this department yet.</p>';
-            }
-
-            return `
-            <div id="dept-${dept.id}" style="margin-bottom:2rem;">
-                <div class="dept-hero-section">
-                    <div class="dept-hero-text">
-                        <span class="dept-hero-label">${escapeHtml(dept.name)}</span>
-                        <h2>${icon} ${escapeHtml(dept.name)}</h2>
-                        <p>${escapeHtml(dept.description || '')}</p>
-                    </div>
-                    <div class="dept-hero-img">
-  ${dept.image_path
-                    ? `<img src="${dept.image_path}" alt="${escapeHtml(dept.name)}" loading="lazy" />`
-                    : icon}
-</div>
+                        ` : `
+                            <div class="no-courses">
+                                <p>No courses are currently listed for this department. Please check back later.</p>
+                            </div>
+                        `}
+                    ` : `
+                        <!-- Non-academic departments show simplified view -->
+                        <div style="margin: 32px 0 48px;">
+                            <div style="background: white; border-radius: 20px; padding: 32px; box-shadow: 0 8px 20px rgba(0,0,0,0.05);">
+                                <h3 style="color: #2c7a4d; margin-bottom: 16px;">Department Overview</h3>
+                                <p style="color: #2c3e44; line-height: 1.8;">${escapeHtml(dept.description || 'This department plays a vital role in supporting the academic mission of Kigumo Technical and Vocational College.')}</p>
+                            </div>
+                        </div>
+                    `}
                 </div>
-                ${dept.hod_name ? `
-                <div class="hod-bar">
-                    <div class="hod-photo">${dept.hod_photo ? `<img src="${dept.hod_photo.startsWith('http') ? dept.hod_photo : '/uploads/' + dept.hod_photo}" alt="${escapeHtml(dept.hod_name)}">` : '👤'}</div>
-                    <div class="hod-info"><h4>${escapeHtml(dept.hod_name)}</h4><span>Head of Department</span></div>
-                </div>` : ''}
-                ${coursesHtml}
-            </div>`;
-        }
-
-        function renderNonAcademic() {
-            const nonAcademic = allDeptData.filter(d => d.type === 'non_academic');
-            const container = document.getElementById('nonAcademicGrid');
-            container.innerHTML = nonAcademic.length === 0
-                ? '<p style="text-align:center;color:#888;">No non-academic departments found.</p>'
-                : nonAcademic.map(d => `
-                    <div class="non-acad-card">
-                        <h4>${escapeHtml(d.name)}</h4>
-                        <p style="color:#555;font-size:0.9rem;line-height:1.6;">${escapeHtml(d.description || '')}</p>
-                        ${d.hod_name ? `<p style="color:#1a7a1a;font-weight:500;font-size:0.85rem;">📋 Head: ${escapeHtml(d.hod_name)}</p>` : ''}
-                    </div>
-                `).join('');
-        }
-
-        // Sub-tab click delegation
-        document.addEventListener('click', function (e) {
-            if (e.target.dataset.subtab) {
-                const parent = e.target.closest('[id^="dept-"]');
-                if (parent) {
-                    parent.querySelectorAll('.dept-tab[data-subtab]').forEach(t => t.classList.remove('active'));
-                    e.target.classList.add('active');
-                    parent.querySelectorAll('.subtab-content').forEach(c => c.classList.remove('active'));
-                    const target = document.getElementById('subtab-' + e.target.dataset.subtab);
-                    if (target) target.classList.add('active');
+            `;
+            
+            // Attach sub-tab click handlers for academic departments
+            if (dept.type === 'academic' && hasCourses) {
+                const subTabsContainer = document.getElementById(`subTabs-${dept.id}`);
+                if (subTabsContainer) {
+                    subTabsContainer.querySelectorAll('.sub-tab').forEach(tab => {
+                        tab.addEventListener('click', function() {
+                            const subtabId = this.dataset.subtab;
+                            subTabsContainer.querySelectorAll('.sub-tab').forEach(t => t.classList.remove('active'));
+                            this.classList.add('active');
+                            
+                            const container = document.getElementById(`subtabContainer-${dept.id}`);
+                            container.querySelectorAll('.subtab-pane').forEach(pane => pane.classList.remove('active'));
+                            const targetPane = document.getElementById(subtabId);
+                            if (targetPane) targetPane.classList.add('active');
+                        });
+                    });
                 }
             }
-        });
-
+        }
+        
         function escapeHtml(str) {
             if (!str) return '';
             const div = document.createElement('div');
             div.textContent = str;
             return div.innerHTML;
         }
+        
+        // Listen for hash changes (when user clicks navbar dropdown links)
+        window.addEventListener('hashchange', function() {
+            if (window.location.hash && window.location.hash.startsWith('#dept-')) {
+                const deptId = parseInt(window.location.hash.replace('#dept-', ''));
+                const dept = allDepartments.find(d => d.id === deptId);
+                if (dept && currentDeptId !== deptId) {
+                    currentDeptId = deptId;
+                    renderDepartmentContent(currentDeptId);
+                    // Scroll to top of content
+                    document.querySelector('.container').scrollIntoView({ behavior: 'smooth' });
+                }
+            }
+        });
+        
+        // Initialize
+        (async function init() {
+            await loadFooter();
+            await loadDepartments();
+        })();
     </script>
 </body>
 
