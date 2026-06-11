@@ -30,6 +30,38 @@ async function uploadToCloudinary(file, folder) {
   return result.secure_url;
 }
 
+// ── GET ALL DEPARTMENTS (with new fields) ──
+router.get("/departments", async (req, res) => {
+  try {
+    const [rows] = await db.execute(`
+      SELECT 
+        d.id, 
+        d.name, 
+        d.type, 
+        d.description, 
+        d.image_path, 
+        d.created_at,
+        d.vision, 
+        d.mission, 
+        d.objective, 
+        NULL AS examining_body,
+        u.full_name AS hod_name, 
+        u.id AS hod_id,
+        u.email AS hod_email, 
+        u.photo_path AS hod_photo 
+      FROM departments d
+      LEFT JOIN hod_assignments ha ON ha.department_id = d.id
+      LEFT JOIN users u ON u.id = ha.lecturer_id
+      ORDER BY d.name
+    `);
+    
+    res.json({ success: true, data: rows });
+  } catch (err) {
+    logger.error("Departments fetch error", { error: err.message });
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+});
+
 // ── SLIDES ──
 router.get("/slides", async (req, res) => {
   const [rows] = await db.execute(
@@ -686,10 +718,72 @@ router.delete("/download-categories/:name", async (req, res) => {
   }
 });
 
-// ── DEPARTMENTS CRUD ──
+// ── COHORT BATCHES ──
+router.get("/cohorts", async (req, res) => {
+  try {
+    const { department_id } = req.query;
+    let sql = `
+      SELECT cb.id, cb.department_id, cb.batch_code, cb.intake_date, cb.label, cb.is_active,
+             d.name AS department_name
+      FROM cohort_batches cb
+      JOIN departments d ON d.id = cb.department_id
+      WHERE 1=1
+    `;
+    const params = [];
+
+    if (department_id && /^\d+$/.test(department_id)) {
+      sql += " AND cb.department_id = ?";
+      params.push(department_id);
+    }
+
+    sql += " ORDER BY cb.intake_date DESC, cb.batch_code DESC";
+    const [rows] = await db.execute(sql, params);
+    res.json({ success: true, data: rows });
+  } catch (err) {
+    logger.error("Cohorts fetch error", { error: err.message });
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+});
+
+router.post("/cohorts", upload.none(), async (req, res) => {
+  try {
+    const { department_id, batch_code, intake_date, label } = req.body;
+    if (!department_id || !batch_code || !intake_date) {
+      return res.status(400).json({
+        success: false,
+        message: "Department, batch code, and intake date are required",
+      });
+    }
+
+    await db.execute(
+      "INSERT INTO cohort_batches (department_id, batch_code, intake_date, label, is_active) VALUES (?,?,?,?,TRUE)",
+      [department_id, batch_code, intake_date, label || batch_code],
+    );
+    res.json({ success: true, message: "Cohort added" });
+  } catch (err) {
+    logger.error("Cohort create error", { error: err.message });
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+});
+
+router.patch("/cohorts/:id/toggle", async (req, res) => {
+  try {
+    await db.execute(
+      "UPDATE cohort_batches SET is_active = NOT is_active WHERE id = ?",
+      [req.params.id],
+    );
+    res.json({ success: true, message: "Cohort status updated" });
+  } catch (err) {
+    logger.error("Cohort toggle error", { error: err.message });
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+});
+
+
+// ── DEPARTMENTS CRUD (with vision, mission, objective) ──
 router.post("/departments", upload.single("image"), async (req, res) => {
   try {
-    const { name, type, description } = req.body;
+    const { name, type, description, vision, mission, objective } = req.body;
     if (!name || !type)
       return res.status(400).json({ success: false, message: "Name and type are required" });
     
@@ -698,35 +792,43 @@ router.post("/departments", upload.single("image"), async (req, res) => {
       : null;
     
     await db.execute(
-      "INSERT INTO departments (name, type, description, image_path) VALUES (?,?,?,?)",
-      [name, type, description || "", image_path]
+      `INSERT INTO departments (name, type, description, vision, mission, objective, image_path) 
+       VALUES (?,?,?,?,?,?,?)`,
+      [name, type, description || "", vision || null, mission || null, objective || null, image_path]
     );
     res.json({ success: true, message: "Department added" });
   } catch (err) {
     logger.error("Dept create error", { error: err.message });
-    res.status(500).json({ success: false, message: "Server error" });
+    res.status(500).json({ success: false, message: "Server error: " + err.message });
   }
 });
 
 router.put("/departments/:id", upload.single("image"), async (req, res) => {
   try {
-    const { name, type, description } = req.body;
+    const { name, type, description, vision, mission, objective } = req.body;
     const [[existing]] = await db.execute("SELECT * FROM departments WHERE id = ?", [req.params.id]);
+    
+    if (!existing) {
+      return res.status(404).json({ success: false, message: "Department not found" });
+    }
     
     const image_path = req.file 
       ? await uploadToCloudinary(req.file, "kigumo-tvc/departments") 
-      : existing?.image_path || null;
+      : existing.image_path || null;
     
     await db.execute(
-      "UPDATE departments SET name=?, type=?, description=?, image_path=? WHERE id=?",
-      [name, type, description, image_path, req.params.id]
+      `UPDATE departments 
+       SET name=?, type=?, description=?, vision=?, mission=?, objective=?, image_path=? 
+       WHERE id=?`,
+      [name, type, description || "", vision || null, mission || null, objective || null, image_path, req.params.id]
     );
     res.json({ success: true, message: "Department updated" });
   } catch (err) {
     logger.error("Dept update error", { error: err.message });
-    res.status(500).json({ success: false, message: "Server error" });
+    res.status(500).json({ success: false, message: "Server error: " + err.message });
   }
 });
+
 router.delete("/departments/:id", async (req, res) => {
   try {
     const [[row]] = await db.execute("SELECT * FROM departments WHERE id = ?", [
@@ -747,6 +849,7 @@ router.delete("/departments/:id", async (req, res) => {
     res.status(500).json({ success: false, message: "Server error" });
   }
 });
+
 
 // ── HOD ASSIGNMENT ──
 router.put("/departments/:id/hod", async (req, res) => {

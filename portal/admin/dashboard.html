@@ -368,7 +368,7 @@
         this.classList.add('active');
         document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
         document.getElementById('tab-' + this.dataset.tab).classList.add('active');
-        const loader = { overview: loadOverview, slider: loadSlides, principal: loadPrincipal, 'page-content': loadPageContent, users: loadUsers, departments: loadDepartments, courses: loadCourses, timetable: loadTimetable, news: loadNews, downloads: loadDownloads, gallery: loadGallery, recycle: loadRecycle, enquiries: loadEnquiries, bom: loadBOM, partners: loadPartners, }[this.dataset.tab];
+        const loader = { overview: loadOverview, slider: loadSlides, principal: loadPrincipal, 'page-content': loadPageContent, users: loadUsers, departments: loadDepartments, courses: loadCourses, timetable: loadTimetable, news: loadNews, downloads: loadDownloads, gallery: loadGallery, recycle: loadRecycle, enquiries: loadEnquiries, bom: loadBOM, partners: loadPartners, cohorts: loadCohortsTab }[this.dataset.tab];
         if (loader) loader();
       });
     });
@@ -566,24 +566,93 @@
     async function addLecturer(e) { e.preventDefault(); const f = new FormData(e.target); const r = await fetch(`${API}/users/add-lecturer`, { method: 'POST', body: f }); alert((await r.json()).message); closeModal(); loadUsers(); }
     async function deactivateUser(id) { if (!confirm('Deactivate this user?')) return; await fetch(`${API}/users/${id}/deactivate`, { method: 'PATCH' }); loadUsers(); }
 
+
+    // ── DEPARTMENTS (FULLY UPDATED WITH VISION, MISSION, OBJECTIVE, EXAM_BODY) ──
+    // ── DEPARTMENTS (FULLY UPDATED WITH VISION, MISSION, OBJECTIVE, EXAM_BODY) ──
     async function loadDepartments() {
-      const r = await fetch('/api/v1/departments'), d = await r.json();
-      let h = '<button class="btn btn-green btn-sm" onclick="openDeptForm()">+ Add Department</button><table><tr><th>Image</th><th>Name</th><th>Type</th><th>HOD</th><th>Active</th><th>Actions</th></tr>';
+      const r = await fetch(`${API}/departments`);
+      const d = await r.json();
+      let h = `<button class="btn btn-green btn-sm" onclick="openDeptForm()">+ Add Department</button><table>
+        <thead>
+        <tr>
+          <th>Image</th>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Exam Body</th>
+          <th>Vision</th>
+          <th>Mission</th>
+          <th>Objective</th>
+          <th>HOD</th>
+          <th>Active</th>
+          <th>Actions</th>
+        </tr>
+        </thead>
+        <tbody>`;
+  
       if (d.success && d.data) d.data.forEach(dept => {
-        h += `<tr><td>${dept.image_path ? '<img src="' + dept.image_path + '" style="height:40px;width:60px;object-fit:cover;border-radius:4px;">' : '🏛️'}</td><td>${escapeHtml(dept.name)}</td><td>${dept.type}</td><td>${escapeHtml(dept.hod_name || 'None')}</td><td>${dept.is_active !== false ? '✅' : '❌'}</td><td><button class="btn btn-yellow btn-sm" onclick="editDept(${dept.id})">Edit</button> <button class="btn btn-red btn-sm" onclick="deleteDept(${dept.id})">Del</button></td></tr>`;
+        // Truncate long text for table display
+        const visionShort = dept.vision ? (dept.vision.length > 50 ? dept.vision.substring(0, 50) + '...' : dept.vision) : '—';
+        const missionShort = dept.mission ? (dept.mission.length > 50 ? dept.mission.substring(0, 50) + '...' : dept.mission) : '—';
+        const objectiveShort = dept.objective ? (dept.objective.length > 50 ? dept.objective.substring(0, 50) + '...' : dept.objective) : '—';
+
+        h += `<tr>
+        <td>${dept.image_path ? '<img src="' + dept.image_path + '" style="height:40px;width:60px;object-fit:cover;border-radius:4px;" loading="lazy">' : '🏛️'}</td>
+        <td><strong>${escapeHtml(dept.name)}</strong></td>
+        <td><span class="badge ${dept.type === 'academic' ? 'badge-active' : 'badge-inactive'}">${dept.type}</span></td>
+        <td>${dept.type === 'academic' ? (dept.examining_body || '<span style="color:#999;">—</span>') : '<span style="color:#999;">N/A</span>'}</td>
+        <td><small title="${escapeHtml(dept.vision || '')}">${escapeHtml(visionShort)}</small></td>
+        <td><small title="${escapeHtml(dept.mission || '')}">${escapeHtml(missionShort)}</small></td>
+        <td><small title="${escapeHtml(dept.objective || '')}">${escapeHtml(objectiveShort)}</small></td>
+        <td>${dept.hod_name ? '<span style="color:#1a7a1a;font-weight:500;">✓ ' + escapeHtml(dept.hod_name) + '</span>' : '<span style="color:#999;">—</span>'}</td>
+        <td>${dept.is_active !== false ? '<span class="badge badge-active">Active</span>' : '<span class="badge badge-inactive">Inactive</span>'}</td>
+        <td>
+          <button class="btn btn-yellow btn-sm" onclick="editDept(${dept.id})" title="Edit Department">✏️ Edit</button>
+          <button class="btn btn-red btn-sm" onclick="deleteDept(${dept.id})" title="Delete Department">🗑️ Del</button>
+        </td>
+      </tr>`;
       });
-      h += '</table>'; document.getElementById('departmentsContent').innerHTML = h;
+
+      h += '</tbody></table>';
+      document.getElementById('departmentsContent').innerHTML = h;
+    }
+
+    function toggleExamBodyField() {
+      const type = document.getElementById('deptTypeSelect')?.value;
+      const examGroup = document.getElementById('examBodyGroup');
+      if (examGroup) examGroup.style.display = type === 'academic' ? 'block' : 'none';
+    }
+
+    function toggleEditExamBodyField() {
+      const type = document.getElementById('editDeptTypeSelect')?.value;
+      const examGroup = document.getElementById('editExamBodyGroup');
+      if (examGroup) examGroup.style.display = type === 'academic' ? 'block' : 'none';
     }
 
     function openDeptForm() {
-      openModal(`<h3>Add Department</h3><form onsubmit="addDept(event)" enctype="multipart/form-data">
-    <div class="form-group"><label>Department Name</label><input name="name" required></div>
-    <div class="form-group"><label>Type</label><select name="type" required>
-      <option value="academic">Academic</option><option value="non_academic">Non-Academic</option>
+      openModal(`<h3>➕ Add New Department</h3><form onsubmit="addDept(event)" enctype="multipart/form-data">
+    <div class="form-group"><label>Department Name <span style="color:#c00;">*</span></label><input name="name" required placeholder="e.g., Information Communication Technology"></div>
+    <div class="form-group"><label>Type <span style="color:#c00;">*</span></label><select name="type" id="deptTypeSelect" onchange="toggleExamBodyField()" required>
+      <option value="academic">Academic</option>
+      <option value="non_academic">Non-Academic</option>
     </select></div>
-    <div class="form-group"><label>Description</label><textarea name="description" rows="3"></textarea></div>
-    <div class="form-group"><label>Department Image</label><input type="file" name="image" accept="image/*"></div>
-    <button class="btn btn-green">Save</button> <button type="button" class="btn btn-red" onclick="closeModal()">Cancel</button>
+    <div class="form-group" id="examBodyGroup" style="display:block;">
+      <label>Examining Body (for Academic departments)</label>
+      <select name="examining_body">
+        <option value="">-- Select Examining Body --</option>
+        <option value="KNEC">KNEC (Kenya National Examinations Council)</option>
+        <option value="KASNEB">KASNEB (Kenya Accountants and Secretaries National Examinations Board)</option>
+        <option value="CDACC">CDACC (Curriculum Development Assessment and Certification Council)</option>
+      </select>
+      <small style="color:#666;display:block;margin-top:4px;">Only applies to Academic departments</small>
+    </div>
+    <div class="form-group"><label>Description</label><textarea name="description" rows="3" placeholder="Brief description of the department..."></textarea></div>
+    <div class="form-group"><label>Vision Statement</label><textarea name="vision" rows="3" placeholder="What is the department's vision? e.g., To be a center of excellence in technical training..."></textarea></div>
+    <div class="form-group"><label>Mission Statement</label><textarea name="mission" rows="3" placeholder="What is the department's mission? e.g., To provide quality, industry-driven training..."></textarea></div>
+    <div class="form-group"><label>Key Objective</label><textarea name="objective" rows="3" placeholder="What is the department's main objective? e.g., To equip students with hands-on skills..."></textarea></div>
+    <div class="form-group"><label>Department Image</label><input type="file" name="image" accept="image/*"><small style="color:#666;display:block;margin-top:4px;">Upload JPG, PNG, or GIF (recommended size: 800x600px)</small></div>
+    <hr style="margin:1rem 0;">
+    <button class="btn btn-green">💾 Save Department</button>
+    <button type="button" class="btn btn-red" onclick="closeModal()">❌ Cancel</button>
   </form>`);
     }
 
@@ -598,91 +667,67 @@
         const r = await fetch(`${API}/departments`, { method: 'POST', body: f });
         const result = await r.json();
         if (result.success) {
-          finishProgress(true, 'Department added successfully!');
+          finishProgress(true, '✅ Department added successfully!');
           closeModal();
           loadDepartments();
+        } else {
+          finishProgress(false, result.message || 'Failed to add department');
         }
-        else { finishProgress(false, result.message); }
-      } catch (err) { finishProgress(false, 'Network error. Please try again.'); }
+      } catch (err) {
+        finishProgress(false, 'Network error. Please try again.');
+      }
     }
 
-
     async function editDept(id) {
-      const r = await fetch('/api/v1/departments'), d = await r.json();
-      const dept = d.data?.find(x => x.id == id);
-      if (!dept) return alert('Department not found');
-      openModal(`<h3>Edit Department</h3><form onsubmit="updateDept(event, ${id})" enctype="multipart/form-data">
-    <div class="form-group"><label>Department Name</label><input name="name" value="${escapeHtml(dept.name)}" required></div>
-    <div class="form-group"><label>Type</label><select name="type" required>
+      showProgress('Loading department details...');
+      updateProgress(20, 'Fetching data...');
+
+      try {
+        const r = await fetch(`${API}/departments`)  // API = '/api/v1/admin';
+        const d = await r.json();
+        hideProgress();
+
+        const dept = d.data?.find(x => x.id == id);
+        if (!dept) return alert('Department not found');
+
+        const examBodyHtml = dept.type === 'academic' ? `
+    <div class="form-group">
+      <label>Examining Body</label>
+      <select name="examining_body">
+        <option value="">-- Select Examining Body --</option>
+        <option value="KNEC" ${dept.examining_body === 'KNEC' ? 'selected' : ''}>KNEC (Kenya National Examinations Council)</option>
+        <option value="KASNEB" ${dept.examining_body === 'KASNEB' ? 'selected' : ''}>KASNEB (Kenya Accountants and Secretaries National Examinations Board)</option>
+        <option value="CDACC" ${dept.examining_body === 'CDACC' ? 'selected' : ''}>CDACC (Curriculum Development Assessment and Certification Council)</option>
+      </select>
+    </div>
+    ` : '<input type="hidden" name="examining_body" value="">';
+
+        openModal(`<h3>✏️ Edit Department: ${escapeHtml(dept.name)}</h3><form onsubmit="updateDept(event, ${id})" enctype="multipart/form-data">
+    <div class="form-group"><label>Department Name <span style="color:#c00;">*</span></label><input name="name" value="${escapeHtml(dept.name)}" required></div>
+    <div class="form-group"><label>Type <span style="color:#c00;">*</span></label><select name="type" id="editDeptTypeSelect" onchange="toggleEditExamBodyField()" required>
       <option value="academic" ${dept.type === 'academic' ? 'selected' : ''}>Academic</option>
       <option value="non_academic" ${dept.type === 'non_academic' ? 'selected' : ''}>Non-Academic</option>
     </select></div>
+    <div id="editExamBodyGroup" style="display:${dept.type === 'academic' ? 'block' : 'none'};">${examBodyHtml}</div>
     <div class="form-group"><label>Description</label><textarea name="description" rows="3">${escapeHtml(dept.description || '')}</textarea></div>
+    <div class="form-group"><label>Vision Statement</label><textarea name="vision" rows="3" placeholder="What is the department's vision?">${escapeHtml(dept.vision || '')}</textarea></div>
+    <div class="form-group"><label>Mission Statement</label><textarea name="mission" rows="3" placeholder="What is the department's mission?">${escapeHtml(dept.mission || '')}</textarea></div>
+    <div class="form-group"><label>Key Objective</label><textarea name="objective" rows="3" placeholder="What is the department's main objective?">${escapeHtml(dept.objective || '')}</textarea></div>
     <div class="form-group"><label>Department Image</label>
-      ${dept.image_path ? `<div style="margin-bottom:0.5rem;"><img src="${dept.image_path}" style="max-height:100px;border-radius:8px;"></div><small style="color:#888;">Current image shown above. Upload new to replace.</small>` : ''}
+      ${dept.image_path ? `<div style="margin-bottom:0.8rem;"><img src="${dept.image_path}" style="max-height:100px;border-radius:8px;border:1px solid #ddd;"><br><small style="color:#888;">Current image shown above. Upload new to replace.</small></div>` : ''}
       <input type="file" name="image" accept="image/*">
     </div>
-    <div class="form-group"><label>Current HOD: <strong>${escapeHtml(dept.hod_name || 'None assigned')}</strong></label>
-      <button type="button" class="btn btn-yellow btn-sm" onclick="closeModal();openHodForm(${id}, '${escapeHtml(dept.name)}', ${dept.hod_id || 0})">Change HOD</button>
+    <div class="form-group"><label>Current HOD: <strong style="color:#1a7a1a;">${escapeHtml(dept.hod_name || 'None assigned')}</strong></label>
+      <button type="button" class="btn btn-yellow btn-sm" onclick="closeModal();openHodForm(${id}, '${escapeHtml(dept.name)}', ${dept.hod_id || 0})">👤 Change HOD</button>
     </div>
-    <button class="btn btn-green">Save Department</button> <button type="button" class="btn btn-red" onclick="closeModal()">Cancel</button>
+    <hr style="margin:1rem 0;">
+    <button class="btn btn-green">💾 Save Changes</button>
+    <button type="button" class="btn btn-red" onclick="closeModal()">❌ Cancel</button>
   </form>`);
-    }
-
-    async function openHodForm(deptId, deptName, currentHodId) {
-      // Fetch all lecturers and HODs
-      const r = await fetch('/api/v1/users?role=lecturer');
-      const hodR = await fetch('/api/v1/users?role=hod');
-      const [lectData, hodData] = await Promise.all([r.json(), hodR.json()]);
-
-      let allLecturers = [];
-      if (lectData.success && lectData.data) allLecturers = allLecturers.concat(lectData.data);
-      if (hodData.success && hodData.data) allLecturers = allLecturers.concat(hodData.data);
-
-      // Remove duplicates by ID
-      const seen = new Set();
-      allLecturers = allLecturers.filter(u => {
-        if (seen.has(u.id)) return false;
-        seen.add(u.id);
-        return true;
-      }).sort((a, b) => a.full_name.localeCompare(b.full_name));
-
-      const options = allLecturers.map(u =>
-        `<option value="${u.id}" ${u.id == currentHodId ? 'selected' : ''}>${escapeHtml(u.full_name)} (${u.role})</option>`
-      ).join('');
-
-      openModal(`<h3>Assign HOD for ${escapeHtml(deptName)}</h3><form onsubmit="assignHod(event, ${deptId})">
-    <div class="form-group"><label>Select Lecturer</label><select name="lecturer_id" required>
-      <option value="">-- Select Lecturer --</option>
-      ${options}
-    </select></div>
-    <div class="form-group"><label>Assignment Date</label><input type="date" name="assigned_at" value="${new Date().toISOString().split('T')[0]}" required></div>
-    <button class="btn btn-green">Assign HOD</button> <button type="button" class="btn btn-red" onclick="closeModal()">Cancel</button>
-  </form>`);
-    }
-
-    async function assignHod(e, deptId) {
-      e.preventDefault();
-      const f = new FormData(e.target);
-      const payload = { lecturer_id: f.get('lecturer_id'), assigned_at: f.get('assigned_at') };
-
-      showProgress('Assigning HOD...');
-      updateProgress(40, 'Updating department...');
-
-      try {
-        const r = await fetch(`${API}/departments/${deptId}/hod`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        });
-        const result = await r.json();
-        if (result.success) {
-          finishProgress(true, 'HOD assigned successfully!');
-          closeModal();
-          loadDepartments();
-        }
-        else { finishProgress(false, result.message); }
-      } catch (err) { finishProgress(false, 'Network error.'); }
+      } catch (err) {
+        hideProgress();
+        alert('Error loading department details');
+      }
     }
 
     async function updateDept(e, id) {
@@ -696,27 +741,114 @@
         const r = await fetch(`${API}/departments/${id}`, { method: 'PUT', body: f });
         const result = await r.json();
         if (result.success) {
-          finishProgress(true, 'Department updated successfully!');
+          finishProgress(true, '✅ Department updated successfully!');
           closeModal();
           loadDepartments();
+        } else {
+          finishProgress(false, result.message || 'Update failed');
         }
-        else { finishProgress(false, result.message); }
-      } catch (err) { finishProgress(false, 'Network error. Please try again.'); }
+      } catch (err) {
+        finishProgress(false, 'Network error. Please try again.');
+      }
     }
 
-
     async function deleteDept(id) {
-      if (!confirm('Move this department to recycle bin? This will not delete courses or users in it.')) return;
+      if (!confirm('⚠️ Move this department to recycle bin?\n\nThis will NOT delete associated courses or users, but the department will be hidden from public view.')) return;
 
       showProgress('Moving to recycle bin...');
+      updateProgress(50, 'Archiving department data...');
 
       try {
         const r = await fetch(`${API}/departments/${id}`, { method: 'DELETE' });
         const result = await r.json();
-        if (result.success) { finishProgress(true, 'Department moved to recycle bin!'); loadDepartments(); }
-        else { finishProgress(false, result.message); }
-      } catch (err) { finishProgress(false, 'Network error.'); }
+        if (result.success) {
+          finishProgress(true, '✅ Department moved to recycle bin!');
+          loadDepartments();
+        } else {
+          finishProgress(false, result.message);
+        }
+      } catch (err) {
+        finishProgress(false, 'Network error.');
+      }
     }
+
+    async function openHodForm(deptId, deptName, currentHodId) {
+      showProgress('Loading lecturers...');
+      updateProgress(30, 'Fetching staff list...');
+
+      try {
+        // Fetch all lecturers and HODs
+        const r = await fetch('/api/v1/users?role=lecturer');
+        const hodR = await fetch('/api/v1/users?role=hod');
+        const [lectData, hodData] = await Promise.all([r.json(), hodR.json()]);
+        hideProgress();
+
+        let allLecturers = [];
+        if (lectData.success && lectData.data) allLecturers = allLecturers.concat(lectData.data);
+        if (hodData.success && hodData.data) allLecturers = allLecturers.concat(hodData.data);
+
+        // Remove duplicates by ID
+        const seen = new Set();
+        allLecturers = allLecturers.filter(u => {
+          if (seen.has(u.id)) return false;
+          seen.add(u.id);
+          return true;
+        }).sort((a, b) => a.full_name.localeCompare(b.full_name));
+
+        const options = allLecturers.map(u =>
+          `<option value="${u.id}" ${u.id == currentHodId ? 'selected' : ''}>${escapeHtml(u.full_name)} (${u.role.toUpperCase()})</option>`
+        ).join('');
+
+        openModal(`<h3>👨‍🏫 Assign Head of Department</h3>
+    <p><strong>Department:</strong> ${escapeHtml(deptName)}</p>
+    <form onsubmit="assignHod(event, ${deptId})">
+      <div class="form-group"><label>Select Lecturer/HOD</label>
+        <select name="lecturer_id" required style="padding:0.6rem;">
+          <option value="">-- Select Staff Member --</option>
+          ${options}
+        </select>
+        <small style="color:#666;display:block;margin-top:4px;">Only lecturers and existing HODs are shown. Assigning will auto-update user role to HOD.</small>
+      </div>
+      <div class="form-group"><label>Assignment Date</label>
+        <input type="date" name="assigned_at" value="${new Date().toISOString().split('T')[0]}" required>
+      </div>
+      <hr style="margin:1rem 0;">
+      <button class="btn btn-green">✅ Assign HOD</button>
+      <button type="button" class="btn btn-red" onclick="closeModal()">❌ Cancel</button>
+    </form>`);
+      } catch (err) {
+        hideProgress();
+        alert('Error loading staff list');
+      }
+    }
+
+    async function assignHod(e, deptId) {
+      e.preventDefault();
+      const f = new FormData(e.target);
+      const payload = { lecturer_id: f.get('lecturer_id'), assigned_at: f.get('assigned_at') };
+
+      showProgress('Assigning HOD...');
+      updateProgress(40, 'Updating department head...');
+
+      try {
+        const r = await fetch(`${API}/departments/${deptId}/hod`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const result = await r.json();
+        if (result.success) {
+          finishProgress(true, '✅ HOD assigned successfully!');
+          closeModal();
+          loadDepartments();
+        } else {
+          finishProgress(false, result.message || 'Assignment failed');
+        }
+      } catch (err) {
+        finishProgress(false, 'Network error.');
+      }
+    }
+
 
     // ── COURSES ──
     let courseFormStep = 1;
@@ -1126,7 +1258,7 @@
     }
     // ── TIMETABLE ──
     async function loadTimetable() {
-      const r = await fetch('/api/v1/timetable/all'), d = await r.json();
+      const r = await fetch(`${API}/timetable/all`), d = await r.json();
       let h = '<table><tr><th>Day</th><th>Time</th><th>Subject</th><th>Room</th></tr>';
       if (d.success && d.data) d.data.forEach(t => { h += `<tr><td>${t.day}</td><td>${t.time_start?.substring(0, 5)}-${t.time_end?.substring(0, 5)}</td><td>${t.subject}</td><td>${t.room}</td></tr>` });
       h += '</table>'; document.getElementById('timetableContent').innerHTML = h;
