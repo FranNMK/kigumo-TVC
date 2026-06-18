@@ -188,6 +188,21 @@ ul {
 }
 
 /* ── Navbar ───────────────────────────────────────────────── */
+/* Aplly Button Styes */
+.btn-apply {
+  background: #f5c518;
+  color: #1a1a2e;
+  padding: 8px 18px;
+  border-radius: var(--radius);
+  font-weight: 700;
+  margin-left: 4px;
+}
+.btn-apply:hover {
+  background: #d4a800;
+  color: #1a1a2e;
+}
+
+
 .navbar {
   background: var(--white);
   box-shadow: var(--shadow);
@@ -1519,3 +1534,4 @@ ul {
     background-position: 200% 0;
   }
 }
+

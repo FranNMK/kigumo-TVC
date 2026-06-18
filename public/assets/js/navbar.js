@@ -111,7 +111,9 @@
   <li><a href="/news.html" class="${current === "news" ? "active" : ""}">News</a></li>
   <li><a href="/contact.html" class="${current === "contact" ? "active" : ""}">Contact</a></li>
   <li><a href="/downloads.html" class="${current === "downloads" ? "active" : ""}">Downloads</a></li>
-  <li><a href="/portal/login.html" class="btn-portal">School Portal</a></li>
+   <!-- Apply Now button -->
+  <li><a href="/apply.html" class="btn-apply ${current === "apply" ? "active" : ""}">Apply Now</a></li>
+  <li><a href="/portal/login.html" class="btn-portal">Login</a></li>
 </ul>
         </div>
       </nav>

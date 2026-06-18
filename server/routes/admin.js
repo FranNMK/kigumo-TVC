@@ -54,7 +54,7 @@ router.get("/departments", async (req, res) => {
       LEFT JOIN users u ON u.id = ha.lecturer_id
       ORDER BY d.name
     `);
-    
+
     res.json({ success: true, data: rows });
   } catch (err) {
     logger.error("Departments fetch error", { error: err.message });
@@ -786,11 +786,11 @@ router.post("/departments", upload.single("image"), async (req, res) => {
     const { name, type, description, vision, mission, objective } = req.body;
     if (!name || !type)
       return res.status(400).json({ success: false, message: "Name and type are required" });
-    
-    const image_path = req.file 
-      ? await uploadToCloudinary(req.file, "kigumo-tvc/departments") 
+
+    const image_path = req.file
+      ? await uploadToCloudinary(req.file, "kigumo-tvc/departments")
       : null;
-    
+
     await db.execute(
       `INSERT INTO departments (name, type, description, vision, mission, objective, image_path) 
        VALUES (?,?,?,?,?,?,?)`,
@@ -807,15 +807,15 @@ router.put("/departments/:id", upload.single("image"), async (req, res) => {
   try {
     const { name, type, description, vision, mission, objective } = req.body;
     const [[existing]] = await db.execute("SELECT * FROM departments WHERE id = ?", [req.params.id]);
-    
+
     if (!existing) {
       return res.status(404).json({ success: false, message: "Department not found" });
     }
-    
-    const image_path = req.file 
-      ? await uploadToCloudinary(req.file, "kigumo-tvc/departments") 
+
+    const image_path = req.file
+      ? await uploadToCloudinary(req.file, "kigumo-tvc/departments")
       : existing.image_path || null;
-    
+
     await db.execute(
       `UPDATE departments 
        SET name=?, type=?, description=?, vision=?, mission=?, objective=?, image_path=? 
@@ -1097,6 +1097,68 @@ router.delete("/courses/:id", async (req, res) => {
   } catch (err) {
     logger.error("Course delete error", { error: err.message });
     res.status(500).json({ success: false, message: "Server error" });
+  }
+});
+
+// ── ADMIN: Applications ──
+router.get("/applications", async (req, res) => {
+  try {
+    const { status, search } = req.query;
+    let sql = `
+      SELECT a.*, c.name AS course_name, d.name AS department_name
+      FROM applications a
+      LEFT JOIN courses c ON a.course_id = c.id
+      LEFT JOIN departments d ON a.department_id = d.id
+      WHERE 1=1
+    `;
+    const params = [];
+    if (status) {
+      sql += ' AND a.status = ?';
+      params.push(status);
+    }
+    if (search) {
+      sql += ' AND (a.reference_number LIKE ? OR a.full_name LIKE ?)';
+      params.push('%' + search + '%', '%' + search + '%');
+    }
+    sql += ' ORDER BY a.submitted_at DESC';
+    const [rows] = await db.execute(sql, params);
+    res.json({ success: true, data: rows });
+  } catch (err) {
+    logger.error('Applications fetch error', { error: err.message });
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+router.get("/applications/:id", async (req, res) => {
+  try {
+    const [rows] = await db.execute(`
+      SELECT a.*, c.name AS course_name, d.name AS department_name
+      FROM applications a
+      LEFT JOIN courses c ON a.course_id = c.id
+      LEFT JOIN departments d ON a.department_id = d.id
+      WHERE a.id = ?
+    `, [req.params.id]);
+    if (rows.length === 0) return res.status(404).json({ success: false, message: 'Not found' });
+    res.json({ success: true, data: rows[0] });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+router.patch("/applications/:id/status", async (req, res) => {
+  try {
+    const { status } = req.body;
+    const valid = ['pending', 'reviewed', 'accepted', 'rejected'];
+    if (!valid.includes(status)) {
+      return res.status(400).json({ success: false, message: 'Invalid status' });
+    }
+    await db.execute(
+      'UPDATE applications SET status = ?, updated_at = NOW() WHERE id = ?',
+      [status, req.params.id]
+    );
+    res.json({ success: true, message: 'Status updated' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Server error' });
   }
 });
 

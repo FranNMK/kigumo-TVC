@@ -266,6 +266,7 @@
       <a href="#" class="nav-link" data-tab="bom">🏛️ BOM</a>
       <a href="#" class="nav-link" data-tab="partners">🤝 Partners</a>
       <a href="#" class="nav-link" data-tab="cohorts">📅 Cohorts</a>
+      <a href="#" class="nav-link" data-tab="applications">📋 Applications</a>
       <hr style="border-color:#444;margin:0.5rem 0;">
       <button id="logoutBtn"
         style="background:#c00;color:#fff;border:none;padding:0.5rem 1rem;margin-left:1rem;cursor:pointer;border-radius:4px;">🚪
@@ -340,6 +341,10 @@
           <p>Loading...</p>
         </div>
       </div>
+      <div class="tab-content" id="tab-applications">
+        <h2>Applications</h2>
+        <div id="applicationsContent">Loading...</div>
+      </div>
 
     </main>
   </div>
@@ -368,7 +373,7 @@
         this.classList.add('active');
         document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
         document.getElementById('tab-' + this.dataset.tab).classList.add('active');
-        const loader = { overview: loadOverview, slider: loadSlides, principal: loadPrincipal, 'page-content': loadPageContent, users: loadUsers, departments: loadDepartments, courses: loadCourses, timetable: loadTimetable, news: loadNews, downloads: loadDownloads, gallery: loadGallery, recycle: loadRecycle, enquiries: loadEnquiries, bom: loadBOM, partners: loadPartners, cohorts: loadCohortsTab }[this.dataset.tab];
+        const loader = { overview: loadOverview, slider: loadSlides, principal: loadPrincipal, 'page-content': loadPageContent, users: loadUsers, departments: loadDepartments, courses: loadCourses, timetable: loadTimetable, news: loadNews, downloads: loadDownloads, gallery: loadGallery, recycle: loadRecycle, enquiries: loadEnquiries, bom: loadBOM, partners: loadPartners, cohorts: loadCohortsTab, applications: loadApplications }[this.dataset.tab];
         if (loader) loader();
       });
     });
@@ -588,7 +593,7 @@
         </tr>
         </thead>
         <tbody>`;
-  
+
       if (d.success && d.data) d.data.forEach(dept => {
         // Truncate long text for table display
         const visionShort = dept.vision ? (dept.vision.length > 50 ? dept.vision.substring(0, 50) + '...' : dept.vision) : '—';
@@ -1602,6 +1607,121 @@
     async function toggleCohort(id) {
       await fetch(`/api/v1/admin/cohorts/${id}/toggle`, { method: 'PATCH' });
       loadCohortsTab();
+    }
+
+    // ── APPLICATIONS ──
+    async function loadApplications() {
+      try {
+        const r = await fetch(API + '/applications');
+        const d = await r.json();
+        let h = `
+      <div class="filter-bar" style="display:flex; gap:1rem; margin-bottom:1rem; flex-wrap:wrap;">
+        <select id="appFilterStatus" onchange="loadApplications()">
+          <option value="">All Statuses</option>
+          <option value="pending">Pending</option>
+          <option value="reviewed">Reviewed</option>
+          <option value="accepted">Accepted</option>
+          <option value="rejected">Rejected</option>
+        </select>
+        <input type="text" id="appFilterSearch" placeholder="Search by ref/name..." onkeyup="if(event.key==='Enter') loadApplications()">
+        <button class="btn btn-green btn-sm" onclick="loadApplications()">🔍 Filter</button>
+        <button class="btn btn-sm" onclick="document.getElementById('appFilterStatus').value='';document.getElementById('appFilterSearch').value='';loadApplications();">Clear</button>
+      </div>
+      <table>
+        <thead><tr><th>Ref</th><th>Name</th><th>Course</th><th>Intake</th><th>Status</th><th>Submitted</th><th>Actions</th></tr></thead>
+      <tbody>`;
+        if (d.success && d.data) {
+          d.data.forEach(app => {
+            const statusBadge = {
+              'pending': 'badge-warning',
+              'reviewed': 'badge-info',
+              'accepted': 'badge-active',
+              'rejected': 'badge-inactive'
+            }[app.status] || 'badge';
+            h += `<tr>
+          <td><strong>${escapeHtml(app.reference_number)}</strong></td>
+          <td>${escapeHtml(app.full_name)}</td>
+          <td>${escapeHtml(app.course_name || '')}</td>
+          <td>${escapeHtml(app.preferred_intake)}</td>
+          <td><span class="badge ${statusBadge}">${app.status}</span></td>
+          <td>${new Date(app.submitted_at).toLocaleDateString()}</td>
+          <td>
+            <button class="btn btn-yellow btn-sm" onclick="viewApplication(${app.id})">👁️ View</button>
+            <select onchange="updateAppStatus(${app.id}, this.value)" style="padding:4px;border-radius:4px;">
+              <option value="pending" ${app.status === 'pending' ? 'selected' : ''}>Pending</option>
+              <option value="reviewed" ${app.status === 'reviewed' ? 'selected' : ''}>Reviewed</option>
+              <option value="accepted" ${app.status === 'accepted' ? 'selected' : ''}>Accepted</option>
+              <option value="rejected" ${app.status === 'rejected' ? 'selected' : ''}>Rejected</option>
+            </select>
+          </td>
+        </tr>`;
+          });
+        } else {
+          h += '<tr><td colspan="7">No applications found.</td></tr>';
+        }
+        h += '</tbody></table>';
+        document.getElementById('applicationsContent').innerHTML = h;
+      } catch (err) {
+        console.error('loadApplications error:', err);
+        document.getElementById('applicationsContent').innerHTML = '<p style="color:#c00;">Error loading applications.</p>';
+      }
+    }
+
+    async function viewApplication(id) {
+      try {
+        const r = await fetch(API + '/applications/' + id);
+        const d = await r.json();
+        if (!d.success || !d.data) return alert('Application not found');
+        const app = d.data;
+        const docLinks = `
+      <a href="${app.kcse_cert_path}" target="_blank">📄 KCSE Cert</a> |
+      <a href="${app.id_doc_path}" target="_blank">🆔 ID</a>
+      ${app.photo_path ? `| <a href="${app.photo_path}" target="_blank">📸 Photo</a>` : ''}
+    `;
+        openModal(`
+      <h3>Application: ${app.reference_number}</h3>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+        <div><strong>Name:</strong> ${escapeHtml(app.full_name)}</div>
+        <div><strong>DOB:</strong> ${app.dob}</div>
+        <div><strong>Gender:</strong> ${app.gender}</div>
+        <div><strong>ID:</strong> ${escapeHtml(app.id_number)}</div>
+        <div><strong>Phone:</strong> ${escapeHtml(app.phone)}</div>
+        <div><strong>Email:</strong> ${escapeHtml(app.email)}</div>
+        <div><strong>KCSE Year:</strong> ${app.kcse_year}</div>
+        <div><strong>KCSE Grade:</strong> ${app.kcse_grade}</div>
+        <div><strong>Prev School:</strong> ${escapeHtml(app.prev_school || '')}</div>
+        <div><strong>Course:</strong> ${escapeHtml(app.course_name || '')}</div>
+        <div><strong>Intake:</strong> ${escapeHtml(app.preferred_intake)}</div>
+        <div><strong>Study Mode:</strong> ${escapeHtml(app.study_mode)}</div>
+        <div><strong>Status:</strong> ${app.status}</div>
+        <div><strong>Submitted:</strong> ${new Date(app.submitted_at).toLocaleString()}</div>
+        <div style="grid-column:1/3;"><strong>Documents:</strong> ${docLinks}</div>
+      </div>
+      <button class="btn btn-red" onclick="closeModal()">Close</button>
+    `);
+      } catch (err) {
+        alert('Error loading application details');
+      }
+    }
+
+    async function updateAppStatus(id, newStatus) {
+      if (!confirm(`Change status to "${newStatus}"?`)) return;
+      try {
+        const r = await fetch(API + '/applications/' + id + '/status', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: newStatus })
+        });
+        const result = await r.json();
+        if (result.success) {
+          alert('Status updated!');
+          loadApplications();
+        } else {
+          alert(result.message || 'Update failed');
+        }
+      } catch (err) {
+        alert('Network error');
+      }
     }
 
     // ── PARTNERS ──
