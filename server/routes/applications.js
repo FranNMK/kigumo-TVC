@@ -21,16 +21,29 @@ const upload = multer({
   }
 });
 
-// Helper: upload buffer to Cloudinary
+// ── HELPER: Upload to Cloudinary with dynamic resource_type ──
 async function uploadToCloudinary(file, folder) {
   if (!file) return null;
   const base64 = file.buffer.toString('base64');
   const dataURI = `data:${file.mimetype};base64,${base64}`;
-  const result = await uploadFile(dataURI, { folder });
+
+  // Use 'image' for PDFs so they render inline
+  let resourceType = 'auto';
+  if (file.mimetype === 'application/pdf') {
+    resourceType = 'image';
+  } else if (file.mimetype.startsWith('image/')) {
+    resourceType = 'image';
+  }
+
+  const result = await uploadFile(dataURI, {
+    folder,
+    resource_type: resourceType,
+    access_mode: 'public'
+  });
   return result.secure_url;
 }
 
-// Helper: generate unique reference number
+// ── Helper: generate unique reference number ──
 async function generateReference() {
   const year = new Date().getFullYear();
   let ref, exists;

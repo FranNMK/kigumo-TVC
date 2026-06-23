@@ -1667,20 +1667,57 @@
       }
     }
 
-    async function viewApplication(id) {
-      try {
-        const r = await fetch(API + '/applications/' + id);
-        const d = await r.json();
-        if (!d.success || !d.data) return alert('Application not found');
-        const app = d.data;
-        const docLinks = `
-      <a href="${app.kcse_cert_path}" target="_blank">📄 KCSE Cert</a> |
-      <a href="${app.id_doc_path}" target="_blank">🆔 ID</a>
-      ${app.photo_path ? `| <a href="${app.photo_path}" target="_blank">📸 Photo</a>` : ''}
+    // Helper: View document in modal (PDFs in iframe, images as <img>)
+function viewDocument(url) {
+  if (!url) return;
+  const isPdf = url.includes('.pdf') || url.includes('raw/upload') || url.includes('.pdf?');
+  if (isPdf) {
+    openModal(`
+      <h3>Document Viewer</h3>
+      <iframe src="${url}" style="width:100%; height:600px; border:none; border-radius:8px;"></iframe>
+      <div style="margin-top:12px;">
+        <a href="${url}" download class="btn btn-green" style="margin-right:8px;">⬇ Download</a>
+        <button class="btn btn-red" onclick="closeModal()">Close</button>
+      </div>
+    `);
+  } else {
+    openModal(`
+      <h3>Document Viewer</h3>
+      <img src="${url}" style="width:100%; max-height:80vh; object-fit:contain; border-radius:8px;">
+      <div style="margin-top:12px;">
+        <a href="${url}" download class="btn btn-green" style="margin-right:8px;">⬇ Download</a>
+        <button class="btn btn-red" onclick="closeModal()">Close</button>
+      </div>
+    `);
+  }
+}
+
+async function viewApplication(id) {
+  try {
+    const r = await fetch(API + '/applications/' + id);
+    const d = await r.json();
+    if (!d.success || !d.data) return alert('Application not found');
+    const app = d.data;
+
+    // Helper to generate document buttons that open in modal
+    function docButton(url, label) {
+      if (!url) return '';
+      return `<button class="btn btn-sm" style="background:#eef2f0; color:#1a7a1a; margin:4px 8px 4px 0; padding:4px 12px; border-radius:20px; border:none; cursor:pointer;" onclick="viewDocument('${url}')">
+                👁️ ${label}
+              </button>`;
+    }
+
+    const docLinks = `
+      <div style="display:flex; flex-wrap:wrap; gap:4px; margin-top:8px;">
+        ${docButton(app.kcse_cert_path, 'KCSE Certificate')}
+        ${docButton(app.id_doc_path, 'ID Document')}
+        ${app.photo_path ? docButton(app.photo_path, 'Passport Photo') : ''}
+      </div>
     `;
-        openModal(`
+
+    openModal(`
       <h3>Application: ${app.reference_number}</h3>
-      <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin:12px 0;">
         <div><strong>Name:</strong> ${escapeHtml(app.full_name)}</div>
         <div><strong>DOB:</strong> ${app.dob}</div>
         <div><strong>Gender:</strong> ${app.gender}</div>
@@ -1699,10 +1736,11 @@
       </div>
       <button class="btn btn-red" onclick="closeModal()">Close</button>
     `);
-      } catch (err) {
-        alert('Error loading application details');
-      }
-    }
+  } catch (err) {
+    alert('Error loading application details');
+  }
+}
+
 
     async function updateAppStatus(id, newStatus) {
       if (!confirm(`Change status to "${newStatus}"?`)) return;

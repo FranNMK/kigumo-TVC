@@ -188,21 +188,6 @@ ul {
 }
 
 /* ── Navbar ───────────────────────────────────────────────── */
-/* Aplly Button Styes */
-.btn-apply {
-  background: #f5c518;
-  color: #1a1a2e;
-  padding: 8px 18px;
-  border-radius: var(--radius);
-  font-weight: 700;
-  margin-left: 4px;
-}
-.btn-apply:hover {
-  background: #d4a800;
-  color: #1a1a2e;
-}
-
-
 .navbar {
   background: var(--white);
   box-shadow: var(--shadow);
@@ -215,61 +200,101 @@ ul {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 20px;
+  padding: 10px 20px;
+  flex-wrap: wrap; /* allow container to wrap on very small screens if needed */
 }
 .nav-brand {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
+  flex-shrink: 0; /* prevent logo from shrinking */
+  margin-right: 20px;
 }
 .nav-brand img {
-  width: 48px;
-  height: 48px;
+  width: 44px;
+  height: 44px;
   object-fit: contain;
 }
 .nav-brand-text h1 {
   font-size: 1rem;
   font-weight: 700;
   color: var(--green);
-  line-height: 1.2;
+  line-height: 1.1;
 }
 .nav-brand-text span {
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   color: var(--mid);
 }
 .nav-links {
   display: flex;
   align-items: center;
-  gap: 4px;
+  flex-wrap: wrap; /* allow links to wrap to next line when space is tight */
+  gap: 2px 6px; /* row gap and column gap */
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  flex: 1 1 auto; /* allow it to grow and shrink */
+  justify-content: flex-end; /* align items to the right */
+}
+.nav-links li {
+  display: flex;
+  align-items: center;
 }
 .nav-links a {
-  padding: 8px 14px;
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 10px; /* reduce padding slightly to fit more */
   border-radius: var(--radius);
-  font-size: 0.88rem;
+  font-size: 0.85rem; /* slightly smaller font */
   font-weight: 500;
   color: var(--dark);
   transition: var(--transition);
   cursor: pointer;
+  white-space: nowrap;
+  text-decoration: none;
+  line-height: 1.2;
 }
 .nav-links a:hover {
-  cursor: pointer;
-}
-.nav-links a:hover,
-.nav-links a.active {
   background: var(--green-light);
   color: var(--green);
 }
+.nav-links a.active {
+  background: var(--green-light);
+  color: var(--green);
+  font-weight: 600;
+}
+/* Buttons */
+.nav-links .btn-apply,
+.nav-links .btn-portal {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 14px;
+  border-radius: var(--radius);
+  font-weight: 700;
+  font-size: 0.85rem;
+  line-height: 1.2;
+  border: none;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  white-space: nowrap;
+}
+.nav-links .btn-apply {
+  background: #f5c518;
+  color: #1a1a2e;
+}
+.nav-links .btn-apply:hover {
+  background: #d4a800;
+  color: #1a1a2e;
+}
 .nav-links .btn-portal {
   background: var(--green);
-  color: var(--white);
-  padding: 8px 16px;
-  border-radius: var(--radius);
-  margin-left: 8px;
+  color: #ffffff;
 }
 .nav-links .btn-portal:hover {
   background: var(--green-dark);
+  color: #ffffff;
 }
-
+/* Remove the old separate .btn-apply rule (duplicate) – we already have it above */
 /* Hamburger */
 .hamburger {
   display: none;
@@ -1120,6 +1145,11 @@ ul {
   top: 116px !important;
 }
 
+.nav-links {
+  display: flex;
+  /*align-items: center; This ensures all items are vertically centered*/
+  gap: 4px;
+}
 /* ═══════════════════════════════════
    LANGUAGE SWITCHER
    ═══════════════════════════════════ */
@@ -1535,3 +1565,57 @@ ul {
   }
 }
 
+/* Aplly Button Styes */
+.btn-apply {
+  background: #f5c518;
+  color: #1a1a2e;
+  padding: 8px 18px;
+  border-radius: var(--radius);
+  font-weight: 700;
+  margin-left: 4px;
+}
+.btn-apply:hover {
+  background: #d4a800;
+  color: #1a1a2e;
+}
+
+/* Navbar buttons - consistent alignment */
+.nav-links .btn-apply,
+.nav-links .btn-portal {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 18px;
+  border-radius: var(--radius, 6px);
+  font-weight: 700;
+  font-size: 0.88rem;
+  line-height: 1.2;
+  height: 40px; /* Match with other nav items */
+  margin: 0;
+  vertical-align: middle;
+  transition: all 0.25s ease;
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
+}
+
+.nav-links .btn-apply {
+  background: #f5c518;
+  color: #1a1a2e;
+  margin-right: 4px;
+}
+
+.nav-links .btn-apply:hover {
+  background: #d4a800;
+  color: #1a1a2e;
+}
+
+.nav-links .btn-portal {
+  background: #1a7a1a;
+  color: #ffffff;
+}
+
+.nav-links .btn-portal:hover {
+  background: #145214;
+  color: #ffffff;
+}
