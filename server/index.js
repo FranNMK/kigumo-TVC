@@ -87,6 +87,7 @@ app.use("/api/v1/stats", require("./routes/stats"));
 app.use("/api/v1/slides", require("./routes/slides"));
 app.use("/api/v1/partners", require("./routes/partners"));
 app.use("/api/v1/applications", require("./routes/applications"));
+app.use("/api/v1/portals", require("./routes/portals"));
 
 // ── Portal Page Routes ─────────────────────────────────────
 // CRITICAL ADDITION: These routes serve portal HTML pages

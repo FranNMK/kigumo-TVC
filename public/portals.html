@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Access all Kigumo TVC portals - Student, Lecturer, Admin, e-Learning, and more." />
+    <meta name="theme-color" content="#1a7a1a" />
+    <title>Portals - Kigumo Technical and Vocational College</title>
+    <link rel="icon" type="image/jpeg" href="assets/images/logo.jpeg" />
+    <link rel="stylesheet" href="assets/css/main.css" />
+    <style>
+        .portals-hero {
+            background: linear-gradient(135deg, #1a1a2e, #1a7a1a);
+            color: #fff;
+            padding: 4rem 2rem 2.5rem;
+            text-align: center;
+        }
+        .portals-hero h1 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 0.5rem;
+        }
+        .portals-hero p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .portals-grid {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 3rem 1.5rem;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 2rem;
+        }
+        .portal-card {
+            background: #fff;
+            border-radius: 12px;
+            padding: 1.8rem;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+            border-left: 4px solid #1a7a1a;
+            transition: transform 0.25s, box-shadow 0.25s;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        .portal-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+        }
+        .portal-icon {
+            font-size: 2.8rem;
+            margin-bottom: 0.5rem;
+        }
+        .portal-card h3 {
+            font-size: 1.15rem;
+            color: #1a2c3e;
+            margin-bottom: 0.5rem;
+            font-weight: 700;
+        }
+        .portal-card p {
+            font-size: 0.9rem;
+            color: #5b6e8c;
+            line-height: 1.6;
+            flex: 1;
+        }
+        .portal-btn {
+            display: inline-block;
+            margin-top: 1rem;
+            background: #1a7a1a;
+            color: #fff;
+            padding: 0.6rem 1.2rem;
+            border-radius: 40px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.85rem;
+            transition: background 0.2s;
+            align-self: flex-start;
+        }
+        .portal-btn:hover {
+            background: #145214;
+        }
+        .no-portals {
+            text-align: center;
+            color: #888;
+            padding: 3rem;
+        }
+        @media (max-width: 768px) {
+            .portals-hero h1 { font-size: 1.8rem; }
+            .portals-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div id="google_translate_element" style="position:fixed;top:10px;right:10px;z-index:9999;background:white;padding:5px;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,0.1);"></div>
+    <header id="mainNavbar"></header>
+
+    <section class="portals-hero">
+        <h1>🔗 All Portals</h1>
+        <p>Access all college portals – Student, Lecturer, Admin, e-Learning, and more.</p>
+    </section>
+
+    <div class="portals-grid" id="portalsGrid">
+        <div class="portal-card" style="text-align:center; padding: 3rem;">
+            <p>Loading portals...</p>
+        </div>
+    </div>
+
+    <footer id="mainFooter"></footer>
+
+    <script src="assets/js/navbar.js"></script>
+    <script>
+        buildNavbar('portals');
+
+        async function loadFooter() {
+            try {
+                const res = await fetch('/');
+                const html = await res.text();
+                const doc = new DOMParser().parseFromString(html, 'text/html');
+                const footer = doc.querySelector('footer');
+                if (footer) document.getElementById('mainFooter').innerHTML = footer.outerHTML;
+            } catch(e) { console.log('Footer load failed'); }
+        }
+        loadFooter();
+
+        async function loadPortals() {
+            const grid = document.getElementById('portalsGrid');
+            try {
+                const res = await fetch('/api/v1/portals');
+                const data = await res.json();
+                if (!data.success || !data.data || data.data.length === 0) {
+                    grid.innerHTML = '<div class="no-portals">No portals available at this time.</div>';
+                    return;
+                }
+                grid.innerHTML = data.data.map(p => `
+                    <div class="portal-card">
+                        <div class="portal-icon">${escapeHtml(p.icon || '🔗')}</div>
+                        <h3>${escapeHtml(p.name)}</h3>
+                        <p>${escapeHtml(p.description || '')}</p>
+                        <a href="${escapeHtml(p.link)}" target="_blank" class="portal-btn">Visit Portal →</a>
+                    </div>
+                `).join('');
+            } catch (err) {
+                console.error('Failed to load portals:', err);
+                grid.innerHTML = '<div class="no-portals">Failed to load portals. Please try again later.</div>';
+            }
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        }
+
+        loadPortals();
+    </script>
+</body>
+</html>

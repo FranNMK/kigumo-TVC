@@ -225,6 +225,72 @@
         max-height: none;
       }
     }
+
+    /* ── Admin Panel Mobile Hamburger ── */
+    .admin-hamburger {
+      display: none;
+      background: none;
+      border: none;
+      color: #1a1a2e;
+      font-size: 1.5rem;
+      padding: 8px 12px;
+      cursor: pointer;
+      position: fixed;
+      top: 12px;
+      left: 12px;
+      z-index: 1001;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .sidebar-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.4);
+      z-index: 998;
+    }
+
+    .sidebar-overlay.open {
+      display: block;
+    }
+
+    @media (max-width: 768px) {
+      .admin-hamburger {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .dashboard-wrapper {
+        position: relative;
+      }
+
+      .sidebar {
+        position: fixed;
+        top: 0;
+        left: -280px;
+        width: 280px;
+        height: 100vh;
+        z-index: 999;
+        transition: left 0.3s ease;
+        box-shadow: 2px 0 12px rgba(0, 0, 0, 0.1);
+      }
+
+      .sidebar.open {
+        left: 0;
+      }
+
+      .main-content {
+        padding-top: 60px;
+        max-height: 100vh;
+        overflow-y: auto;
+      }
+    }
   </style>
 </head>
 
@@ -247,6 +313,14 @@
     </div>
   </div>
 
+  <!-- Admin Hamburger Button -->
+  <button class="admin-hamburger" id="adminHamburger" aria-label="Toggle sidebar">
+    ☰
+  </button>
+
+  <!-- Sidebar Overlay -->
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
   <div class="dashboard-wrapper">
     <nav class="sidebar">
       <h3>⚙️ Admin Panel</h3>
@@ -254,6 +328,7 @@
       <a href="#" class="nav-link" data-tab="slider">🎞️ Slider</a>
       <a href="#" class="nav-link" data-tab="principal">👤 Principal Msg</a>
       <a href="#" class="nav-link" data-tab="page-content">📝 Page Content</a>
+      <a href="#" class="nav-link" data-tab="portals">📋 Portals</a>
       <a href="#" class="nav-link" data-tab="users">👥 Users</a>
       <a href="#" class="nav-link" data-tab="departments">🏛️ Departments</a>
       <a href="#" class="nav-link" data-tab="courses">📚 Courses</a>
@@ -291,6 +366,11 @@
         <h2>Page Content</h2>
         <div id="pageContentContent">Loading...</div>
       </div>
+      <div class="tab-content" id="tab-portals">
+        <h2>Portals Management</h2>
+        <div id="portalsContent">Loading...</div>
+      </div>
+
       <div class="tab-content" id="tab-users">
         <h2>Users</h2>
         <div id="usersContent">Loading...</div>
@@ -346,6 +426,7 @@
         <div id="applicationsContent">Loading...</div>
       </div>
 
+
     </main>
   </div>
 
@@ -373,7 +454,7 @@
         this.classList.add('active');
         document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
         document.getElementById('tab-' + this.dataset.tab).classList.add('active');
-        const loader = { overview: loadOverview, slider: loadSlides, principal: loadPrincipal, 'page-content': loadPageContent, users: loadUsers, departments: loadDepartments, courses: loadCourses, timetable: loadTimetable, news: loadNews, downloads: loadDownloads, gallery: loadGallery, recycle: loadRecycle, enquiries: loadEnquiries, bom: loadBOM, partners: loadPartners, cohorts: loadCohortsTab, applications: loadApplications }[this.dataset.tab];
+        const loader = { overview: loadOverview, slider: loadSlides, principal: loadPrincipal, 'page-content': loadPageContent, users: loadUsers, departments: loadDepartments, courses: loadCourses, timetable: loadTimetable, news: loadNews, downloads: loadDownloads, gallery: loadGallery, recycle: loadRecycle, enquiries: loadEnquiries, bom: loadBOM, partners: loadPartners, cohorts: loadCohortsTab, applications: loadApplications, portals: loadPortalsAdmin }[this.dataset.tab];
         if (loader) loader();
       });
     });
@@ -1668,11 +1749,11 @@
     }
 
     // Helper: View document in modal (PDFs in iframe, images as <img>)
-function viewDocument(url) {
-  if (!url) return;
-  const isPdf = url.includes('.pdf') || url.includes('raw/upload') || url.includes('.pdf?');
-  if (isPdf) {
-    openModal(`
+    function viewDocument(url) {
+      if (!url) return;
+      const isPdf = url.includes('.pdf') || url.includes('raw/upload') || url.includes('.pdf?');
+      if (isPdf) {
+        openModal(`
       <h3>Document Viewer</h3>
       <iframe src="${url}" style="width:100%; height:600px; border:none; border-radius:8px;"></iframe>
       <div style="margin-top:12px;">
@@ -1680,8 +1761,8 @@ function viewDocument(url) {
         <button class="btn btn-red" onclick="closeModal()">Close</button>
       </div>
     `);
-  } else {
-    openModal(`
+      } else {
+        openModal(`
       <h3>Document Viewer</h3>
       <img src="${url}" style="width:100%; max-height:80vh; object-fit:contain; border-radius:8px;">
       <div style="margin-top:12px;">
@@ -1689,25 +1770,25 @@ function viewDocument(url) {
         <button class="btn btn-red" onclick="closeModal()">Close</button>
       </div>
     `);
-  }
-}
-
-async function viewApplication(id) {
-  try {
-    const r = await fetch(API + '/applications/' + id);
-    const d = await r.json();
-    if (!d.success || !d.data) return alert('Application not found');
-    const app = d.data;
-
-    // Helper to generate document buttons that open in modal
-    function docButton(url, label) {
-      if (!url) return '';
-      return `<button class="btn btn-sm" style="background:#eef2f0; color:#1a7a1a; margin:4px 8px 4px 0; padding:4px 12px; border-radius:20px; border:none; cursor:pointer;" onclick="viewDocument('${url}')">
-                👁️ ${label}
-              </button>`;
+      }
     }
 
-    const docLinks = `
+    async function viewApplication(id) {
+      try {
+        const r = await fetch(API + '/applications/' + id);
+        const d = await r.json();
+        if (!d.success || !d.data) return alert('Application not found');
+        const app = d.data;
+
+        // Helper to generate document buttons that open in modal
+        function docButton(url, label) {
+          if (!url) return '';
+          return `<button class="btn btn-sm" style="background:#eef2f0; color:#1a7a1a; margin:4px 8px 4px 0; padding:4px 12px; border-radius:20px; border:none; cursor:pointer;" onclick="viewDocument('${url}')">
+                👁️ ${label}
+              </button>`;
+        }
+
+        const docLinks = `
       <div style="display:flex; flex-wrap:wrap; gap:4px; margin-top:8px;">
         ${docButton(app.kcse_cert_path, 'KCSE Certificate')}
         ${docButton(app.id_doc_path, 'ID Document')}
@@ -1715,7 +1796,7 @@ async function viewApplication(id) {
       </div>
     `;
 
-    openModal(`
+        openModal(`
       <h3>Application: ${app.reference_number}</h3>
       <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin:12px 0;">
         <div><strong>Name:</strong> ${escapeHtml(app.full_name)}</div>
@@ -1736,10 +1817,10 @@ async function viewApplication(id) {
       </div>
       <button class="btn btn-red" onclick="closeModal()">Close</button>
     `);
-  } catch (err) {
-    alert('Error loading application details');
-  }
-}
+      } catch (err) {
+        alert('Error loading application details');
+      }
+    }
 
 
     async function updateAppStatus(id, newStatus) {
@@ -1872,6 +1953,210 @@ async function viewApplication(id) {
       } catch (err) {
         finishProgress(false, 'Network error. Please try again.');
       }
+    }
+
+
+    // ── PORTALS ──
+    async function loadPortalsAdmin() {
+      try {
+        const r = await fetch(API + '/portals');
+        const d = await r.json();
+        let h = `
+            <button class="btn btn-green btn-sm" onclick="openPortalForm()">+ Add Portal</button>
+            <table>
+                <thead><tr><th>Icon</th><th>Name</th><th>Description</th><th>Link</th><th>Order</th><th>Active</th><th>Actions</th></tr></thead>
+                <tbody>
+        `;
+        if (d.success && d.data) {
+          d.data.forEach(p => {
+            h += `<tr>
+                    <td>${escapeHtml(p.icon || '🔗')}</td>
+                    <td><strong>${escapeHtml(p.name)}</strong></td>
+                    <td>${escapeHtml(p.description || '')}</td>
+                    <td><a href="${escapeHtml(p.link)}" target="_blank">${escapeHtml(p.link)}</a></td>
+                    <td>${p.sort_order}</td>
+                    <td>${p.is_active ? '✅' : '❌'}</td>
+                    <td>
+                        <button class="btn btn-yellow btn-sm" onclick="editPortal(${p.id})">Edit</button>
+                        <button class="btn btn-red btn-sm" onclick="deletePortal(${p.id})">Del</button>
+                    </td>
+                </tr>`;
+          });
+        } else {
+          h += `<tr><td colspan="7">No portals found.</td></tr>`;
+        }
+        h += '</tbody></table>';
+        document.getElementById('portalsContent').innerHTML = h;
+      } catch (err) {
+        console.error('loadPortalsAdmin error:', err);
+        document.getElementById('portalsContent').innerHTML = '<p style="color:#c00;">Error loading portals.</p>';
+      }
+    }
+
+    function openPortalForm() {
+      openModal(`
+        <h3>Add Portal</h3>
+        <form onsubmit="addPortal(event)">
+            <div class="form-group"><label>Name</label><input name="name" required></div>
+            <div class="form-group"><label>Description</label><textarea name="description" rows="2"></textarea></div>
+            <div class="form-group"><label>Link (URL)</label><input name="link" required></div>
+            <div class="form-group"><label>Icon (emoji)</label><input name="icon" value="🔗"></div>
+            <div class="form-group"><label>Sort Order</label><input type="number" name="sort_order" value="0"></div>
+            <button class="btn btn-green">Save</button>
+            <button type="button" class="btn btn-red" onclick="closeModal()">Cancel</button>
+        </form>
+    `);
+    }
+
+    async function addPortal(e) {
+      e.preventDefault();
+      const f = new FormData(e.target);
+      const payload = {
+        name: f.get('name'),
+        description: f.get('description'),
+        link: f.get('link'),
+        icon: f.get('icon'),
+        sort_order: parseInt(f.get('sort_order')) || 0
+      };
+
+      showProgress('Adding portal...');
+      updateProgress(30, 'Creating portal...');
+
+      try {
+        const r = await fetch(API + '/portals', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const result = await r.json();
+        if (result.success) {
+          finishProgress(true, 'Portal added successfully!');
+          closeModal();
+          loadPortalsAdmin();
+        } else {
+          finishProgress(false, result.message || 'Failed to add portal');
+        }
+      } catch (err) {
+        finishProgress(false, 'Network error. Please try again.');
+      }
+    }
+
+    async function editPortal(id) {
+      try {
+        const r = await fetch(API + '/portals');
+        const d = await r.json();
+        const portal = d.data.find(p => p.id === id);
+        if (!portal) return alert('Portal not found');
+        openModal(`
+            <h3>Edit Portal</h3>
+            <form onsubmit="updatePortal(event, ${id})">
+                <div class="form-group"><label>Name</label><input name="name" value="${escapeHtml(portal.name)}" required></div>
+                <div class="form-group"><label>Description</label><textarea name="description" rows="2">${escapeHtml(portal.description || '')}</textarea></div>
+                <div class="form-group"><label>Link (URL)</label><input name="link" value="${escapeHtml(portal.link)}" required></div>
+                <div class="form-group"><label>Icon (emoji)</label><input name="icon" value="${escapeHtml(portal.icon || '🔗')}"></div>
+                <div class="form-group"><label>Sort Order</label><input type="number" name="sort_order" value="${portal.sort_order}"></div>
+                <div class="form-group" style="display:flex; align-items:center; gap:8px;">
+                    <input type="checkbox" name="is_active" ${portal.is_active ? 'checked' : ''}>
+                    <label style="margin-bottom:0;">Active</label>
+                </div>
+                <button class="btn btn-green">Save</button>
+                <button type="button" class="btn btn-red" onclick="closeModal()">Cancel</button>
+            </form>
+        `);
+      } catch (err) {
+        alert('Error loading portal details');
+      }
+    }
+
+    async function updatePortal(e, id) {
+      e.preventDefault();
+      const f = new FormData(e.target);
+      const payload = {
+        name: f.get('name'),
+        description: f.get('description'),
+        link: f.get('link'),
+        icon: f.get('icon'),
+        sort_order: parseInt(f.get('sort_order')) || 0,
+        is_active: f.get('is_active') === 'on'
+      };
+
+      showProgress('Updating portal...');
+      updateProgress(30, 'Saving changes...');
+
+      try {
+        const r = await fetch(API + '/portals/' + id, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const result = await r.json();
+        if (result.success) {
+          finishProgress(true, 'Portal updated successfully!');
+          closeModal();
+          loadPortalsAdmin();
+        } else {
+          finishProgress(false, result.message || 'Failed to update portal');
+        }
+      } catch (err) {
+        finishProgress(false, 'Network error. Please try again.');
+      }
+    }
+
+    async function deletePortal(id) {
+      if (!confirm('Delete this portal?')) return;
+
+      showProgress('Deleting portal...');
+      updateProgress(40, 'Removing portal...');
+
+      try {
+        const r = await fetch(API + '/portals/' + id, {
+          method: 'DELETE'
+        });
+        const result = await r.json();
+        if (result.success) {
+          finishProgress(true, 'Portal deleted successfully!');
+          loadPortalsAdmin();
+        } else {
+          finishProgress(false, result.message || 'Failed to delete portal');
+        }
+      } catch (err) {
+        finishProgress(false, 'Network error. Please try again.');
+      }
+    }
+
+    // ── Admin Panel Mobile Hamburger ──
+    const adminHamburger = document.getElementById('adminHamburger');
+    const sidebarOverlay = document.getElementById('sidebarOverlay');
+    const sidebar = document.querySelector('.sidebar');
+
+    function toggleSidebar() {
+      sidebar.classList.toggle('open');
+      sidebarOverlay.classList.toggle('open');
+      document.body.style.overflow = sidebar.classList.contains('open') ? 'hidden' : '';
+    }
+
+    if (adminHamburger && sidebarOverlay && sidebar) {
+      // Toggle on hamburger click
+      adminHamburger.addEventListener('click', toggleSidebar);
+
+      // Close on overlay click
+      sidebarOverlay.addEventListener('click', toggleSidebar);
+
+      // Close on Escape key
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && sidebar.classList.contains('open')) {
+          toggleSidebar();
+        }
+      });
+
+      // Close when a link is clicked
+      sidebar.querySelectorAll('a').forEach(function (link) {
+        link.addEventListener('click', function () {
+          if (window.innerWidth <= 768 && sidebar.classList.contains('open')) {
+            toggleSidebar();
+          }
+        });
+      });
     }
 
   </script>

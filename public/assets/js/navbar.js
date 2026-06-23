@@ -113,8 +113,7 @@
   <li><a href="/downloads.html" class="${current === "downloads" ? "active" : ""}">Downloads</a></li>
    <!-- Apply Now button -->
   <li><a href="/apply.html" class="btn-apply ${current === "apply" ? "active" : ""}">Apply Now</a></li>
-  <li><a href="/portal/login.html" class="btn-portal">Login</a></li>
-</ul>
+  <li><a href="/portals.html" class="btn-portal">Portals</a></li>
         </div>
       </nav>
       <div class="nav-overlay" id="nav-overlay"></div>

@@ -30,6 +30,62 @@ async function uploadToCloudinary(file, folder) {
   return result.secure_url;
 }
 
+
+// ── PORTALS CRUD ──
+router.get('/portals', async (req, res) => {
+  try {
+    const [rows] = await db.execute(
+      'SELECT * FROM portals ORDER BY sort_order'
+    );
+    res.json({ success: true, data: rows });
+  } catch (err) {
+    logger.error('Admin portals fetch error', { error: err.message });
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+router.post('/portals', async (req, res) => {
+  try {
+    const { name, description, link, icon, sort_order } = req.body;
+    if (!name || !link) {
+      return res.status(400).json({ success: false, message: 'Name and link are required' });
+    }
+    const [result] = await db.execute(
+      'INSERT INTO portals (name, description, link, icon, sort_order) VALUES (?, ?, ?, ?, ?)',
+      [name, description || '', link, icon || '🔗', sort_order || 0]
+    );
+    res.json({ success: true, message: 'Portal added', id: result.insertId });
+  } catch (err) {
+    logger.error('Portal create error', { error: err.message });
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+router.put('/portals/:id', async (req, res) => {
+  try {
+    const { name, description, link, icon, sort_order, is_active } = req.body;
+    await db.execute(
+      `UPDATE portals SET name=?, description=?, link=?, icon=?, sort_order=?, is_active=? WHERE id=?`,
+      [name, description || '', link, icon || '🔗', sort_order || 0, is_active === undefined ? 1 : (is_active ? 1 : 0), req.params.id]
+    );
+    res.json({ success: true, message: 'Portal updated' });
+  } catch (err) {
+    logger.error('Portal update error', { error: err.message });
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+router.delete('/portals/:id', async (req, res) => {
+  try {
+    await db.execute('DELETE FROM portals WHERE id = ?', [req.params.id]);
+    res.json({ success: true, message: 'Portal deleted' });
+  } catch (err) {
+    logger.error('Portal delete error', { error: err.message });
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+
 // ── GET ALL DEPARTMENTS (with new fields) ──
 router.get("/departments", async (req, res) => {
   try {
