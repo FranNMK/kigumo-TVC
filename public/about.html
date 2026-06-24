@@ -237,6 +237,7 @@
         .charter-table thead th:first-child {
             border-radius: 12px 0 0 0;
         }
+
         .charter-table thead th:last-child {
             border-radius: 0 12px 0 0;
         }
@@ -456,7 +457,8 @@
                             <td colspan="4">Students Admission Process</td>
                         </tr>
                         <tr>
-                            <td class="service-name">Request of applications for advertised College Programmes/Courses</td>
+                            <td class="service-name">Request of applications for advertised College Programmes/Courses
+                            </td>
                             <td>Online submission of application</td>
                             <td class="cost-free">Free</td>
                             <td class="waiting">Instantly</td>
@@ -576,7 +578,8 @@
             </div>
 
             <!-- Commitment statement from the image -->
-            <div style="margin-top:2rem;text-align:center;background:#ffffff;padding:1.2rem;border-radius:10px;border-left:4px solid #1a7a1a;">
+            <div
+                style="margin-top:2rem;text-align:center;background:#ffffff;padding:1.2rem;border-radius:10px;border-left:4px solid #1a7a1a;">
                 <p style="font-weight:600;color:#1a1a2e;font-size:1.05rem;">
                     WE ARE COMMITTED TO COUNTERING AND EXCELLENCE IN SERVICE DELIVERY
                 </p>
@@ -824,55 +827,72 @@
                 if (!res.ok) throw new Error('Principal fetch failed');
                 const data = await res.json();
 
+                console.log('Principal API response:', data); // debug
+
                 if (data.success && data.data) {
                     const p = data.data;
 
-                    // Fix: remove any leading /uploads/ from image_path to avoid doubling
-                    const imagePath = p.image_path
-                        ? p.image_path.replace(/^\/uploads\//, '')
-                        : '';
+                    // Try multiple possible field names
+                    let imagePath = p.image_path || p.photo || p.photo_url || p.image || '';
+
+                    // Normalise the image path:
+                    // - If it's a full URL (http/https), use it as-is.
+                    // - Otherwise, treat it as a local path and prepend /uploads/
+                    if (imagePath) {
+                        if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
+                            // Full URL – do nothing
+                        } else {
+                            // Local path – clean and prepend /uploads/
+                            imagePath = imagePath.replace(/^\/+/, ''); // remove leading slashes
+                            imagePath = '/uploads/' + imagePath;
+                        }
+                        // Remove any double slashes (just in case)
+                        imagePath = imagePath.replace(/([^:])\/+/g, '$1/');
+                    }
 
                     const photoHtml = imagePath
-                        ? `<img src="/uploads/${imagePath}" alt="${escapeHtml(p.principal_name || '')}" style="width:100%;height:100%;object-fit:cover;">`
+                        ? `<img src="${imagePath}" alt="${escapeHtml(p.principal_name || 'Principal')}" style="width:100%;height:100%;object-fit:cover;">`
                         : '<span style="font-size:4rem;">👤</span>';
 
-                    // Fix: only show name once; title is the position
+                    // Trim the name to remove extra spaces
+                    const principalName = (p.principal_name || 'Chief Principal').trim();
+
                     document.getElementById('principalProfile').innerHTML = `
                 <div class="profile-photo-lg">
                     ${photoHtml}
                 </div>
                 <div class="profile-info">
-                    <h3>${escapeHtml(p.principal_name || 'Chief Principal')}</h3>
+                    <h3>${escapeHtml(principalName)}</h3>
                     <p class="title">${escapeHtml(p.title || 'Chief Principal')}</p>
                     <div class="bio">${p.message || 'Profile information coming soon.'}</div>
                 </div>
             `;
                 }
             } catch (e) {
-                console.log('Principal profile fetch failed');
+                console.log('Principal profile fetch failed:', e);
             }
         }
 
         async function loadDeputyPrincipals() {
-    try {
-        // Fetch the two specific deputy principals directly by role
-        const [resAcad, resAdmin] = await Promise.all([
-            fetch('/api/v1/users?role=deputy_principal_academics'),
-            fetch('/api/v1/users?role=deputy_principal_administration')
-        ]);
+            try {
+                // Fetch the two specific deputy principals directly by role
+                const [resAcad, resAdmin] = await Promise.all([
+                    fetch('/api/v1/users?role=deputy_principal_academics'),
+                    fetch('/api/v1/users?role=deputy_principal_administration')
+                ]);
 
-        const dataAcad = await resAcad.json();
-        const dataAdmin = await resAdmin.json();
+                const dataAcad = await resAcad.json();
+                const dataAdmin = await resAdmin.json();
 
-        // Build HTML for Academics
-        let dpAcademicsHtml = '';
-        if (dataAcad.success && dataAcad.data && dataAcad.data.length > 0) {
-            const dp = dataAcad.data[0];
-            dpAcademicsHtml = `
+                // Build HTML for Academics
+                let dpAcademicsHtml = '';
+                if (dataAcad.success && dataAcad.data && dataAcad.data.length > 0) {
+                    const dp = dataAcad.data[0];
+                    dpAcademicsHtml = `
                 <div class="profile-photo-lg">
                     ${dp.photo_path
-                        ? `<img src="/uploads/${dp.photo_path.replace(/^\/uploads\//, '')}" alt="${escapeHtml(dp.full_name)}">`
-                        : '<span style="font-size:4rem;">👤</span>'}
+                            ? `<img src="/uploads/${dp.photo_path.replace(/^\/uploads\//, '')}" alt="${escapeHtml(dp.full_name)}">`
+                            : '<span style="font-size:4rem;">👤</span>'}
                 </div>
                 <div class="profile-info">
                     <h3>${escapeHtml(dp.full_name)}</h3>
@@ -880,17 +900,17 @@
                     <div class="bio">${dp.bio || 'Profile information coming soon.'}</div>
                 </div>
             `;
-        }
+                }
 
-        // Build HTML for Administration
-        let dpAdminHtml = '';
-        if (dataAdmin.success && dataAdmin.data && dataAdmin.data.length > 0) {
-            const dp = dataAdmin.data[0];
-            dpAdminHtml = `
+                // Build HTML for Administration
+                let dpAdminHtml = '';
+                if (dataAdmin.success && dataAdmin.data && dataAdmin.data.length > 0) {
+                    const dp = dataAdmin.data[0];
+                    dpAdminHtml = `
                 <div class="profile-photo-lg">
                     ${dp.photo_path
-                        ? `<img src="/uploads/${dp.photo_path.replace(/^\/uploads\//, '')}" alt="${escapeHtml(dp.full_name)}">`
-                        : '<span style="font-size:4rem;">👤</span>'}
+                            ? `<img src="/uploads/${dp.photo_path.replace(/^\/uploads\//, '')}" alt="${escapeHtml(dp.full_name)}">`
+                            : '<span style="font-size:4rem;">👤</span>'}
                 </div>
                 <div class="profile-info">
                     <h3>${escapeHtml(dp.full_name)}</h3>
@@ -898,10 +918,10 @@
                     <div class="bio">${dp.bio || 'Profile information coming soon.'}</div>
                 </div>
             `;
-        }
+                }
 
-        // Update DOM
-        document.getElementById('dpAcademicsProfile').innerHTML = dpAcademicsHtml || `
+                // Update DOM
+                document.getElementById('dpAcademicsProfile').innerHTML = dpAcademicsHtml || `
             <div class="profile-photo-lg"><span style="font-size:4rem;">👤</span></div>
             <div class="profile-info">
                 <h3>Deputy Principal - Academics</h3>
@@ -910,7 +930,7 @@
             </div>
         `;
 
-        document.getElementById('dpAdminProfile').innerHTML = dpAdminHtml || `
+                document.getElementById('dpAdminProfile').innerHTML = dpAdminHtml || `
             <div class="profile-photo-lg"><span style="font-size:4rem;">👤</span></div>
             <div class="profile-info">
                 <h3>Deputy Principal - Administration</h3>
@@ -919,10 +939,10 @@
             </div>
         `;
 
-    } catch(e) {
-        console.log('Deputy Principals fetch failed');
-    }
-}
+            } catch (e) {
+                console.log('Deputy Principals fetch failed');
+            }
+        }
 
         async function loadHODs() {
             try {
