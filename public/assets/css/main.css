@@ -436,38 +436,191 @@ ul {
   right: 20px;
 }
 
-/* ── Quick Links Bar ──────────────────────────────────────── */
-.quick-links {
-  background: var(--green);
-  padding: 0;
+/* ── Quick Access Cards ───────────────────────────────────── */
+.quick-access {
+    background: var(--green);
+    padding: 40px 0;
 }
-.quick-links .container {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
+
+.quick-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 24px;
 }
-.quick-link-item {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  padding: 18px 16px;
-  color: var(--white);
-  font-size: 0.88rem;
-  font-weight: 600;
-  border-right: 1px solid rgba(255, 255, 255, 0.15);
-  transition: var(--transition);
-  cursor: pointer;
+
+.quick-card {
+    background: rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(4px);
+    border-radius: 16px;
+    padding: 28px 24px;
+    text-decoration: none;
+    color: var(--white);
+    transition: all 0.35s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    position: relative;
+    overflow: hidden;
 }
-.quick-link-item:last-child {
-  border-right: none;
+
+.quick-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, rgba(245, 197, 24, 0.05), transparent 60%);
+    opacity: 0;
+    transition: opacity 0.4s ease;
+    pointer-events: none;
 }
-.quick-link-item:hover {
-  background: var(--green-dark);
-  color: var(--yellow);
+
+.quick-card:hover {
+    transform: translateY(-6px);
+    background: rgba(255, 255, 255, 0.15);
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.15);
+    border-color: rgba(255, 255, 255, 0.2);
 }
-.quick-link-item .ql-icon {
-  font-size: 1.4rem;
+
+.quick-card:hover::before {
+    opacity: 1;
 }
+
+.quick-card-icon {
+    width: 44px;
+    height: 44px;
+    background: rgba(255, 255, 255, 0.12);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 12px;
+    flex-shrink: 0;
+    transition: all 0.3s ease;
+}
+
+.quick-card:hover .quick-card-icon {
+    background: rgba(245, 197, 24, 0.2);
+    transform: scale(1.05);
+}
+
+.quick-card-icon svg {
+    width: 24px;
+    height: 24px;
+    stroke: var(--yellow);
+    stroke-width: 1.8;
+    fill: none;
+}
+
+.quick-card h3 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin: 0;
+    color: var(--white);
+}
+
+.quick-card p {
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.7);
+    line-height: 1.5;
+    margin: 4px 0 8px;
+}
+
+.quick-card-btn {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--yellow);
+    transition: all 0.25s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.quick-card:hover .quick-card-btn {
+    transform: translateX(4px);
+    color: #ffd84a;
+}
+
+/* Highlight card (Apply Now) */
+.quick-card-highlight {
+    background: var(--yellow);
+    border-color: var(--yellow);
+    color: var(--dark);
+}
+
+.quick-card-highlight .quick-card-icon {
+    background: rgba(26, 26, 46, 0.1);
+}
+
+.quick-card-highlight .quick-card-icon svg {
+    stroke: var(--dark);
+}
+
+.quick-card-highlight p {
+    color: rgba(26, 26, 46, 0.7);
+}
+
+.quick-card-highlight .quick-card-btn {
+    color: var(--dark);
+}
+
+.quick-card-highlight:hover {
+    background: #d4a800;
+    border-color: #d4a800;
+}
+
+.quick-card-highlight:hover .quick-card-btn {
+    color: var(--dark);
+}
+
+.quick-card-highlight::before {
+    background: linear-gradient(135deg, rgba(26, 26, 46, 0.05), transparent 60%);
+}
+
+/* Responsive */
+@media (max-width: 992px) {
+    .quick-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 18px;
+    }
+}
+
+@media (max-width: 640px) {
+    .quick-grid {
+        grid-template-columns: 1fr;
+        gap: 14px;
+    }
+
+    .quick-card {
+        padding: 20px 18px;
+        flex-direction: row;
+        align-items: center;
+        gap: 16px;
+    }
+
+    .quick-card-icon {
+        margin-bottom: 0;
+        width: 40px;
+        height: 40px;
+    }
+
+    .quick-card-icon svg {
+        width: 20px;
+        height: 20px;
+    }
+
+    .quick-card h3 {
+        font-size: 1rem;
+    }
+
+    .quick-card p {
+        display: none; /* Hide description on mobile for cleaner look */
+    }
+}
+
 
 /* ── Stats Strip ──────────────────────────────────────────── */
 .stats {

@@ -116,28 +116,77 @@
 
 
     <!-- ══════════════════════════════════════════════════════════
-     QUICK LINKS BAR
+     QUICK ACCESS CARDS (Nyeri Style)
 ══════════════════════════════════════════════════════════ -->
-    <div class="quick-links">
-        <div class="container">
-            <a href="/portal/login.html" class="quick-link-item">
-                <span class="ql-icon">🎓</span>
-                <span data-i18n="ql-student">Student Portal</span>
+<section class="quick-access">
+    <div class="container">
+        <div class="quick-grid">
+            <!-- Card 1: Portals (replaces Student & Lecturer) -->
+            <a href="/portal.html" class="quick-card">
+                <div class="quick-card-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                        <rect x="2" y="2" width="20" height="20" rx="2.18"/>
+                        <line x1="8" y1="2" x2="8" y2="22"/>
+                        <line x1="16" y1="2" x2="16" y2="22"/>
+                        <line x1="2" y1="8" x2="22" y2="8"/>
+                        <line x1="2" y1="16" x2="22" y2="16"/>
+                    </svg>
+                </div>
+                <div class="quick-card-content">
+                    <h3>All Portals</h3>
+                    <p>Access student, lecturer, admin &amp; all college portals</p>
+                    <span class="quick-card-btn">Visit Portals →</span>
+                </div>
             </a>
-            <a href="/portal/login.html" class="quick-link-item">
-                <span class="ql-icon">👨‍🏫</span>
-                <span data-i18n="ql-lecturer">Lecturer Portal</span>
+
+            <!-- Card 2: Downloads -->
+            <a href="downloads.html" class="quick-card">
+                <div class="quick-card-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                        <polyline points="7 10 12 15 17 10"/>
+                        <line x1="12" y1="15" x2="12" y2="3"/>
+                    </svg>
+                </div>
+                <div class="quick-card-content">
+                    <h3>Downloads</h3>
+                    <p>Download forms, prospectuses &amp; academic resources</p>
+                    <span class="quick-card-btn">View Downloads →</span>
+                </div>
             </a>
-            <a href="downloads.html" class="quick-link-item">
-                <span class="ql-icon">📥</span>
-                <span data-i18n="ql-downloads">Downloads</span>
+
+            <!-- Card 3: Contact Us -->
+            <a href="contact.html" class="quick-card">
+                <div class="quick-card-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                        <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+                    </svg>
+                </div>
+                <div class="quick-card-content">
+                    <h3>Contact Us</h3>
+                    <p>Reach out to our team for inquiries &amp; support</p>
+                    <span class="quick-card-btn">Contact Now →</span>
+                </div>
             </a>
-            <a href="contact.html" class="quick-link-item">
-                <span class="ql-icon">📞</span>
-                <span data-i18n="ql-contact">Contact Us</span>
+
+            <!-- Card 4: Apply Now (Highlighted) -->
+            <a href="apply.html" class="quick-card quick-card-highlight">
+                <div class="quick-card-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                        <path d="M22 6.5L12 13 2 6.5"/>
+                        <path d="M22 17.5L12 24 2 17.5"/>
+                        <path d="M22 12L12 18.5 2 12"/>
+                    </svg>
+                </div>
+                <div class="quick-card-content">
+                    <h3>Apply Now</h3>
+                    <p>Start your application for the upcoming intake</p>
+                    <span class="quick-card-btn">Apply Now →</span>
+                </div>
             </a>
         </div>
     </div>
+</section>
 
     <!-- ══════════════════════════════════════════════════════════
      STATS STRIP
