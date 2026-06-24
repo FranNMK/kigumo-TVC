@@ -21,8 +21,8 @@
             }, 'google_translate_element');
         }
     </script>
- 
-   
+
+
     <style>
         /* About Page Specific Styles */
         .about-hero {
@@ -204,29 +204,100 @@
             line-height: 1.8;
         }
 
-        /* Service Charter */
-        .charter-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 1.5rem;
-        }
-
-        .charter-card {
+        /* ========== NEW SERVICE CHARTER TABLE STYLES ========== */
+        .charter-table-wrapper {
+            overflow-x: auto;
             background: #ffffff;
-            border-radius: 10px;
-            padding: 1.8rem;
-            border-top: 4px solid #f5c518;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+            margin-top: 1rem;
         }
 
-        .charter-card .icon {
-            font-size: 2rem;
-            margin-bottom: 0.8rem;
+        .charter-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.95rem;
+            min-width: 640px;
         }
 
-        .charter-card h4 {
+        .charter-table thead {
+            background: #1a7a1a;
+            color: #ffffff;
+        }
+
+        .charter-table thead th {
+            padding: 1rem 1.2rem;
+            text-align: left;
+            font-weight: 600;
+            font-size: 0.95rem;
+            letter-spacing: 0.3px;
+            white-space: nowrap;
+        }
+
+        .charter-table thead th:first-child {
+            border-radius: 12px 0 0 0;
+        }
+        .charter-table thead th:last-child {
+            border-radius: 0 12px 0 0;
+        }
+
+        .charter-table tbody td {
+            padding: 0.8rem 1.2rem;
+            border-bottom: 1px solid #e9edf2;
+            vertical-align: top;
+            line-height: 1.5;
+        }
+
+        .charter-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .charter-table tbody tr:hover {
+            background: #f8fafc;
+        }
+
+        /* ---- Category row (group header) ---- */
+        .charter-table .category-row td {
+            background: #eaf3eb;
+            font-weight: 700;
+            color: #0b4f2c;
+            font-size: 1rem;
+            padding: 0.6rem 1.2rem;
+            border-bottom: 2px solid #c3d9c6;
+        }
+
+        .charter-table .category-row td:first-child {
+            border-radius: 0;
+        }
+
+        /* ---- Sub‑service rows ---- */
+        .charter-table .service-name {
+            font-weight: 500;
+            color: #1e2b3c;
+            padding-left: 1.8rem;
+            position: relative;
+        }
+
+        .charter-table .service-name::before {
+            content: "▹";
+            position: absolute;
+            left: 0.2rem;
             color: #1a7a1a;
-            margin-bottom: 0.5rem;
+            font-size: 1rem;
+        }
+
+        .charter-table .cost-free {
+            color: #0b7a3a;
+            font-weight: 600;
+        }
+
+        .charter-table .cost-paid {
+            color: #b33c1f;
+            font-weight: 600;
+        }
+
+        .charter-table .waiting {
+            white-space: nowrap;
         }
 
         /* HOD Grid */
@@ -334,42 +405,194 @@
         </div>
     </section>
 
-    <!-- #charter - Service Charter -->
+    <!-- ========== #charter - Service Charter (UPDATED) ========== -->
     <section id="charter" style="background:#f8f9fa;">
         <div class="section-container">
             <h2 class="section-title">Service Charter</h2>
             <p class="section-subtitle">Our commitments to students, staff, and stakeholders</p>
-            <div class="charter-grid" id="charterGrid">
-                <div class="charter-card">
-                    <div class="icon">⏱️</div>
-                    <h4>Timely Results</h4>
-                    <p>Examination results released within 30 days after examining body release.</p>
-                </div>
-                <div class="charter-card">
-                    <div class="icon">📋</div>
-                    <h4>Fast Admissions</h4>
-                    <p>Applications processed within 48 hours of submission.</p>
-                </div>
-                <div class="charter-card">
-                    <div class="icon">💬</div>
-                    <h4>Quick Response</h4>
-                    <p>Student queries and complaints addressed within 24 hours.</p>
-                </div>
-                <div class="charter-card">
-                    <div class="icon">💰</div>
-                    <h4>Transparent Fees</h4>
-                    <p>Clear fee structures with no hidden charges.</p>
-                </div>
-                <div class="charter-card">
-                    <div class="icon">🛡️</div>
-                    <h4>Safe Environment</h4>
-                    <p>Inclusive and conducive learning environment for all.</p>
-                </div>
-                <div class="charter-card">
-                    <div class="icon">🎯</div>
-                    <h4>Career Guidance</h4>
-                    <p>Industrial attachment placement and career counseling support.</p>
-                </div>
+
+            <div class="charter-table-wrapper">
+                <table class="charter-table">
+                    <thead>
+                        <tr>
+                            <th>Service</th>
+                            <th>Requirements</th>
+                            <th>Cost</th>
+                            <th>Waiting Time</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Information and Feedback -->
+                        <tr class="category-row">
+                            <td colspan="4">Information and Feedback</td>
+                        </tr>
+                        <tr>
+                            <td class="service-name">Customer service</td>
+                            <td>Enquiry</td>
+                            <td class="cost-free">Free</td>
+                            <td class="waiting">Ten minutes</td>
+                        </tr>
+                        <tr>
+                            <td class="service-name">Attendance to phone calls</td>
+                            <td>A phone call</td>
+                            <td class="cost-free">Free</td>
+                            <td class="waiting">Ten seconds</td>
+                        </tr>
+                        <tr>
+                            <td class="service-name">Response to complaints, compliments or suggestions</td>
+                            <td>Report of complaints, compliments or suggestions</td>
+                            <td class="cost-free">Free</td>
+                            <td class="waiting">3 days</td>
+                        </tr>
+                        <tr>
+                            <td class="service-name">Communication</td>
+                            <td>Access to College communication channels</td>
+                            <td class="cost-free">Free</td>
+                            <td class="waiting">Instantly</td>
+                        </tr>
+
+                        <!-- Students Admission Process -->
+                        <tr class="category-row">
+                            <td colspan="4">Students Admission Process</td>
+                        </tr>
+                        <tr>
+                            <td class="service-name">Request of applications for advertised College Programmes/Courses</td>
+                            <td>Online submission of application</td>
+                            <td class="cost-free">Free</td>
+                            <td class="waiting">Instantly</td>
+                        </tr>
+                        <tr>
+                            <td class="service-name">Communication to selected applicants</td>
+                            <td>None</td>
+                            <td class="cost-free">Free</td>
+                            <td class="waiting">Fourteen days after selection</td>
+                        </tr>
+                        <tr>
+                            <td class="service-name">Admission of successful applicants</td>
+                            <td>Admission letter and other documents</td>
+                            <td class="cost-paid">Ksh 100</td>
+                            <td class="waiting">Reporting day</td>
+                        </tr>
+                        <tr>
+                            <td class="service-name">Establishment of applicants' register</td>
+                            <td>Applicants' details</td>
+                            <td class="cost-free">Free</td>
+                            <td class="waiting">Instantly</td>
+                        </tr>
+
+                        <!-- Teaching, Examinations and Graduation -->
+                        <tr class="category-row">
+                            <td colspan="4">Teaching, Examinations and Graduation</td>
+                        </tr>
+                        <tr>
+                            <td class="service-name">Teaching, learning and administering examinations</td>
+                            <td>75 percent class attendance</td>
+                            <td>Full payment of fees</td>
+                            <td class="waiting">As per Curriculum</td>
+                        </tr>
+                        <tr>
+                            <td class="service-name">Release of examination results</td>
+                            <td>None</td>
+                            <td class="cost-free">Free</td>
+                            <td class="waiting">14 days after the last exam</td>
+                        </tr>
+                        <tr>
+                            <td class="service-name">Issuance of academic transcripts</td>
+                            <td>Completion of studies</td>
+                            <td class="cost-free">Free</td>
+                            <td class="waiting">14 days</td>
+                        </tr>
+
+                        <!-- Financial Services -->
+                        <tr class="category-row">
+                            <td colspan="4">Financial Services</td>
+                        </tr>
+                        <tr>
+                            <td class="service-name">Report of payment to the Finance Office</td>
+                            <td>Audit - Money order, bank's cheque, bank deposit slip, M-PESA transaction</td>
+                            <td class="cost-free">Free</td>
+                            <td class="waiting">5 minutes</td>
+                        </tr>
+
+                        <!-- Disciplinary Cases -->
+                        <tr class="category-row">
+                            <td colspan="4">Disciplinary Cases</td>
+                        </tr>
+                        <tr>
+                            <td class="service-name">Resolution of students' disciplinary cases</td>
+                            <td>—</td>
+                            <td>—</td>
+                            <td>—</td>
+                        </tr>
+
+                        <!-- Procurement -->
+                        <tr class="category-row">
+                            <td colspan="4">Procurement</td>
+                        </tr>
+                        <tr>
+                            <td class="service-name">Issuance of teaching materials to teachers</td>
+                            <td>Only final material required from students</td>
+                            <td class="cost-free">Free</td>
+                            <td class="waiting">Thirty days after appeal</td>
+                        </tr>
+                        <tr>
+                            <td class="service-name">Payment for goods and services</td>
+                            <td>—</td>
+                            <td class="cost-free">Free</td>
+                            <td class="waiting">2 days after reporting</td>
+                        </tr>
+
+                        <!-- Human Resource Services -->
+                        <tr class="category-row">
+                            <td colspan="4">Human Resource Services</td>
+                        </tr>
+                        <tr>
+                            <td class="service-name">Staff recruitment, placement and promotion</td>
+                            <td>—</td>
+                            <td class="cost-free">Free</td>
+                            <td class="waiting">90 days</td>
+                        </tr>
+                        <tr>
+                            <td class="service-name">Services to those with challenges</td>
+                            <td>Advertised vacancies, application letter and interview</td>
+                            <td class="cost-free">Free</td>
+                            <td class="waiting">Within 60 days</td>
+                        </tr>
+                        <!-- The two "Presentation of physical challenge" rows from the image – we include them as separate rows with dashes -->
+                        <tr>
+                            <td class="service-name">Presentation of physical challenge</td>
+                            <td>—</td>
+                            <td>—</td>
+                            <td>—</td>
+                        </tr>
+                        <tr>
+                            <td class="service-name">Presentation of physical challenge</td>
+                            <td>—</td>
+                            <td>—</td>
+                            <td>—</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Commitment statement from the image -->
+            <div style="margin-top:2rem;text-align:center;background:#ffffff;padding:1.2rem;border-radius:10px;border-left:4px solid #1a7a1a;">
+                <p style="font-weight:600;color:#1a1a2e;font-size:1.05rem;">
+                    WE ARE COMMITTED TO COUNTERING AND EXCELLENCE IN SERVICE DELIVERY
+                </p>
+                <!-- <p style="color:#555;font-size:0.95rem;max-width:700px;margin:0.5rem auto;">
+                    Any service rendered that does not conform to the above standards or any other service that does not meet the
+                    commitment to charity and excellence in Service Delivery should be reported to:
+                </p>
+                <p style="color:#1a7a1a;font-size:0.9rem;margin-top:0.5rem;">
+                    <strong>a.</strong> The Principal College Technical and Vocational College<br>
+                    P.O Box 512023 &bull; Tel: +254 021 702 0477 &bull; Email: kz@kztechcollege.com
+                </p>
+                <p style="color:#1a7a1a;font-size:0.9rem;">
+                    <strong>b.</strong> The Commission Secretary/Chief Executive Officer, Commission in Ashburton<br>
+                    P.O Box 2041402030 Nairobi &bull; Tel: +254 021 702 0272/702 7004 &bull; Email: info@kztechcollege.co.ke
+                </p> -->
+                <p style="font-weight:700;color:#1a7a1a;margin-top:0.5rem;">QUALITY SERVICE IS YOUR RIGHT</p>
             </div>
         </div>
     </section>
