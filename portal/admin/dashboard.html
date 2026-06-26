@@ -2526,17 +2526,177 @@
         loadEnquiries();
       }
 
-      // ── BOM ──
+      // ── BOM CRUD ──
       async function loadBOM() {
-        const r = await fetch("/api/v1/bom"),
-          d = await r.json();
-        let h = "<table><tr><th>Name</th><th>Position</th></tr>";
-        if (d.success && d.data)
-          d.data.forEach((m) => {
-            h += `<tr><td>${escapeHtml(m.full_name)}</td><td>${escapeHtml(m.position || "")}</td></tr>`;
-          });
-        h += "</table>";
-        document.getElementById("bomContent").innerHTML = h;
+        try {
+          const r = await fetch(`${API}/bom`);
+          const d = await r.json();
+          let h = `
+      <div style="display:flex;gap:0.5rem;margin-bottom:1rem;flex-wrap:wrap;">
+        <button class="btn btn-green btn-sm" onclick="openBOMForm()">➕ Add Member</button>
+      </div>
+      <table>
+        <thead><tr>
+          <th>Photo</th>
+          <th>Name</th>
+          <th>Position</th>
+          <th>Order</th>
+          <th>Active</th>
+          <th>Actions</th>
+        </tr></thead>
+        <tbody>
+    `;
+          if (d.success && d.data) {
+            d.data.forEach((m) => {
+              const imgSrc = getImageSrc(m.photo_path);
+              h += `<tr>
+          <td>${imgSrc ? `<img src="${imgSrc}" style="width:50px;height:50px;object-fit:cover;border-radius:50%;">` : "👤"}</td>
+          <td><strong>${escapeHtml(m.full_name)}</strong></td>
+          <td>${escapeHtml(m.position || "—")}</td>
+          <td>${m.sort_order}</td>
+          <td><span class="badge ${m.is_active ? "badge-active" : "badge-inactive"}">${m.is_active ? "Active" : "Inactive"}</span></td>
+          <td>
+            <button class="btn btn-yellow btn-sm" onclick="editBOM(${m.id})">Edit</button>
+            <button class="btn btn-sm" style="background:#6c757d;color:#fff;" onclick="toggleBOM(${m.id})">Toggle</button>
+            <button class="btn btn-red btn-sm" onclick="deleteBOM(${m.id})">Del</button>
+          </td>
+        </tr>`;
+            });
+          } else {
+            h += `<tr><td colspan="6">No BOM members found.</td></tr>`;
+          }
+          h += "</tbody></table>";
+          document.getElementById("bomContent").innerHTML = h;
+        } catch (err) {
+          console.error("loadBOM error:", err);
+          document.getElementById("bomContent").innerHTML =
+            '<p style="color:#c00;">Error loading BOM members.</p>';
+        }
+      }
+
+      // Helper: get correct image src (Cloudinary or local)
+      function getImageSrc(path) {
+        if (!path) return null;
+        if (path.startsWith("http://") || path.startsWith("https://"))
+          return path;
+        return "/uploads/" + path.replace(/^\/+/, "");
+      }
+
+      // Open Add form
+      function openBOMForm() {
+        openModal(`
+    <h3>➕ Add BOM Member</h3>
+    <form onsubmit="addBOM(event)" enctype="multipart/form-data">
+      <div class="form-group"><label>Full Name *</label><input name="full_name" required></div>
+      <div class="form-group"><label>Position</label><input name="position"></div>
+      <div class="form-group"><label>Sort Order</label><input type="number" name="sort_order" value="0"></div>
+      <div class="form-group"><label>Photo</label><input type="file" name="photo" accept="image/*"></div>
+      <button class="btn btn-green">Save</button>
+      <button type="button" class="btn btn-red" onclick="closeModal()">Cancel</button>
+    </form>
+  `);
+      }
+
+      async function addBOM(e) {
+        e.preventDefault();
+        const f = new FormData(e.target);
+        const progressInterval = startProgressAnimation();
+        try {
+          const r = await fetch(`${API}/bom`, { method: "POST", body: f });
+          clearInterval(progressInterval);
+          const result = await r.json();
+          if (result.success) {
+            finishProgress(true, "Member added!");
+            closeModal();
+            loadBOM();
+          } else {
+            finishProgress(false, result.message);
+          }
+        } catch (err) {
+          clearInterval(progressInterval);
+          finishProgress(false, "Network error");
+        }
+      }
+
+      async function editBOM(id) {
+        try {
+          const r = await fetch(`${API}/bom`);
+          const d = await r.json();
+          const m = d.data?.find((x) => x.id === id);
+          if (!m) return alert("Member not found");
+          openModal(`
+      <h3>✏️ Edit BOM Member</h3>
+      <form onsubmit="updateBOM(event, ${id})" enctype="multipart/form-data">
+        <div class="form-group"><label>Full Name *</label><input name="full_name" value="${escapeHtml(m.full_name)}" required></div>
+        <div class="form-group"><label>Position</label><input name="position" value="${escapeHtml(m.position || "")}"></div>
+        <div class="form-group"><label>Sort Order</label><input type="number" name="sort_order" value="${m.sort_order}"></div>
+        <div class="form-group">
+          <label>Photo (leave empty to keep current)</label>
+          ${m.photo_path ? `<div style="margin-bottom:0.5rem;"><img src="${getImageSrc(m.photo_path)}" style="max-height:80px;border-radius:8px;"></div>` : ""}
+          <input type="file" name="photo" accept="image/*">
+        </div>
+        <button class="btn btn-green">Update</button>
+        <button type="button" class="btn btn-red" onclick="closeModal()">Cancel</button>
+      </form>
+    `);
+        } catch (err) {
+          alert("Error loading member");
+        }
+      }
+
+      async function updateBOM(e, id) {
+        e.preventDefault();
+        const f = new FormData(e.target);
+        const progressInterval = startProgressAnimation();
+        try {
+          const r = await fetch(`${API}/bom/${id}`, { method: "PUT", body: f });
+          clearInterval(progressInterval);
+          const result = await r.json();
+          if (result.success) {
+            finishProgress(true, "Updated!");
+            closeModal();
+            loadBOM();
+          } else {
+            finishProgress(false, result.message);
+          }
+        } catch (err) {
+          clearInterval(progressInterval);
+          finishProgress(false, "Network error");
+        }
+      }
+
+      async function toggleBOM(id) {
+        if (!confirm("Toggle active status?")) return;
+        showProgress("Toggling...");
+        try {
+          const r = await fetch(`${API}/bom/${id}/toggle`, { method: "PATCH" });
+          const result = await r.json();
+          if (result.success) {
+            finishProgress(true, "Status toggled");
+            loadBOM();
+          } else {
+            finishProgress(false, result.message);
+          }
+        } catch (err) {
+          finishProgress(false, "Network error");
+        }
+      }
+
+      async function deleteBOM(id) {
+        if (!confirm("Move this member to recycle bin?")) return;
+        showProgress("Moving to recycle bin...");
+        try {
+          const r = await fetch(`${API}/bom/${id}`, { method: "DELETE" });
+          const result = await r.json();
+          if (result.success) {
+            finishProgress(true, "Moved to recycle bin");
+            loadBOM();
+          } else {
+            finishProgress(false, result.message);
+          }
+        } catch (err) {
+          finishProgress(false, "Network error");
+        }
       }
 
       // ── COHORTS ──

@@ -1,589 +1,627 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description"
-        content="About Kigumo Technical and Vocational College - Our history, vision, mission, administration, and Board of Management">
-    <meta name="theme-color" content="#1a7a1a">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="About Kigumo Technical and Vocational College - Our history, vision, mission, administration, and Board of Management"
+    />
+    <meta name="theme-color" content="#1a7a1a" />
     <title>About Us - Kigumo Technical and Vocational College</title>
 
-    <link rel="icon" type="image/jpeg" href="assets/images/logo.jpeg">
-    <link rel="stylesheet" href="assets/css/main.css">
+    <link rel="icon" type="image/jpeg" href="assets/images/logo.jpeg" />
+    <link rel="stylesheet" href="assets/css/main.css" />
 
     <script type="text/javascript">
-        function googleTranslateElementInit() {
-            new google.translate.TranslateElement({
-                pageLanguage: 'en',
-                includedLanguages: 'sw',
-                layout: google.translate.TranslateElement.InlineLayout.SIMPLE
-            }, 'google_translate_element');
-        }
+      function googleTranslateElementInit() {
+        new google.translate.TranslateElement(
+          {
+            pageLanguage: "en",
+            includedLanguages: "sw",
+            layout: google.translate.TranslateElement.InlineLayout.SIMPLE,
+          },
+          "google_translate_element",
+        );
+      }
     </script>
 
-
     <style>
-        /* About Page Specific Styles */
-        .about-hero {
-            background: linear-gradient(135deg, #1a1a2e 0%, #1a7a1a 100%);
-            color: #ffffff;
-            padding: 5rem 2rem 3rem;
-            text-align: center;
+      /* About Page Specific Styles */
+      .about-hero {
+        background: linear-gradient(135deg, #1a1a2e 0%, #1a7a1a 100%);
+        color: #ffffff;
+        padding: 5rem 2rem 3rem;
+        text-align: center;
+      }
+
+      .about-hero h1 {
+        font-size: 2.5rem;
+        margin-bottom: 1rem;
+      }
+
+      .about-hero p {
+        font-size: 1.1rem;
+        max-width: 700px;
+        margin: 0 auto;
+        opacity: 0.9;
+      }
+
+      .section-container {
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 3rem 1.5rem;
+      }
+
+      .section-title {
+        text-align: center;
+        color: #1a7a1a;
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+      }
+
+      .section-subtitle {
+        text-align: center;
+        color: #666;
+        margin-bottom: 2.5rem;
+      }
+
+      /* Vision & Mission Cards */
+      .vision-mission-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 2rem;
+        margin: 2rem 0;
+      }
+
+      .vm-card {
+        background: #ffffff;
+        border: 2px solid #1a7a1a;
+        border-radius: 12px;
+        padding: 2rem;
+        text-align: center;
+      }
+
+      .vm-card h3 {
+        color: #1a7a1a;
+        font-size: 1.4rem;
+        margin-bottom: 1rem;
+      }
+
+      .vm-card p {
+        color: #555;
+        line-height: 1.7;
+      }
+
+      .core-values-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 1.5rem;
+        margin-top: 2rem;
+      }
+
+      .value-item {
+        background: #f8f9fa;
+        border-left: 4px solid #1a7a1a;
+        padding: 1.2rem;
+        border-radius: 6px;
+      }
+
+      .value-item strong {
+        display: block;
+        color: #1a7a1a;
+        margin-bottom: 0.3rem;
+      }
+
+      /* BOM Grid */
+      .bom-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 1.5rem;
+      }
+
+      .bom-card {
+        background: #ffffff;
+        border-radius: 10px;
+        padding: 1.5rem;
+        text-align: center;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+        transition: transform 0.3s;
+      }
+
+      .bom-card:hover {
+        transform: translateY(-4px);
+      }
+
+      .bom-photo {
+        width: 90px;
+        height: 90px;
+        border-radius: 50%;
+        background: #e0e0e0;
+        margin: 0 auto 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        color: #1a7a1a;
+        overflow: hidden;
+      }
+
+      .bom-photo img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      .bom-card h4 {
+        color: #1a1a2e;
+        margin-bottom: 0.3rem;
+      }
+
+      .bom-card .position {
+        color: #1a7a1a;
+        font-size: 0.9rem;
+        font-weight: 600;
+      }
+
+      /* Profile Section */
+      .profile-full {
+        display: flex;
+        gap: 2.5rem;
+        align-items: flex-start;
+        background: #f8f9fa;
+        border-radius: 12px;
+        padding: 2.5rem;
+        border-left: 5px solid #1a7a1a;
+      }
+
+      .profile-photo-lg {
+        width: 200px;
+        height: 200px;
+        border-radius: 12px;
+        background: #e0e0e0;
+        flex-shrink: 0;
+        overflow: hidden;
+      }
+
+      .profile-photo-lg img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      .profile-info h3 {
+        color: #1a7a1a;
+        font-size: 1.5rem;
+        margin-bottom: 0.3rem;
+      }
+
+      .profile-info .title {
+        color: #666;
+        font-weight: 600;
+        margin-bottom: 1rem;
+      }
+
+      .profile-info .bio {
+        color: #555;
+        line-height: 1.8;
+      }
+
+      /* ========== NEW SERVICE CHARTER TABLE STYLES ========== */
+      .charter-table-wrapper {
+        overflow-x: auto;
+        background: #ffffff;
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+        margin-top: 1rem;
+      }
+
+      .charter-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.95rem;
+        min-width: 640px;
+      }
+
+      .charter-table thead {
+        background: #1a7a1a;
+        color: #ffffff;
+      }
+
+      .charter-table thead th {
+        padding: 1rem 1.2rem;
+        text-align: left;
+        font-weight: 600;
+        font-size: 0.95rem;
+        letter-spacing: 0.3px;
+        white-space: nowrap;
+      }
+
+      .charter-table thead th:first-child {
+        border-radius: 12px 0 0 0;
+      }
+
+      .charter-table thead th:last-child {
+        border-radius: 0 12px 0 0;
+      }
+
+      .charter-table tbody td {
+        padding: 0.8rem 1.2rem;
+        border-bottom: 1px solid #e9edf2;
+        vertical-align: top;
+        line-height: 1.5;
+      }
+
+      .charter-table tbody tr:last-child td {
+        border-bottom: none;
+      }
+
+      .charter-table tbody tr:hover {
+        background: #f8fafc;
+      }
+
+      /* ---- Category row (group header) ---- */
+      .charter-table .category-row td {
+        background: #eaf3eb;
+        font-weight: 700;
+        color: #0b4f2c;
+        font-size: 1rem;
+        padding: 0.6rem 1.2rem;
+        border-bottom: 2px solid #c3d9c6;
+      }
+
+      .charter-table .category-row td:first-child {
+        border-radius: 0;
+      }
+
+      /* ---- Sub‑service rows ---- */
+      .charter-table .service-name {
+        font-weight: 500;
+        color: #1e2b3c;
+        padding-left: 1.8rem;
+        position: relative;
+      }
+
+      .charter-table .service-name::before {
+        content: "▹";
+        position: absolute;
+        left: 0.2rem;
+        color: #1a7a1a;
+        font-size: 1rem;
+      }
+
+      .charter-table .cost-free {
+        color: #0b7a3a;
+        font-weight: 600;
+      }
+
+      .charter-table .cost-paid {
+        color: #b33c1f;
+        font-weight: 600;
+      }
+
+      .charter-table .waiting {
+        white-space: nowrap;
+      }
+
+      /* HOD Grid */
+      .hod-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 1.5rem;
+      }
+
+      .hod-card {
+        background: #ffffff;
+        border-radius: 10px;
+        padding: 1.5rem;
+        text-align: center;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+      }
+
+      .hod-photo {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        background: #e0e0e0;
+        margin: 0 auto 1rem;
+        overflow: hidden;
+      }
+
+      .hod-photo img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      .hod-card h4 {
+        color: #1a1a2e;
+        margin-bottom: 0.2rem;
+      }
+
+      .hod-card .dept {
+        color: #1a7a1a;
+        font-weight: 600;
+        font-size: 0.9rem;
+      }
+
+      .hod-card .bio-short {
+        color: #777;
+        font-size: 0.85rem;
+        margin-top: 0.5rem;
+      }
+
+      /* Accreditation Badge */
+      .accreditation-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.8rem;
+        background: #d4edda;
+        color: #155724;
+        padding: 0.8rem 1.5rem;
+        border-radius: 30px;
+        font-weight: 600;
+        margin: 1rem 0;
+      }
+
+      @media (max-width: 768px) {
+        .vision-mission-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .profile-full {
+          flex-direction: column;
+          align-items: center;
+          text-align: center;
         }
 
         .about-hero h1 {
-            font-size: 2.5rem;
-            margin-bottom: 1rem;
+          font-size: 1.8rem;
         }
-
-        .about-hero p {
-            font-size: 1.1rem;
-            max-width: 700px;
-            margin: 0 auto;
-            opacity: 0.9;
-        }
-
-        .section-container {
-            max-width: 1100px;
-            margin: 0 auto;
-            padding: 3rem 1.5rem;
-        }
-
-        .section-title {
-            text-align: center;
-            color: #1a7a1a;
-            font-size: 2rem;
-            margin-bottom: 0.5rem;
-        }
-
-        .section-subtitle {
-            text-align: center;
-            color: #666;
-            margin-bottom: 2.5rem;
-        }
-
-        /* Vision & Mission Cards */
-        .vision-mission-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 2rem;
-            margin: 2rem 0;
-        }
-
-        .vm-card {
-            background: #ffffff;
-            border: 2px solid #1a7a1a;
-            border-radius: 12px;
-            padding: 2rem;
-            text-align: center;
-        }
-
-        .vm-card h3 {
-            color: #1a7a1a;
-            font-size: 1.4rem;
-            margin-bottom: 1rem;
-        }
-
-        .vm-card p {
-            color: #555;
-            line-height: 1.7;
-        }
-
-        .core-values-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: 1.5rem;
-            margin-top: 2rem;
-        }
-
-        .value-item {
-            background: #f8f9fa;
-            border-left: 4px solid #1a7a1a;
-            padding: 1.2rem;
-            border-radius: 6px;
-        }
-
-        .value-item strong {
-            display: block;
-            color: #1a7a1a;
-            margin-bottom: 0.3rem;
-        }
-
-        /* BOM Grid */
-        .bom-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 1.5rem;
-        }
-
-        .bom-card {
-            background: #ffffff;
-            border-radius: 10px;
-            padding: 1.5rem;
-            text-align: center;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
-            transition: transform 0.3s;
-        }
-
-        .bom-card:hover {
-            transform: translateY(-4px);
-        }
-
-        .bom-photo {
-            width: 90px;
-            height: 90px;
-            border-radius: 50%;
-            background: #e0e0e0;
-            margin: 0 auto 1rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 2rem;
-            color: #1a7a1a;
-            overflow: hidden;
-        }
-
-        .bom-photo img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        .bom-card h4 {
-            color: #1a1a2e;
-            margin-bottom: 0.3rem;
-        }
-
-        .bom-card .position {
-            color: #1a7a1a;
-            font-size: 0.9rem;
-            font-weight: 600;
-        }
-
-        /* Profile Section */
-        .profile-full {
-            display: flex;
-            gap: 2.5rem;
-            align-items: flex-start;
-            background: #f8f9fa;
-            border-radius: 12px;
-            padding: 2.5rem;
-            border-left: 5px solid #1a7a1a;
-        }
-
-        .profile-photo-lg {
-            width: 200px;
-            height: 200px;
-            border-radius: 12px;
-            background: #e0e0e0;
-            flex-shrink: 0;
-            overflow: hidden;
-        }
-
-        .profile-photo-lg img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        .profile-info h3 {
-            color: #1a7a1a;
-            font-size: 1.5rem;
-            margin-bottom: 0.3rem;
-        }
-
-        .profile-info .title {
-            color: #666;
-            font-weight: 600;
-            margin-bottom: 1rem;
-        }
-
-        .profile-info .bio {
-            color: #555;
-            line-height: 1.8;
-        }
-
-        /* ========== NEW SERVICE CHARTER TABLE STYLES ========== */
-        .charter-table-wrapper {
-            overflow-x: auto;
-            background: #ffffff;
-            border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
-            margin-top: 1rem;
-        }
-
-        .charter-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 0.95rem;
-            min-width: 640px;
-        }
-
-        .charter-table thead {
-            background: #1a7a1a;
-            color: #ffffff;
-        }
-
-        .charter-table thead th {
-            padding: 1rem 1.2rem;
-            text-align: left;
-            font-weight: 600;
-            font-size: 0.95rem;
-            letter-spacing: 0.3px;
-            white-space: nowrap;
-        }
-
-        .charter-table thead th:first-child {
-            border-radius: 12px 0 0 0;
-        }
-
-        .charter-table thead th:last-child {
-            border-radius: 0 12px 0 0;
-        }
-
-        .charter-table tbody td {
-            padding: 0.8rem 1.2rem;
-            border-bottom: 1px solid #e9edf2;
-            vertical-align: top;
-            line-height: 1.5;
-        }
-
-        .charter-table tbody tr:last-child td {
-            border-bottom: none;
-        }
-
-        .charter-table tbody tr:hover {
-            background: #f8fafc;
-        }
-
-        /* ---- Category row (group header) ---- */
-        .charter-table .category-row td {
-            background: #eaf3eb;
-            font-weight: 700;
-            color: #0b4f2c;
-            font-size: 1rem;
-            padding: 0.6rem 1.2rem;
-            border-bottom: 2px solid #c3d9c6;
-        }
-
-        .charter-table .category-row td:first-child {
-            border-radius: 0;
-        }
-
-        /* ---- Sub‑service rows ---- */
-        .charter-table .service-name {
-            font-weight: 500;
-            color: #1e2b3c;
-            padding-left: 1.8rem;
-            position: relative;
-        }
-
-        .charter-table .service-name::before {
-            content: "▹";
-            position: absolute;
-            left: 0.2rem;
-            color: #1a7a1a;
-            font-size: 1rem;
-        }
-
-        .charter-table .cost-free {
-            color: #0b7a3a;
-            font-weight: 600;
-        }
-
-        .charter-table .cost-paid {
-            color: #b33c1f;
-            font-weight: 600;
-        }
-
-        .charter-table .waiting {
-            white-space: nowrap;
-        }
-
-        /* HOD Grid */
-        .hod-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-            gap: 1.5rem;
-        }
-
-        .hod-card {
-            background: #ffffff;
-            border-radius: 10px;
-            padding: 1.5rem;
-            text-align: center;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
-        }
-
-        .hod-photo {
-            width: 80px;
-            height: 80px;
-            border-radius: 50%;
-            background: #e0e0e0;
-            margin: 0 auto 1rem;
-            overflow: hidden;
-        }
-
-        .hod-photo img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        .hod-card h4 {
-            color: #1a1a2e;
-            margin-bottom: 0.2rem;
-        }
-
-        .hod-card .dept {
-            color: #1a7a1a;
-            font-weight: 600;
-            font-size: 0.9rem;
-        }
-
-        .hod-card .bio-short {
-            color: #777;
-            font-size: 0.85rem;
-            margin-top: 0.5rem;
-        }
-
-        /* Accreditation Badge */
-        .accreditation-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.8rem;
-            background: #d4edda;
-            color: #155724;
-            padding: 0.8rem 1.5rem;
-            border-radius: 30px;
-            font-weight: 600;
-            margin: 1rem 0;
-        }
-
-        @media (max-width: 768px) {
-            .vision-mission-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .profile-full {
-                flex-direction: column;
-                align-items: center;
-                text-align: center;
-            }
-
-            .about-hero h1 {
-                font-size: 1.8rem;
-            }
-        }
+      }
     </style>
-</head>
+  </head>
 
-<body>
-
-
-
-
+  <body>
     <!-- Hero -->
     <section class="about-hero">
-        <h1>About Kigumo TVC</h1>
-        <p>Empowering youth with practical skills for self-reliance and national development since 2015.</p>
+      <h1>About Kigumo TVC</h1>
+      <p>
+        Empowering youth with practical skills for self-reliance and national
+        development since 2015.
+      </p>
     </section>
 
     <!-- #about - History -->
     <section id="about" class="section-container">
-        <h2 class="section-title">About KTVC</h2>
-        <p class="section-subtitle">Our journey of excellence in technical education</p>
+      <h2 class="section-title">About KTVC</h2>
+      <p class="section-subtitle">
+        Our journey of excellence in technical education
+      </p>
 
-        <div style="max-width:800px;margin:0 auto;line-height:1.8;color:#555;" id="aboutHistory">
-            <p>Loading...</p>
-        </div>
+      <div
+        style="max-width: 800px; margin: 0 auto; line-height: 1.8; color: #555"
+        id="aboutHistory"
+      >
+        <p>Loading...</p>
+      </div>
 
-        <div style="text-align:center;margin-top:1.5rem;">
-            <span class="accreditation-badge">
-                ✅ TVETA Accredited Institution
-            </span>
-        </div>
+      <div style="text-align: center; margin-top: 1.5rem">
+        <span class="accreditation-badge">
+          ✅ TVETA Accredited Institution
+        </span>
+      </div>
     </section>
 
     <!-- ========== #charter - Service Charter (UPDATED) ========== -->
-    <section id="charter" style="background:#f8f9fa;">
-        <div class="section-container">
-            <h2 class="section-title">Service Charter</h2>
-            <p class="section-subtitle">Our commitments to students, staff, and stakeholders</p>
+    <section id="charter" style="background: #f8f9fa">
+      <div class="section-container">
+        <h2 class="section-title">Service Charter</h2>
+        <p class="section-subtitle">
+          Our commitments to students, staff, and stakeholders
+        </p>
 
-            <div class="charter-table-wrapper">
-                <table class="charter-table">
-                    <thead>
-                        <tr>
-                            <th>Service</th>
-                            <th>Requirements</th>
-                            <th>Cost</th>
-                            <th>Waiting Time</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <!-- Information and Feedback -->
-                        <tr class="category-row">
-                            <td colspan="4">Information and Feedback</td>
-                        </tr>
-                        <tr>
-                            <td class="service-name">Customer service</td>
-                            <td>Enquiry</td>
-                            <td class="cost-free">Free</td>
-                            <td class="waiting">Ten minutes</td>
-                        </tr>
-                        <tr>
-                            <td class="service-name">Attendance to phone calls</td>
-                            <td>A phone call</td>
-                            <td class="cost-free">Free</td>
-                            <td class="waiting">Ten seconds</td>
-                        </tr>
-                        <tr>
-                            <td class="service-name">Response to complaints, compliments or suggestions</td>
-                            <td>Report of complaints, compliments or suggestions</td>
-                            <td class="cost-free">Free</td>
-                            <td class="waiting">3 days</td>
-                        </tr>
-                        <tr>
-                            <td class="service-name">Communication</td>
-                            <td>Access to College communication channels</td>
-                            <td class="cost-free">Free</td>
-                            <td class="waiting">Instantly</td>
-                        </tr>
+        <div class="charter-table-wrapper">
+          <table class="charter-table">
+            <thead>
+              <tr>
+                <th>Service</th>
+                <th>Requirements</th>
+                <th>Cost</th>
+                <th>Waiting Time</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- Information and Feedback -->
+              <tr class="category-row">
+                <td colspan="4">Information and Feedback</td>
+              </tr>
+              <tr>
+                <td class="service-name">Customer service</td>
+                <td>Enquiry</td>
+                <td class="cost-free">Free</td>
+                <td class="waiting">Ten minutes</td>
+              </tr>
+              <tr>
+                <td class="service-name">Attendance to phone calls</td>
+                <td>A phone call</td>
+                <td class="cost-free">Free</td>
+                <td class="waiting">Ten seconds</td>
+              </tr>
+              <tr>
+                <td class="service-name">
+                  Response to complaints, compliments or suggestions
+                </td>
+                <td>Report of complaints, compliments or suggestions</td>
+                <td class="cost-free">Free</td>
+                <td class="waiting">3 days</td>
+              </tr>
+              <tr>
+                <td class="service-name">Communication</td>
+                <td>Access to College communication channels</td>
+                <td class="cost-free">Free</td>
+                <td class="waiting">Instantly</td>
+              </tr>
 
-                        <!-- Students Admission Process -->
-                        <tr class="category-row">
-                            <td colspan="4">Students Admission Process</td>
-                        </tr>
-                        <tr>
-                            <td class="service-name">Request of applications for advertised College Programmes/Courses
-                            </td>
-                            <td>Online submission of application</td>
-                            <td class="cost-free">Free</td>
-                            <td class="waiting">Instantly</td>
-                        </tr>
-                        <tr>
-                            <td class="service-name">Communication to selected applicants</td>
-                            <td>None</td>
-                            <td class="cost-free">Free</td>
-                            <td class="waiting">Fourteen days after selection</td>
-                        </tr>
-                        <tr>
-                            <td class="service-name">Admission of successful applicants</td>
-                            <td>Admission letter and other documents</td>
-                            <td class="cost-paid">Ksh 100</td>
-                            <td class="waiting">Reporting day</td>
-                        </tr>
-                        <tr>
-                            <td class="service-name">Establishment of applicants' register</td>
-                            <td>Applicants' details</td>
-                            <td class="cost-free">Free</td>
-                            <td class="waiting">Instantly</td>
-                        </tr>
+              <!-- Students Admission Process -->
+              <tr class="category-row">
+                <td colspan="4">Students Admission Process</td>
+              </tr>
+              <tr>
+                <td class="service-name">
+                  Request of applications for advertised College
+                  Programmes/Courses
+                </td>
+                <td>Online submission of application</td>
+                <td class="cost-free">Free</td>
+                <td class="waiting">Instantly</td>
+              </tr>
+              <tr>
+                <td class="service-name">
+                  Communication to selected applicants
+                </td>
+                <td>None</td>
+                <td class="cost-free">Free</td>
+                <td class="waiting">Fourteen days after selection</td>
+              </tr>
+              <tr>
+                <td class="service-name">Admission of successful applicants</td>
+                <td>Admission letter and other documents</td>
+                <td class="cost-paid">Ksh 100</td>
+                <td class="waiting">Reporting day</td>
+              </tr>
+              <tr>
+                <td class="service-name">
+                  Establishment of applicants' register
+                </td>
+                <td>Applicants' details</td>
+                <td class="cost-free">Free</td>
+                <td class="waiting">Instantly</td>
+              </tr>
 
-                        <!-- Teaching, Examinations and Graduation -->
-                        <tr class="category-row">
-                            <td colspan="4">Teaching, Examinations and Graduation</td>
-                        </tr>
-                        <tr>
-                            <td class="service-name">Teaching, learning and administering examinations</td>
-                            <td>75 percent class attendance</td>
-                            <td>Full payment of fees</td>
-                            <td class="waiting">As per Curriculum</td>
-                        </tr>
-                        <tr>
-                            <td class="service-name">Release of examination results</td>
-                            <td>None</td>
-                            <td class="cost-free">Free</td>
-                            <td class="waiting">14 days after the last exam</td>
-                        </tr>
-                        <tr>
-                            <td class="service-name">Issuance of academic transcripts</td>
-                            <td>Completion of studies</td>
-                            <td class="cost-free">Free</td>
-                            <td class="waiting">14 days</td>
-                        </tr>
+              <!-- Teaching, Examinations and Graduation -->
+              <tr class="category-row">
+                <td colspan="4">Teaching, Examinations and Graduation</td>
+              </tr>
+              <tr>
+                <td class="service-name">
+                  Teaching, learning and administering examinations
+                </td>
+                <td>75 percent class attendance</td>
+                <td>Full payment of fees</td>
+                <td class="waiting">As per Curriculum</td>
+              </tr>
+              <tr>
+                <td class="service-name">Release of examination results</td>
+                <td>None</td>
+                <td class="cost-free">Free</td>
+                <td class="waiting">14 days after the last exam</td>
+              </tr>
+              <tr>
+                <td class="service-name">Issuance of academic transcripts</td>
+                <td>Completion of studies</td>
+                <td class="cost-free">Free</td>
+                <td class="waiting">14 days</td>
+              </tr>
 
-                        <!-- Financial Services -->
-                        <tr class="category-row">
-                            <td colspan="4">Financial Services</td>
-                        </tr>
-                        <tr>
-                            <td class="service-name">Report of payment to the Finance Office</td>
-                            <td>Audit - Money order, bank's cheque, bank deposit slip, M-PESA transaction</td>
-                            <td class="cost-free">Free</td>
-                            <td class="waiting">5 minutes</td>
-                        </tr>
+              <!-- Financial Services -->
+              <tr class="category-row">
+                <td colspan="4">Financial Services</td>
+              </tr>
+              <tr>
+                <td class="service-name">
+                  Report of payment to the Finance Office
+                </td>
+                <td>
+                  Audit - Money order, bank's cheque, bank deposit slip, M-PESA
+                  transaction
+                </td>
+                <td class="cost-free">Free</td>
+                <td class="waiting">5 minutes</td>
+              </tr>
 
-                        <!-- Disciplinary Cases -->
-                        <tr class="category-row">
-                            <td colspan="4">Disciplinary Cases</td>
-                        </tr>
-                        <tr>
-                            <td class="service-name">Resolution of students' disciplinary cases</td>
-                            <td>—</td>
-                            <td>—</td>
-                            <td>—</td>
-                        </tr>
+              <!-- Disciplinary Cases -->
+              <tr class="category-row">
+                <td colspan="4">Disciplinary Cases</td>
+              </tr>
+              <tr>
+                <td class="service-name">
+                  Resolution of students' disciplinary cases
+                </td>
+                <td>—</td>
+                <td>—</td>
+                <td>—</td>
+              </tr>
 
-                        <!-- Procurement -->
-                        <tr class="category-row">
-                            <td colspan="4">Procurement</td>
-                        </tr>
-                        <tr>
-                            <td class="service-name">Issuance of teaching materials to teachers</td>
-                            <td>Only final material required from students</td>
-                            <td class="cost-free">Free</td>
-                            <td class="waiting">Thirty days after appeal</td>
-                        </tr>
-                        <tr>
-                            <td class="service-name">Payment for goods and services</td>
-                            <td>—</td>
-                            <td class="cost-free">Free</td>
-                            <td class="waiting">2 days after reporting</td>
-                        </tr>
+              <!-- Procurement -->
+              <tr class="category-row">
+                <td colspan="4">Procurement</td>
+              </tr>
+              <tr>
+                <td class="service-name">
+                  Issuance of teaching materials to teachers
+                </td>
+                <td>Only final material required from students</td>
+                <td class="cost-free">Free</td>
+                <td class="waiting">Thirty days after appeal</td>
+              </tr>
+              <tr>
+                <td class="service-name">Payment for goods and services</td>
+                <td>—</td>
+                <td class="cost-free">Free</td>
+                <td class="waiting">2 days after reporting</td>
+              </tr>
 
-                        <!-- Human Resource Services -->
-                        <tr class="category-row">
-                            <td colspan="4">Human Resource Services</td>
-                        </tr>
-                        <tr>
-                            <td class="service-name">Staff recruitment, placement and promotion</td>
-                            <td>—</td>
-                            <td class="cost-free">Free</td>
-                            <td class="waiting">90 days</td>
-                        </tr>
-                        <tr>
-                            <td class="service-name">Services to those with challenges</td>
-                            <td>Advertised vacancies, application letter and interview</td>
-                            <td class="cost-free">Free</td>
-                            <td class="waiting">Within 60 days</td>
-                        </tr>
-                        <!-- The two "Presentation of physical challenge" rows from the image – we include them as separate rows with dashes -->
-                        <tr>
-                            <td class="service-name">Presentation of physical challenge</td>
-                            <td>—</td>
-                            <td>—</td>
-                            <td>—</td>
-                        </tr>
-                        <tr>
-                            <td class="service-name">Presentation of physical challenge</td>
-                            <td>—</td>
-                            <td>—</td>
-                            <td>—</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
+              <!-- Human Resource Services -->
+              <tr class="category-row">
+                <td colspan="4">Human Resource Services</td>
+              </tr>
+              <tr>
+                <td class="service-name">
+                  Staff recruitment, placement and promotion
+                </td>
+                <td>—</td>
+                <td class="cost-free">Free</td>
+                <td class="waiting">90 days</td>
+              </tr>
+              <tr>
+                <td class="service-name">Services to those with challenges</td>
+                <td>Advertised vacancies, application letter and interview</td>
+                <td class="cost-free">Free</td>
+                <td class="waiting">Within 60 days</td>
+              </tr>
+              <!-- The two "Presentation of physical challenge" rows from the image – we include them as separate rows with dashes -->
+              <tr>
+                <td class="service-name">Presentation of physical challenge</td>
+                <td>—</td>
+                <td>—</td>
+                <td>—</td>
+              </tr>
+              <tr>
+                <td class="service-name">Presentation of physical challenge</td>
+                <td>—</td>
+                <td>—</td>
+                <td>—</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
 
-            <!-- Commitment statement from the image -->
-            <div
-                style="margin-top:2rem;text-align:center;background:#ffffff;padding:1.2rem;border-radius:10px;border-left:4px solid #1a7a1a;">
-                <p style="font-weight:600;color:#1a1a2e;font-size:1.05rem;">
-                    WE ARE COMMITTED TO COUNTERING AND EXCELLENCE IN SERVICE DELIVERY
-                </p>
-                <!-- <p style="color:#555;font-size:0.95rem;max-width:700px;margin:0.5rem auto;">
+        <!-- Commitment statement from the image -->
+        <div
+          style="
+            margin-top: 2rem;
+            text-align: center;
+            background: #ffffff;
+            padding: 1.2rem;
+            border-radius: 10px;
+            border-left: 4px solid #1a7a1a;
+          "
+        >
+          <p style="font-weight: 600; color: #1a1a2e; font-size: 1.05rem">
+            WE ARE COMMITTED TO COUNTERING AND EXCELLENCE IN SERVICE DELIVERY
+          </p>
+          <!-- <p style="color:#555;font-size:0.95rem;max-width:700px;margin:0.5rem auto;">
                     Any service rendered that does not conform to the above standards or any other service that does not meet the
                     commitment to charity and excellence in Service Delivery should be reported to:
                 </p>
@@ -595,333 +633,449 @@
                     <strong>b.</strong> The Commission Secretary/Chief Executive Officer, Commission in Ashburton<br>
                     P.O Box 2041402030 Nairobi &bull; Tel: +254 021 702 0272/702 7004 &bull; Email: info@kztechcollege.co.ke
                 </p> -->
-                <p style="font-weight:700;color:#1a7a1a;margin-top:0.5rem;">QUALITY SERVICE IS YOUR RIGHT</p>
-            </div>
+          <p style="font-weight: 700; color: #1a7a1a; margin-top: 0.5rem">
+            QUALITY SERVICE IS YOUR RIGHT
+          </p>
         </div>
+      </div>
     </section>
 
     <!-- #vision - Vision & Mission -->
     <section id="vision" class="section-container">
-        <h2 class="section-title">Vision &amp; Mission</h2>
-        <p class="section-subtitle">What drives us every day</p>
+      <h2 class="section-title">Vision &amp; Mission</h2>
+      <p class="section-subtitle">What drives us every day</p>
 
-        <div class="vision-mission-grid">
-            <div class="vm-card">
-                <h3>🔭 Our Vision</h3>
-                <p id="visionText">To be a leading center of excellence in technical and vocational education and
-                    training in Kenya, producing skilled graduates who drive economic transformation.</p>
-            </div>
-            <div class="vm-card">
-                <h3>🎯 Our Mission</h3>
-                <p id="missionText">To provide quality, accessible, and relevant technical and vocational education that
-                    equips learners with practical skills, knowledge, and attitudes for employment, self-reliance, and
-                    lifelong learning.</p>
-            </div>
+      <div class="vision-mission-grid">
+        <div class="vm-card">
+          <h3>🔭 Our Vision</h3>
+          <p id="visionText">
+            To be a leading center of excellence in technical and vocational
+            education and training in Kenya, producing skilled graduates who
+            drive economic transformation.
+          </p>
         </div>
+        <div class="vm-card">
+          <h3>🎯 Our Mission</h3>
+          <p id="missionText">
+            To provide quality, accessible, and relevant technical and
+            vocational education that equips learners with practical skills,
+            knowledge, and attitudes for employment, self-reliance, and lifelong
+            learning.
+          </p>
+        </div>
+      </div>
 
-        <h3 style="text-align:center;color:#1a7a1a;margin-top:2.5rem;">Core Values</h3>
-        <div class="core-values-grid">
-            <div class="value-item"><strong>Excellence</strong>Striving for the highest standards</div>
-            <div class="value-item"><strong>Integrity</strong>Honesty, transparency, and ethical conduct</div>
-            <div class="value-item"><strong>Innovation</strong>Creativity and continuous improvement</div>
-            <div class="value-item"><strong>Inclusivity</strong>Respecting diversity, equal opportunities</div>
-            <div class="value-item"><strong>Teamwork</strong>Collaborating to achieve common goals</div>
-            <div class="value-item"><strong>Accountability</strong>Taking responsibility for our actions</div>
+      <h3 style="text-align: center; color: #1a7a1a; margin-top: 2.5rem">
+        Core Values
+      </h3>
+      <div class="core-values-grid">
+        <div class="value-item">
+          <strong>Excellence</strong>Striving for the highest standards
         </div>
+        <div class="value-item">
+          <strong>Integrity</strong>Honesty, transparency, and ethical conduct
+        </div>
+        <div class="value-item">
+          <strong>Innovation</strong>Creativity and continuous improvement
+        </div>
+        <div class="value-item">
+          <strong>Inclusivity</strong>Respecting diversity, equal opportunities
+        </div>
+        <div class="value-item">
+          <strong>Teamwork</strong>Collaborating to achieve common goals
+        </div>
+        <div class="value-item">
+          <strong>Accountability</strong>Taking responsibility for our actions
+        </div>
+      </div>
     </section>
 
     <!-- #bom - Board of Management -->
-    <section id="bom" style="background:#f8f9fa;">
-        <div class="section-container">
-            <h2 class="section-title">Board of Management</h2>
-            <p class="section-subtitle">Our governance and oversight team</p>
-            <div class="bom-grid" id="bomGrid">
-                <!-- Dynamically loaded from API -->
-                <div class="bom-card">
-                    <div class="bom-photo">👤</div>
-                    <h4>Loading...</h4>
-                    <p class="position">BOM Member</p>
-                </div>
-            </div>
+    <section id="bom" style="background: #f8f9fa">
+      <div class="section-container">
+        <h2 class="section-title">Board of Management</h2>
+        <p class="section-subtitle">Our governance and oversight team</p>
+        <div class="bom-grid" id="bomGrid">
+          <!-- Dynamically loaded from API -->
+          <div class="bom-card">
+            <div class="bom-photo">👤</div>
+            <h4>Loading...</h4>
+            <p class="position">BOM Member</p>
+          </div>
         </div>
+      </div>
     </section>
 
     <!-- #chief-principal -->
     <section id="chief-principal" class="section-container">
-        <h2 class="section-title">Office of the Chief Principal</h2>
-        <p class="section-subtitle">Leadership and administration</p>
-        <div class="profile-full" id="principalProfile">
-            <div class="profile-photo-lg"
-                style="background:#e0e0e0;display:flex;align-items:center;justify-content:center;font-size:4rem;">👤
-            </div>
-            <div class="profile-info">
-                <h3>Loading...</h3>
-                <p class="title">Chief Principal</p>
-                <p class="bio">Loading profile information...</p>
-            </div>
+      <h2 class="section-title">Office of the Chief Principal</h2>
+      <p class="section-subtitle">Leadership and administration</p>
+      <div class="profile-full" id="principalProfile">
+        <div
+          class="profile-photo-lg"
+          style="
+            background: #e0e0e0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 4rem;
+          "
+        >
+          👤
         </div>
+        <div class="profile-info">
+          <h3>Loading...</h3>
+          <p class="title">Chief Principal</p>
+          <p class="bio">Loading profile information...</p>
+        </div>
+      </div>
     </section>
 
     <!-- #dp-academics -->
-    <section id="dp-academics" style="background:#f8f9fa;">
-        <div class="section-container">
-            <h2 class="section-title">Deputy Principal - Academics</h2>
-            <div class="profile-full" id="dpAcademicsProfile">
-                <div class="profile-photo-lg"
-                    style="background:#e0e0e0;display:flex;align-items:center;justify-content:center;font-size:4rem;">👤
-                </div>
-                <div class="profile-info">
-                    <h3>Loading...</h3>
-                    <p class="title">Deputy Principal Academics</p>
-                    <p class="bio">Loading profile information...</p>
-                </div>
-            </div>
+    <section id="dp-academics" style="background: #f8f9fa">
+      <div class="section-container">
+        <h2 class="section-title">Deputy Principal - Academics</h2>
+        <div class="profile-full" id="dpAcademicsProfile">
+          <div
+            class="profile-photo-lg"
+            style="
+              background: #e0e0e0;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              font-size: 4rem;
+            "
+          >
+            👤
+          </div>
+          <div class="profile-info">
+            <h3>Loading...</h3>
+            <p class="title">Deputy Principal Academics</p>
+            <p class="bio">Loading profile information...</p>
+          </div>
         </div>
+      </div>
     </section>
 
     <!-- #dp-administration -->
     <section id="dp-administration" class="section-container">
-        <h2 class="section-title">Deputy Principal - Administration</h2>
-        <div class="profile-full" id="dpAdminProfile">
-            <div class="profile-photo-lg"
-                style="background:#e0e0e0;display:flex;align-items:center;justify-content:center;font-size:4rem;">👤
-            </div>
-            <div class="profile-info">
-                <h3>Loading...</h3>
-                <p class="title">Deputy Principal Administration</p>
-                <p class="bio">Loading profile information...</p>
-            </div>
+      <h2 class="section-title">Deputy Principal - Administration</h2>
+      <div class="profile-full" id="dpAdminProfile">
+        <div
+          class="profile-photo-lg"
+          style="
+            background: #e0e0e0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 4rem;
+          "
+        >
+          👤
         </div>
+        <div class="profile-info">
+          <h3>Loading...</h3>
+          <p class="title">Deputy Principal Administration</p>
+          <p class="bio">Loading profile information...</p>
+        </div>
+      </div>
     </section>
 
     <!-- #hods -->
-    <section id="hods" style="background:#f8f9fa;">
-        <div class="section-container">
-            <h2 class="section-title">Heads of Departments</h2>
-            <p class="section-subtitle">Academic and administrative department leaders</p>
-            <div class="hod-grid" id="hodGrid">
-                <div class="hod-card">
-                    <div class="hod-photo"
-                        style="display:flex;align-items:center;justify-content:center;font-size:2rem;">👤</div>
-                    <h4>Loading...</h4>
-                    <p class="dept">Department</p>
-                </div>
+    <section id="hods" style="background: #f8f9fa">
+      <div class="section-container">
+        <h2 class="section-title">Heads of Departments</h2>
+        <p class="section-subtitle">
+          Academic and administrative department leaders
+        </p>
+        <div class="hod-grid" id="hodGrid">
+          <div class="hod-card">
+            <div
+              class="hod-photo"
+              style="
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 2rem;
+              "
+            >
+              👤
             </div>
+            <h4>Loading...</h4>
+            <p class="dept">Department</p>
+          </div>
         </div>
+      </div>
     </section>
 
     <!-- Footer -->
     <footer id="mainFooter"></footer>
 
     <script>
-        /**
-         * About Page - Dynamic Content Loader
-         * Fetches data from API and populates page sections.
-         */
-        (async function () {
-            // Load navbar and footer from shared components
-            await loadSharedComponents();
+      /**
+       * About Page - Dynamic Content Loader
+       * Fetches data from API and populates page sections.
+       */
+      (async function () {
+        // Load navbar and footer from shared components
+        await loadSharedComponents();
 
-            // Fetch all data in parallel
-            await Promise.all([
-                loadPageContent(),
-                loadBOMMembers(),
-                loadPrincipalProfile(),
-                loadDeputyPrincipals(),
-                loadHODs()
-            ]);
-        })();
+        // Fetch all data in parallel
+        await Promise.all([
+          loadPageContent(),
+          loadBOMMembers(),
+          loadPrincipalProfile(),
+          loadDeputyPrincipals(),
+          loadHODs(),
+        ]);
+      })();
 
-        async function loadSharedComponents() {
-            try {
-                const navRes = await fetch('/');
-                const html = await navRes.text();
-                const parser = new DOMParser();
-                const doc = parser.parseFromString(html, 'text/html');
+      async function loadSharedComponents() {
+        try {
+          const navRes = await fetch("/");
+          const html = await navRes.text();
+          const parser = new DOMParser();
+          const doc = parser.parseFromString(html, "text/html");
 
-                const navbar = doc.querySelector('header');
-                const footer = doc.querySelector('footer');
+          const navbar = doc.querySelector("header");
+          const footer = doc.querySelector("footer");
 
-                if (navbar) document.getElementById('mainNavbar').innerHTML = navbar.outerHTML;
-                if (footer) document.getElementById('mainFooter').innerHTML = footer.outerHTML;
-            } catch (e) {
-                console.log('Could not load shared components, using fallback');
-            }
+          if (navbar)
+            document.getElementById("mainNavbar").innerHTML = navbar.outerHTML;
+          if (footer)
+            document.getElementById("mainFooter").innerHTML = footer.outerHTML;
+        } catch (e) {
+          console.log("Could not load shared components, using fallback");
         }
+      }
 
-        async function loadPageContent() {
-            try {
-                const res = await fetch('/api/v1/content/about/history');
-                if (res.ok) {
-                    const data = await res.json();
-                    if (data.success && data.data) {
-                        document.getElementById('aboutHistory').innerHTML = data.data.content_html;
-                    }
-                }
-
-                const visionRes = await fetch('/api/v1/content/about/vision');
-                if (visionRes.ok) {
-                    const data = await visionRes.json();
-                    if (data.success && data.data) {
-                        document.getElementById('visionText').innerHTML = data.data.content_html;
-                    }
-                }
-
-                const missionRes = await fetch('/api/v1/content/about/mission');
-                if (missionRes.ok) {
-                    const data = await missionRes.json();
-                    if (data.success && data.data) {
-                        document.getElementById('missionText').innerHTML = data.data.content_html;
-                    }
-                }
-            } catch (e) {
-                console.log('Page content fetch failed, using static content');
+      async function loadPageContent() {
+        try {
+          const res = await fetch("/api/v1/content/about/history");
+          if (res.ok) {
+            const data = await res.json();
+            if (data.success && data.data) {
+              document.getElementById("aboutHistory").innerHTML =
+                data.data.content_html;
             }
+          }
+
+          const visionRes = await fetch("/api/v1/content/about/vision");
+          if (visionRes.ok) {
+            const data = await visionRes.json();
+            if (data.success && data.data) {
+              document.getElementById("visionText").innerHTML =
+                data.data.content_html;
+            }
+          }
+
+          const missionRes = await fetch("/api/v1/content/about/mission");
+          if (missionRes.ok) {
+            const data = await missionRes.json();
+            if (data.success && data.data) {
+              document.getElementById("missionText").innerHTML =
+                data.data.content_html;
+            }
+          }
+        } catch (e) {
+          console.log("Page content fetch failed, using static content");
         }
+      }
 
-        async function loadBOMMembers() {
-            try {
-                const res = await fetch('/api/v1/bom');
-                if (!res.ok) throw new Error('BOM fetch failed');
-                const data = await res.json();
+      async function loadBOMMembers() {
+        try {
+          const res = await fetch("/api/v1/bom");
+          if (!res.ok) throw new Error("BOM fetch failed");
+          const data = await res.json();
 
-                if (data.success && data.data && data.data.length > 0) {
-                    const grid = document.getElementById('bomGrid');
-                    grid.innerHTML = data.data.map(member => `
+          if (data.success && data.data && data.data.length > 0) {
+            const grid = document.getElementById("bomGrid");
+            grid.innerHTML = data.data
+              .map(
+                (member) => `
                         <div class="bom-card">
                             <div class="bom-photo">
-                                ${member.photo_path
-                            ? `<img src="/uploads/${member.photo_path}" alt="${member.full_name}">`
-                            : '👤'}
-                            </div>
-                            <h4>${escapeHtml(member.full_name)}</h4>
-                            <p class="position">${escapeHtml(member.position || 'BOM Member')}</p>
-                        </div>
-                    `).join('');
-                }
-            } catch (e) {
-                console.log('BOM members fetch failed');
-                showPlaceholderBOM();
-            }
+    ${(() => {
+      let bomImgSrc = null;
+      if (member.photo_path) {
+        if (
+          member.photo_path.startsWith("http://") ||
+          member.photo_path.startsWith("https://")
+        ) {
+          bomImgSrc = member.photo_path;
+        } else {
+          bomImgSrc = "/uploads/" + member.photo_path.replace(/^\/+/, "");
         }
+      }
+      return bomImgSrc
+        ? `<img src="${bomImgSrc}" alt="${escapeHtml(member.full_name)}" style="width:100%;height:100%;object-fit:cover;">`
+        : "👤";
+    })()}
+</div>
+                            <h4>${escapeHtml(member.full_name)}</h4>
+                            <p class="position">${escapeHtml(member.position || "BOM Member")}</p>
+                        </div>
+                    `,
+              )
+              .join("");
+          }
+        } catch (e) {
+          console.log("BOM members fetch failed");
+          showPlaceholderBOM();
+        }
+      }
 
-        function showPlaceholderBOM() {
-            const grid = document.getElementById('bomGrid');
-            const placeholders = [
-                'BOM Chairperson', 'Secretary to the Board', 'County Government Rep',
-                'TVETA Representative', 'University Representative', 'Industry Representative',
-                'Community Representative', 'Staff Representative'
-            ];
-            grid.innerHTML = placeholders.map((pos, i) => `
+      function showPlaceholderBOM() {
+        const grid = document.getElementById("bomGrid");
+        const placeholders = [
+          "BOM Chairperson",
+          "Secretary to the Board",
+          "County Government Rep",
+          "TVETA Representative",
+          "University Representative",
+          "Industry Representative",
+          "Community Representative",
+          "Staff Representative",
+        ];
+        grid.innerHTML = placeholders
+          .map(
+            (pos, i) => `
                 <div class="bom-card">
                     <div class="bom-photo">👤</div>
                     <h4>Board Member ${i + 1}</h4>
                     <p class="position">${pos}</p>
                 </div>
-            `).join('');
-        }
+            `,
+          )
+          .join("");
+      }
 
-        async function loadPrincipalProfile() {
-            try {
-                const res = await fetch('/api/v1/content/principal-message');
-                if (!res.ok) throw new Error('Principal fetch failed');
-                const data = await res.json();
+      async function loadPrincipalProfile() {
+        try {
+          const res = await fetch("/api/v1/content/principal-message");
+          if (!res.ok) throw new Error("Principal fetch failed");
+          const data = await res.json();
 
-                console.log('Principal API response:', data); // debug
+          console.log("Principal API response:", data); // debug
 
-                if (data.success && data.data) {
-                    const p = data.data;
+          if (data.success && data.data) {
+            const p = data.data;
 
-                    // Try multiple possible field names
-                    let imagePath = p.image_path || p.photo || p.photo_url || p.image || '';
+            // Try multiple possible field names
+            let imagePath =
+              p.image_path || p.photo || p.photo_url || p.image || "";
 
-                    // Normalise the image path:
-                    // - If it's a full URL (http/https), use it as-is.
-                    // - Otherwise, treat it as a local path and prepend /uploads/
-                    if (imagePath) {
-                        if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
-                            // Full URL – do nothing
-                        } else {
-                            // Local path – clean and prepend /uploads/
-                            imagePath = imagePath.replace(/^\/+/, ''); // remove leading slashes
-                            imagePath = '/uploads/' + imagePath;
-                        }
-                        // Remove any double slashes (just in case)
-                        imagePath = imagePath.replace(/([^:])\/+/g, '$1/');
-                    }
+            // Normalise the image path:
+            // - If it's a full URL (http/https), use it as-is.
+            // - Otherwise, treat it as a local path and prepend /uploads/
+            if (imagePath) {
+              if (
+                imagePath.startsWith("http://") ||
+                imagePath.startsWith("https://")
+              ) {
+                // Full URL – do nothing
+              } else {
+                // Local path – clean and prepend /uploads/
+                imagePath = imagePath.replace(/^\/+/, ""); // remove leading slashes
+                imagePath = "/uploads/" + imagePath;
+              }
+              // Remove any double slashes (just in case)
+              imagePath = imagePath.replace(/([^:])\/+/g, "$1/");
+            }
 
-                    const photoHtml = imagePath
-                        ? `<img src="${imagePath}" alt="${escapeHtml(p.principal_name || 'Principal')}" style="width:100%;height:100%;object-fit:cover;">`
-                        : '<span style="font-size:4rem;">👤</span>';
+            const photoHtml = imagePath
+              ? `<img src="${imagePath}" alt="${escapeHtml(p.principal_name || "Principal")}" style="width:100%;height:100%;object-fit:cover;">`
+              : '<span style="font-size:4rem;">👤</span>';
 
-                    // Trim the name to remove extra spaces
-                    const principalName = (p.principal_name || 'Chief Principal').trim();
+            // Trim the name to remove extra spaces
+            const principalName = (
+              p.principal_name || "Chief Principal"
+            ).trim();
 
-                    document.getElementById('principalProfile').innerHTML = `
+            document.getElementById("principalProfile").innerHTML = `
                 <div class="profile-photo-lg">
                     ${photoHtml}
                 </div>
                 <div class="profile-info">
                     <h3>${escapeHtml(principalName)}</h3>
-                    <p class="title">${escapeHtml(p.title || 'Chief Principal')}</p>
-                    <div class="bio">${p.message || 'Profile information coming soon.'}</div>
+                    <p class="title">${escapeHtml(p.title || "Chief Principal")}</p>
+                    <div class="bio">${p.message || "Profile information coming soon."}</div>
                 </div>
             `;
-                }
-            } catch (e) {
-                console.log('Principal profile fetch failed:', e);
-            }
+          }
+        } catch (e) {
+          console.log("Principal profile fetch failed:", e);
         }
+      }
 
-        async function loadDeputyPrincipals() {
-            try {
-                // Fetch the two specific deputy principals directly by role
-                const [resAcad, resAdmin] = await Promise.all([
-                    fetch('/api/v1/users?role=deputy_principal_academics'),
-                    fetch('/api/v1/users?role=deputy_principal_administration')
-                ]);
+      async function loadDeputyPrincipals() {
+        try {
+          const [resAcad, resAdmin] = await Promise.all([
+            fetch("/api/v1/users?role=deputy_principal_academics"),
+            fetch("/api/v1/users?role=deputy_principal_administration"),
+          ]);
 
-                const dataAcad = await resAcad.json();
-                const dataAdmin = await resAdmin.json();
+          const dataAcad = await resAcad.json();
+          const dataAdmin = await resAdmin.json();
 
-                // Build HTML for Academics
-                let dpAcademicsHtml = '';
-                if (dataAcad.success && dataAcad.data && dataAcad.data.length > 0) {
-                    const dp = dataAcad.data[0];
-                    dpAcademicsHtml = `
+          // Helper to build image src correctly
+          function getImageSrc(path) {
+            if (!path) return null;
+            if (path.startsWith("http://") || path.startsWith("https://")) {
+              return path;
+            }
+            return "/uploads/" + path.replace(/^\/+/, "");
+          }
+
+          // --- Academics ---
+          let dpAcademicsHtml = "";
+          if (dataAcad.success && dataAcad.data && dataAcad.data.length > 0) {
+            const dp = dataAcad.data[0];
+            const imgSrc = getImageSrc(dp.photo_path);
+            dpAcademicsHtml = `
                 <div class="profile-photo-lg">
-                    ${dp.photo_path
-                            ? `<img src="/uploads/${dp.photo_path.replace(/^\/uploads\//, '')}" alt="${escapeHtml(dp.full_name)}">`
-                            : '<span style="font-size:4rem;">👤</span>'}
+                    ${
+                      imgSrc
+                        ? `<img src="${imgSrc}" alt="${escapeHtml(dp.full_name)}" style="width:100%;height:100%;object-fit:cover;">`
+                        : '<span style="font-size:4rem;">👤</span>'
+                    }
                 </div>
                 <div class="profile-info">
                     <h3>${escapeHtml(dp.full_name)}</h3>
                     <p class="title">Deputy Principal - Academics</p>
-                    <div class="bio">${dp.bio || 'Profile information coming soon.'}</div>
+                    <div class="bio">${dp.bio || "Profile information coming soon."}</div>
                 </div>
             `;
-                }
+          }
 
-                // Build HTML for Administration
-                let dpAdminHtml = '';
-                if (dataAdmin.success && dataAdmin.data && dataAdmin.data.length > 0) {
-                    const dp = dataAdmin.data[0];
-                    dpAdminHtml = `
+          // --- Administration ---
+          let dpAdminHtml = "";
+          if (
+            dataAdmin.success &&
+            dataAdmin.data &&
+            dataAdmin.data.length > 0
+          ) {
+            const dp = dataAdmin.data[0];
+            const imgSrc = getImageSrc(dp.photo_path);
+            dpAdminHtml = `
                 <div class="profile-photo-lg">
-                    ${dp.photo_path
-                            ? `<img src="/uploads/${dp.photo_path.replace(/^\/uploads\//, '')}" alt="${escapeHtml(dp.full_name)}">`
-                            : '<span style="font-size:4rem;">👤</span>'}
+                    ${
+                      imgSrc
+                        ? `<img src="${imgSrc}" alt="${escapeHtml(dp.full_name)}" style="width:100%;height:100%;object-fit:cover;">`
+                        : '<span style="font-size:4rem;">👤</span>'
+                    }
                 </div>
                 <div class="profile-info">
                     <h3>${escapeHtml(dp.full_name)}</h3>
                     <p class="title">Deputy Principal - Administration</p>
-                    <div class="bio">${dp.bio || 'Profile information coming soon.'}</div>
+                    <div class="bio">${dp.bio || "Profile information coming soon."}</div>
                 </div>
             `;
-                }
+          }
 
-                // Update DOM
-                document.getElementById('dpAcademicsProfile').innerHTML = dpAcademicsHtml || `
+          document.getElementById("dpAcademicsProfile").innerHTML =
+            dpAcademicsHtml ||
+            `
             <div class="profile-photo-lg"><span style="font-size:4rem;">👤</span></div>
             <div class="profile-info">
                 <h3>Deputy Principal - Academics</h3>
@@ -930,7 +1084,9 @@
             </div>
         `;
 
-                document.getElementById('dpAdminProfile').innerHTML = dpAdminHtml || `
+          document.getElementById("dpAdminProfile").innerHTML =
+            dpAdminHtml ||
+            `
             <div class="profile-photo-lg"><span style="font-size:4rem;">👤</span></div>
             <div class="profile-info">
                 <h3>Deputy Principal - Administration</h3>
@@ -938,52 +1094,67 @@
                 <div class="bio">Profile information will be updated soon.</div>
             </div>
         `;
-
-            } catch (e) {
-                console.log('Deputy Principals fetch failed');
-            }
+        } catch (e) {
+          console.log("Deputy Principals fetch failed", e);
         }
+      }
+      async function loadHODs() {
+        try {
+          const res = await fetch("/api/v1/departments");
+          if (!res.ok) throw new Error("HOD fetch failed");
+          const data = await res.json();
 
-        async function loadHODs() {
-            try {
-                const res = await fetch('/api/v1/departments');
-                if (!res.ok) throw new Error('HOD fetch failed');
-                const data = await res.json();
-
-                if (data.success && data.data) {
-                    const hodsWithData = data.data.filter(d => d.hod_name);
-                    if (hodsWithData.length > 0) {
-                        const grid = document.getElementById('hodGrid');
-                        grid.innerHTML = hodsWithData.map(dept => `
-                            <div class="hod-card">
-                                <div class="hod-photo">
-                                    ${dept.hod_photo
-                                ? `<img src="/uploads/${dept.hod_photo}" alt="${escapeHtml(dept.hod_name)}">`
-                                : '👤'}
-                                </div>
-                                <h4>${escapeHtml(dept.hod_name)}</h4>
-                                <p class="dept">${escapeHtml(dept.name)}</p>
-                            </div>
-                        `).join('');
+          if (data.success && data.data) {
+            const hodsWithData = data.data.filter((d) => d.hod_name);
+            if (hodsWithData.length > 0) {
+              const grid = document.getElementById("hodGrid");
+              grid.innerHTML = hodsWithData
+                .map((dept) => {
+                  // Handle image correctly (Cloudinary or local)
+                  let imgSrc = null;
+                  if (dept.hod_photo) {
+                    if (
+                      dept.hod_photo.startsWith("http://") ||
+                      dept.hod_photo.startsWith("https://")
+                    ) {
+                      imgSrc = dept.hod_photo;
+                    } else {
+                      imgSrc = "/uploads/" + dept.hod_photo.replace(/^\/+/, "");
                     }
-                }
-            } catch (e) {
-                console.log('HODs fetch failed');
+                  }
+                  return `
+                        <div class="hod-card">
+                            <div class="hod-photo">
+                                ${
+                                  imgSrc
+                                    ? `<img src="${imgSrc}" alt="${escapeHtml(dept.hod_name)}" style="width:100%;height:100%;object-fit:cover;">`
+                                    : "👤"
+                                }
+                            </div>
+                            <h4>${escapeHtml(dept.hod_name)}</h4>
+                            <p class="dept">${escapeHtml(dept.name)}</p>
+                        </div>
+                    `;
+                })
+                .join("");
             }
+          }
+        } catch (e) {
+          console.log("HODs fetch failed", e);
         }
+      }
 
-        function escapeHtml(str) {
-            if (!str) return '';
-            const div = document.createElement('div');
-            div.textContent = str;
-            return div.innerHTML;
-        }
+      function escapeHtml(str) {
+        if (!str) return "";
+        const div = document.createElement("div");
+        div.textContent = str;
+        return div.innerHTML;
+      }
     </script>
 
     <script src="assets/js/navbar.js"></script>
     <script>
-        buildNavbar('about');
+      buildNavbar("about");
     </script>
-</body>
-
+  </body>
 </html>

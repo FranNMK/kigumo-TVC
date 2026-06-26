@@ -288,7 +288,7 @@ router.post("/users/add-lecturer", upload.single("photo"), async (req, res) => {
 });
 
 router.patch("/users/:id/deactivate", async (req, res) => {
-  await db.execute("UPDATE users SET is_active = FALSE WHERE id = ?", [
+  await db.execute("UPDATE users SET is_active = NOT is_active WHERE id = ?", [
     req.params.id,
   ]);
   res.json({ success: true });
@@ -551,10 +551,29 @@ router.put("/users/:id", upload.single("photo"), async (req, res) => {
 // DELETE user (soft delete)
 router.delete("/users/:id", async (req, res) => {
   try {
-    await db.execute("UPDATE users SET is_active = FALSE WHERE id = ?", [
+    const [[row]] = await db.execute("SELECT * FROM users WHERE id = ?", [
       req.params.id,
     ]);
-    res.json({ success: true, message: "User deactivated successfully" });
+    if (!row) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    // 1. Archive to recycle_bin
+    await db.execute(
+      "INSERT INTO recycle_bin (original_table, original_id, data_snapshot, deleted_by) VALUES (?,?,?,?)",
+      ["users", row.id, JSON.stringify(row), req.session.user.id]
+    );
+
+    // 2. Disable FK checks temporarily to allow the delete
+    await db.execute("SET foreign_key_checks = 0");
+
+    // 3. Hard delete the user
+    await db.execute("DELETE FROM users WHERE id = ?", [req.params.id]);
+
+    // 4. Re-enable FK checks
+    await db.execute("SET foreign_key_checks = 1");
+
+    res.json({ success: true, message: "User permanently deleted and archived" });
   } catch (err) {
     logger.error("Admin user delete error", { error: err.message });
     res.status(500).json({ success: false, message: "Server error" });
@@ -872,6 +891,95 @@ router.patch("/partners/:id/toggle", async (req, res) => {
     [req.params.id],
   );
   res.json({ success: true });
+});
+
+// ── BOM (Board of Management) CRUD ──
+router.get("/bom", async (req, res) => {
+  try {
+    const [rows] = await db.execute(
+      "SELECT * FROM bom_members ORDER BY sort_order"
+    );
+    res.json({ success: true, data: rows });
+  } catch (err) {
+    logger.error("Admin BOM fetch error", { error: err.message });
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+});
+
+router.post("/bom", upload.single("photo"), async (req, res) => {
+  try {
+    const { full_name, position, sort_order } = req.body;
+    if (!full_name) {
+      return res.status(400).json({ success: false, message: "Full name is required" });
+    }
+    const photo_path = await uploadToCloudinary(req.file, "kigumo-tvc/bom");
+    await db.execute(
+      "INSERT INTO bom_members (full_name, position, photo_path, sort_order, is_active) VALUES (?,?,?,?,TRUE)",
+      [full_name, position || "", photo_path, sort_order || 0]
+    );
+    res.json({ success: true, message: "BOM member added" });
+  } catch (err) {
+    logger.error("BOM create error", { error: err.message });
+    res.status(500).json({ success: false, message: "Failed: " + err.message });
+  }
+});
+
+router.put("/bom/:id", upload.single("photo"), async (req, res) => {
+  try {
+    const { full_name, position, sort_order } = req.body;
+    const [[existing]] = await db.execute(
+      "SELECT * FROM bom_members WHERE id = ?",
+      [req.params.id]
+    );
+    if (!existing) {
+      return res.status(404).json({ success: false, message: "Member not found" });
+    }
+    const photo_path = req.file
+      ? await uploadToCloudinary(req.file, "kigumo-tvc/bom")
+      : existing.photo_path;
+    await db.execute(
+      "UPDATE bom_members SET full_name=?, position=?, photo_path=?, sort_order=? WHERE id=?",
+      [full_name || existing.full_name, position || existing.position, photo_path, sort_order || existing.sort_order, req.params.id]
+    );
+    res.json({ success: true, message: "BOM member updated" });
+  } catch (err) {
+    logger.error("BOM update error", { error: err.message });
+    res.status(500).json({ success: false, message: "Update failed" });
+  }
+});
+
+router.delete("/bom/:id", async (req, res) => {
+  try {
+    const [[row]] = await db.execute("SELECT * FROM bom_members WHERE id = ?", [
+      req.params.id,
+    ]);
+    if (!row) {
+      return res.status(404).json({ success: false, message: "Member not found" });
+    }
+    // Archive to recycle bin
+    await db.execute(
+      "INSERT INTO recycle_bin (original_table, original_id, data_snapshot, deleted_by) VALUES (?,?,?,?)",
+      ["bom_members", row.id, JSON.stringify(row), req.session.user.id]
+    );
+    await db.execute("DELETE FROM bom_members WHERE id = ?", [req.params.id]);
+    res.json({ success: true, message: "BOM member moved to recycle bin" });
+  } catch (err) {
+    logger.error("BOM delete error", { error: err.message });
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+});
+
+router.patch("/bom/:id/toggle", async (req, res) => {
+  try {
+    await db.execute(
+      "UPDATE bom_members SET is_active = NOT is_active WHERE id = ?",
+      [req.params.id]
+    );
+    res.json({ success: true, message: "Status toggled" });
+  } catch (err) {
+    logger.error("BOM toggle error", { error: err.message });
+    res.status(500).json({ success: false, message: "Server error" });
+  }
 });
 
 // ── DOWNLOADS CRUD ──
