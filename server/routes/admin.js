@@ -380,7 +380,7 @@ router.post("/users", upload.single("photo"), async (req, res) => {
         message: "Full name, phone (password), and role are required",
       });
     }
-    // Validate role
+        // Validate role
     const validRoles = [
       "student",
       "lecturer",
@@ -389,6 +389,9 @@ router.post("/users", upload.single("photo"), async (req, res) => {
       "deputy_principal_administration",
       "chief_principal",
       "admin",
+      "registrar",
+      "secretary",
+      "dean_of_students",
     ];
     if (!validRoles.includes(role)) {
       return res.status(400).json({ success: false, message: "Invalid role" });
@@ -481,6 +484,9 @@ router.put("/users/:id", upload.single("photo"), async (req, res) => {
         "deputy_principal_administration",
         "chief_principal",
         "admin",
+        "registrar",
+        "secretary",
+        "dean_of_students",
       ];
       if (!validRoles.includes(role)) {
         return res
