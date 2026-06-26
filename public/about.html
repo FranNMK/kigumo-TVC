@@ -884,70 +884,91 @@
 
       async function loadBOMMembers() {
         try {
-          const res = await fetch("/api/v1/bom");
-          if (!res.ok) throw new Error("BOM fetch failed");
-          const data = await res.json();
+          const [bomRes, principalRes] = await Promise.all([
+            fetch("/api/v1/bom"),
+            fetch("/api/v1/content/principal-message"),
+          ]);
 
-          if (data.success && data.data && data.data.length > 0) {
-            const grid = document.getElementById("bomGrid");
-            grid.innerHTML = data.data
-              .map(
-                (member) => `
-                        <div class="bom-card">
-                            <div class="bom-photo">
-    ${(() => {
-      let bomImgSrc = null;
-      if (member.photo_path) {
-        if (
-          member.photo_path.startsWith("http://") ||
-          member.photo_path.startsWith("https://")
-        ) {
-          bomImgSrc = member.photo_path;
-        } else {
-          bomImgSrc = "/uploads/" + member.photo_path.replace(/^\/+/, "");
-        }
-      }
-      return bomImgSrc
-        ? `<img src="${bomImgSrc}" alt="${escapeHtml(member.full_name)}" style="width:100%;height:100%;object-fit:cover;">`
-        : "👤";
-    })()}
-</div>
-                            <h4>${escapeHtml(member.full_name)}</h4>
-                            <p class="position">${escapeHtml(member.position || "BOM Member")}</p>
-                        </div>
-                    `,
-              )
+          const bomData = await bomRes.json();
+          const principalData = await principalRes.json();
+
+          // --- DEBUG: Open browser console (F12) to see these logs ---
+          console.log("✅ BOM API response:", bomData);
+          console.log("✅ Principal API response:", principalData);
+
+          let members = [];
+
+          // 1. Add the Principal - ONLY if we have a valid name
+          // (Backend only returns active is_active=TRUE records, so we don't need to check is_active)
+          if (
+            principalData.success &&
+            principalData.data &&
+            principalData.data.principal_name
+          ) {
+            const p = principalData.data;
+            console.log("✅ Adding Principal to BOM:", p.principal_name);
+            members.push({
+              full_name: p.principal_name,
+              position: p.title || "Chief Principal",
+              photo_path: p.image_path,
+              is_principal: true,
+            });
+          } else {
+            console.warn(
+              "⚠️ Principal data not found or incomplete. Skipping.",
+            );
+          }
+
+          // 2. Add other BOM members (exclude any with the exact same name as the Principal)
+          if (bomData.success && bomData.data) {
+            const principalName = principalData.data?.principal_name || "";
+            // Strictly filter out anyone with the exact same name to avoid duplicates
+            const filtered = bomData.data.filter(
+              (m) => m.full_name !== principalName,
+            );
+            console.log(`✅ Found ${filtered.length} BOM members to display.`);
+            members = members.concat(filtered);
+          }
+
+          // 3. Render the grid
+          const grid = document.getElementById("bomGrid");
+          if (members.length === 0) {
+            grid.innerHTML = `<div class="bom-card"><div class="bom-photo">👤</div><h4>No members</h4></div>`;
+          } else {
+            grid.innerHTML = members
+              .map((member) => {
+                let imgSrc = null;
+                if (member.photo_path) {
+                  if (
+                    member.photo_path.startsWith("http://") ||
+                    member.photo_path.startsWith("https://")
+                  ) {
+                    imgSrc = member.photo_path;
+                  } else {
+                    imgSrc =
+                      "/uploads/" + member.photo_path.replace(/^\/+/, "");
+                  }
+                }
+                return `
+            <div class="bom-card">
+              <div class="bom-photo">
+                ${
+                  imgSrc
+                    ? `<img src="${imgSrc}" alt="${escapeHtml(member.full_name)}" style="width:100%;height:100%;object-fit:cover;">`
+                    : "👤"
+                }
+              </div>
+              <h4>${escapeHtml(member.full_name)}</h4>
+              <p class="position">${escapeHtml(member.position || "BOM Member")}</p>
+            </div>
+          `;
+              })
               .join("");
           }
         } catch (e) {
-          console.log("BOM members fetch failed");
-          showPlaceholderBOM();
+          console.error("❌ BOM members fetch failed:", e);
+          showPlaceholderBOM(); // fallback to static list
         }
-      }
-
-      function showPlaceholderBOM() {
-        const grid = document.getElementById("bomGrid");
-        const placeholders = [
-          "BOM Chairperson",
-          "Secretary to the Board",
-          "County Government Rep",
-          "TVETA Representative",
-          "University Representative",
-          "Industry Representative",
-          "Community Representative",
-          "Staff Representative",
-        ];
-        grid.innerHTML = placeholders
-          .map(
-            (pos, i) => `
-                <div class="bom-card">
-                    <div class="bom-photo">👤</div>
-                    <h4>Board Member ${i + 1}</h4>
-                    <p class="position">${pos}</p>
-                </div>
-            `,
-          )
-          .join("");
       }
 
       async function loadPrincipalProfile() {
