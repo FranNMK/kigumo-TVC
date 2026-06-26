@@ -1026,10 +1026,11 @@
           <td>${escapeHtml(u.department_name || "—")}</td>
           <td>${u.is_active ? '<span class="badge badge-active">Active</span>' : '<span class="badge badge-inactive">Inactive</span>'}</td>
           <td>
-            <button class="btn btn-yellow btn-sm" onclick="editUser(${u.id})">Edit</button>
-            <button class="btn btn-red btn-sm" onclick="deleteUser(${u.id})">${u.is_active ? "Deactivate" : "Activate"}</button>
-            <button class="btn btn-sm" style="background:#6c757d;color:#fff;" onclick="resetPassword(${u.id})">Reset Pwd</button>
-          </td>
+  <button class="btn btn-yellow btn-sm" onclick="editUser(${u.id})">Edit</button>
+  <button class="btn btn-sm" style="background:#6c757d;color:#fff;" onclick="toggleActiveUser(${u.id})">${u.is_active ? "Deactivate" : "Activate"}</button>
+  <button class="btn btn-red btn-sm" onclick="deleteUserPermanent(${u.id})">Delete</button>
+  <button class="btn btn-sm" style="background:#6c757d;color:#fff;" onclick="resetPassword(${u.id})">Reset Pwd</button>
+</td>
         </tr>`;
             });
           } else {
@@ -1068,14 +1069,17 @@
         <div class="form-group"><label>Phone (Password) *</label><input name="phone" required></div>
         <div class="form-group"><label>Role *</label>
           <select name="role" required>
-            <option value="student">Student</option>
-            <option value="lecturer">Lecturer</option>
-            <option value="hod">HOD</option>
-            <option value="deputy_principal_academics">Deputy Principal Academics</option>
-            <option value="deputy_principal_administration">Deputy Principal Admin</option>
-            <option value="chief_principal">Chief Principal</option>
-            <option value="admin">Admin</option>
-          </select>
+  <option value="student">Student</option>
+  <option value="lecturer">Lecturer</option>
+  <option value="hod">HOD</option>
+  <option value="deputy_principal_academics">Deputy Principal Academics</option>
+  <option value="deputy_principal_administration">Deputy Principal Admin</option>
+  <option value="chief_principal">Chief Principal</option>
+  <option value="admin">Admin</option>
+  <option value="registrar">Registrar</option>
+  <option value="secretary">Secretary</option>
+  <option value="dean_of_students">Dean of Students</option>
+</select>
         </div>
         <div class="form-group"><label>Department</label><select name="department_id"><option value="">— None —</option>${deptOptions}</select></div>
         <div class="form-group"><label>Year of Study</label><input type="number" name="year_of_study" value="1" min="1"></div>
@@ -1170,14 +1174,17 @@
         <div class="form-group"><label>Registration Number</label><input name="reg_number" value="${escapeHtml(user.reg_number || "")}"></div>
         <div class="form-group"><label>Role *</label>
           <select name="role" required>
-            <option value="student" ${user.role === "student" ? "selected" : ""}>Student</option>
-            <option value="lecturer" ${user.role === "lecturer" ? "selected" : ""}>Lecturer</option>
-            <option value="hod" ${user.role === "hod" ? "selected" : ""}>HOD</option>
-            <option value="deputy_principal_academics" ${user.role === "deputy_principal_academics" ? "selected" : ""}>Deputy Principal Academics</option>
-            <option value="deputy_principal_administration" ${user.role === "deputy_principal_administration" ? "selected" : ""}>Deputy Principal Admin</option>
-            <option value="chief_principal" ${user.role === "chief_principal" ? "selected" : ""}>Chief Principal</option>
-            <option value="admin" ${user.role === "admin" ? "selected" : ""}>Admin</option>
-          </select>
+  <option value="student" ${user.role === "student" ? "selected" : ""}>Student</option>
+  <option value="lecturer" ${user.role === "lecturer" ? "selected" : ""}>Lecturer</option>
+  <option value="hod" ${user.role === "hod" ? "selected" : ""}>HOD</option>
+  <option value="deputy_principal_academics" ${user.role === "deputy_principal_academics" ? "selected" : ""}>Deputy Principal Academics</option>
+  <option value="deputy_principal_administration" ${user.role === "deputy_principal_administration" ? "selected" : ""}>Deputy Principal Admin</option>
+  <option value="chief_principal" ${user.role === "chief_principal" ? "selected" : ""}>Chief Principal</option>
+  <option value="admin" ${user.role === "admin" ? "selected" : ""}>Admin</option>
+  <option value="registrar" ${user.role === "registrar" ? "selected" : ""}>Registrar</option>
+  <option value="secretary" ${user.role === "secretary" ? "selected" : ""}>Secretary</option>
+  <option value="dean_of_students" ${user.role === "dean_of_students" ? "selected" : ""}>Dean of Students</option>
+</select>
         </div>
         <div class="form-group"><label>Department</label><select name="department_id"><option value="">— None —</option>${deptOptions}</select></div>
         <div class="form-group"><label>Year of Study</label><input type="number" name="year_of_study" value="${user.year_of_study || 1}" min="1"></div>
@@ -3126,6 +3133,61 @@
             }
           });
         });
+      }
+
+      // — Toggle active status (soft deactivate / reactivate) —
+      async function toggleActiveUser(id) {
+        const r = await fetch(API + "/users/" + id);
+        const d = await r.json();
+        if (!d.success || !d.data) return alert("User not found");
+        const isActive = d.data.is_active;
+        const action = isActive ? "deactivate" : "activate";
+        if (!confirm(`Are you sure you want to ${action} this user?`)) return;
+
+        showProgress(`${action}ing user...`);
+        updateProgress(40, "Updating status...");
+        try {
+          // Use the exact endpoint from the audit: PATCH /users/:id/deactivate
+          const res = await fetch(API + "/users/" + id + "/deactivate", {
+            method: "PATCH",
+          });
+          const result = await res.json();
+          if (result.success) {
+            finishProgress(true, `User ${action}d successfully!`);
+            loadUsers();
+          } else {
+            finishProgress(false, result.message || "Operation failed");
+          }
+        } catch (err) {
+          finishProgress(false, "Network error. Please try again.");
+        }
+      }
+
+      // — Permanently delete (move to recycle bin) —
+      async function deleteUserPermanent(id) {
+        if (
+          !confirm(
+            "⚠️ Delete this user permanently? This will move the user to the recycle bin.",
+          )
+        )
+          return;
+
+        showProgress("Deleting user...");
+        updateProgress(50, "Moving to recycle bin...");
+        try {
+          const res = await fetch(API + "/users/" + id, {
+            method: "DELETE",
+          });
+          const result = await res.json();
+          if (result.success) {
+            finishProgress(true, "✅ User moved to recycle bin!");
+            loadUsers();
+          } else {
+            finishProgress(false, result.message || "Delete failed");
+          }
+        } catch (err) {
+          finishProgress(false, "Network error. Please try again.");
+        }
       }
     </script>
   </body>
