@@ -294,6 +294,289 @@ router.patch("/users/:id/deactivate", async (req, res) => {
   res.json({ success: true });
 });
 
+// ── ADMIN: Full User CRUD ──
+// GET all users (admin view with all fields)
+router.get("/users", async (req, res) => {
+  try {
+    const { role, department } = req.query;
+    let sql = `SELECT id, full_name, email, reg_number, role, primary_department_id, 
+                      year_of_study, photo_path, bio, is_active, created_at, updated_at
+               FROM users WHERE 1=1`;
+    const params = [];
+    if (role) {
+      sql += ` AND role = ?`;
+      params.push(role);
+    }
+    if (department) {
+      sql += ` AND primary_department_id = ?`;
+      params.push(department);
+    }
+    sql += ` ORDER BY full_name`;
+    const [rows] = await db.execute(sql, params);
+    // For each user, fetch department name
+    for (let u of rows) {
+      if (u.primary_department_id) {
+        const [[dept]] = await db.execute(
+          "SELECT name FROM departments WHERE id = ?",
+          [u.primary_department_id]
+        );
+        u.department_name = dept ? dept.name : null;
+      } else {
+        u.department_name = null;
+      }
+    }
+    res.json({ success: true, data: rows });
+  } catch (err) {
+    logger.error("Admin users fetch error", { error: err.message });
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+});
+
+// GET single user
+router.get("/users/:id", async (req, res) => {
+  try {
+    const [rows] = await db.execute(
+      `SELECT id, full_name, email, reg_number, role, primary_department_id,
+              year_of_study, photo_path, bio, is_active, created_at, updated_at
+       FROM users WHERE id = ?`,
+      [req.params.id]
+    );
+    if (rows.length === 0) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+    const user = rows[0];
+    if (user.primary_department_id) {
+      const [[dept]] = await db.execute(
+        "SELECT name FROM departments WHERE id = ?",
+        [user.primary_department_id]
+      );
+      user.department_name = dept ? dept.name : null;
+    } else {
+      user.department_name = null;
+    }
+    res.json({ success: true, data: user });
+  } catch (err) {
+    logger.error("Admin user fetch error", { error: err.message });
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+});
+
+// CREATE user (admin adds any role)
+router.post("/users", upload.single("photo"), async (req, res) => {
+  try {
+    const {
+      full_name,
+      email,
+      reg_number,
+      phone,
+      role,
+      department_id,
+      year_of_study,
+      bio,
+    } = req.body;
+    if (!full_name || !phone || !role) {
+      return res.status(400).json({
+        success: false,
+        message: "Full name, phone (password), and role are required",
+      });
+    }
+    // Validate role
+    const validRoles = [
+      "student",
+      "lecturer",
+      "hod",
+      "deputy_principal_academics",
+      "deputy_principal_administration",
+      "chief_principal",
+      "admin",
+    ];
+    if (!validRoles.includes(role)) {
+      return res.status(400).json({ success: false, message: "Invalid role" });
+    }
+    // Hash password (phone)
+    const bcrypt = require("bcryptjs");
+    const hashedPassword = await bcrypt.hash(phone, 12);
+    const photoPath = req.file
+      ? await uploadToCloudinary(req.file, "kigumo-tvc/staff")
+      : null;
+
+    const [result] = await db.execute(
+      `INSERT INTO users 
+       (full_name, email, reg_number, password, role, primary_department_id, year_of_study, photo_path, bio) 
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        full_name,
+        email || null,
+        reg_number || null,
+        hashedPassword,
+        role,
+        department_id || null,
+        year_of_study || 1,
+        photoPath,
+        bio || null,
+      ]
+    );
+    res.json({
+      success: true,
+      message: "User added successfully",
+      id: result.insertId,
+    });
+  } catch (err) {
+    if (err.code === "ER_DUP_ENTRY") {
+      return res
+        .status(400)
+        .json({
+          success: false,
+          message: "Email or registration number already exists",
+        });
+    }
+    logger.error("Admin user create error", { error: err.message });
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+});
+
+// UPDATE user
+router.put("/users/:id", upload.single("photo"), async (req, res) => {
+  try {
+    const {
+      full_name,
+      email,
+      reg_number,
+      role,
+      department_id,
+      year_of_study,
+      bio,
+      is_active,
+    } = req.body;
+
+    // Fetch existing user
+    const [[existing]] = await db.execute("SELECT * FROM users WHERE id = ?", [
+      req.params.id,
+    ]);
+    if (!existing) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    // Build update fields
+    let updateFields = [];
+    let params = [];
+    if (full_name !== undefined) {
+      updateFields.push("full_name = ?");
+      params.push(full_name);
+    }
+    if (email !== undefined) {
+      updateFields.push("email = ?");
+      params.push(email || null);
+    }
+    if (reg_number !== undefined) {
+      updateFields.push("reg_number = ?");
+      params.push(reg_number || null);
+    }
+    if (role !== undefined) {
+      const validRoles = [
+        "student",
+        "lecturer",
+        "hod",
+        "deputy_principal_academics",
+        "deputy_principal_administration",
+        "chief_principal",
+        "admin",
+      ];
+      if (!validRoles.includes(role)) {
+        return res
+          .status(400)
+          .json({ success: false, message: "Invalid role" });
+      }
+      updateFields.push("role = ?");
+      params.push(role);
+    }
+    if (department_id !== undefined) {
+      updateFields.push("primary_department_id = ?");
+      params.push(department_id || null);
+    }
+    if (year_of_study !== undefined) {
+      updateFields.push("year_of_study = ?");
+      params.push(year_of_study || 1);
+    }
+    if (bio !== undefined) {
+      updateFields.push("bio = ?");
+      params.push(bio || null);
+    }
+    if (is_active !== undefined) {
+      updateFields.push("is_active = ?");
+      params.push(is_active === "true" || is_active === true ? 1 : 0);
+    }
+
+    // Photo upload
+    let photoPath = existing.photo_path;
+    if (req.file) {
+      photoPath = await uploadToCloudinary(req.file, "kigumo-tvc/staff");
+      updateFields.push("photo_path = ?");
+      params.push(photoPath);
+    }
+
+    if (updateFields.length === 0) {
+      return res
+        .status(400)
+        .json({ success: false, message: "No fields to update" });
+    }
+
+    params.push(req.params.id);
+    await db.execute(
+      `UPDATE users SET ${updateFields.join(", ")} WHERE id = ?`,
+      params
+    );
+
+    res.json({ success: true, message: "User updated successfully" });
+  } catch (err) {
+    if (err.code === "ER_DUP_ENTRY") {
+      return res
+        .status(400)
+        .json({
+          success: false,
+          message: "Email or registration number already exists",
+        });
+    }
+    logger.error("Admin user update error", { error: err.message });
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+});
+
+// DELETE user (soft delete)
+router.delete("/users/:id", async (req, res) => {
+  try {
+    await db.execute("UPDATE users SET is_active = FALSE WHERE id = ?", [
+      req.params.id,
+    ]);
+    res.json({ success: true, message: "User deactivated successfully" });
+  } catch (err) {
+    logger.error("Admin user delete error", { error: err.message });
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+});
+
+// Reset password (optional)
+router.patch("/users/:id/password", async (req, res) => {
+  try {
+    const { new_password } = req.body;
+    if (!new_password) {
+      return res
+        .status(400)
+        .json({ success: false, message: "New password is required" });
+    }
+    const bcrypt = require("bcryptjs");
+    const hashed = await bcrypt.hash(new_password, 12);
+    await db.execute("UPDATE users SET password = ? WHERE id = ?", [
+      hashed,
+      req.params.id,
+    ]);
+    res.json({ success: true, message: "Password reset successfully" });
+  } catch (err) {
+    logger.error("Admin user password reset error", { error: err.message });
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+});
+
 // ── ENQUIRIES ──
 router.get("/enquiries", async (req, res) => {
   const [rows] = await db.execute(
