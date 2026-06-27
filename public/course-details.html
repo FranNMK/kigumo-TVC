@@ -175,140 +175,158 @@
   <footer id="mainFooter"></footer>
 
   <script src="assets/js/navbar.js"></script>
-  <script>
-    buildNavbar('courses');
+  <script src="assets/js/navbar.js"></script>
+<script>
+  buildNavbar('courses');
 
-    async function loadFooter() {
-      try {
-        const res = await fetch('/');
-        const html = await res.text();
-        const doc = new DOMParser().parseFromString(html, 'text/html');
-        const footer = doc.querySelector('footer');
-        if (footer) document.getElementById('mainFooter').innerHTML = footer.outerHTML;
-      } catch(e) { console.log('Footer load failed'); }
+  async function loadFooter() {
+    try {
+      const res = await fetch('/');
+      const html = await res.text();
+      const doc = new DOMParser().parseFromString(html, 'text/html');
+      const footer = doc.querySelector('footer');
+      if (footer) document.getElementById('mainFooter').innerHTML = footer.outerHTML;
+    } catch(e) { console.log('Footer load failed'); }
+  }
+  loadFooter();
+
+  // Get course ID from URL parameter
+  const urlParams = new URLSearchParams(window.location.search);
+  const courseId = urlParams.get('id');
+
+  // Helper: Extract Level from Name (same as courses.html)
+  function getCourseLevelFromName(name) {
+    const match = (name || '').match(/Level\s*(\d+)/i);
+    if (match) {
+      const level = parseInt(match[1]);
+      if (level === 6) return 'Diploma (Level 6)';
+      if (level === 5) return 'Certificate (Level 5)';
+      if (level === 4) return 'Artisan (Level 4)';
+      return `Level ${level}`;
     }
-    loadFooter();
+    return 'Short Courses'; // fallback
+  }
 
-    // Get course ID from URL parameter
-    const urlParams = new URLSearchParams(window.location.search);
-    const courseId = urlParams.get('id');
+  async function loadCourseDetails() {
+    if (!courseId) {
+      document.getElementById('courseContent').innerHTML = '<div class="error-state">❌ No course selected. <a href="courses.html">Return to courses</a></div>';
+      return;
+    }
 
-    async function loadCourseDetails() {
-      if (!courseId) {
-        document.getElementById('courseContent').innerHTML = '<div class="error-state">❌ No course selected. <a href="courses.html">Return to courses</a></div>';
+    try {
+      const res = await fetch(`/api/v1/courses/${courseId}`);
+      const data = await res.json();
+      
+      if (!data.success || !data.data) {
+        document.getElementById('courseContent').innerHTML = '<div class="error-state">❌ Course not found. <a href="courses.html">Return to courses</a></div>';
         return;
       }
 
-      try {
-        const res = await fetch(`/api/v1/courses/${courseId}`);
-        const data = await res.json();
-        
-        if (!data.success || !data.data) {
-          document.getElementById('courseContent').innerHTML = '<div class="error-state">❌ Course not found. <a href="courses.html">Return to courses</a></div>';
-          return;
-        }
+      const course = data.data;
+      const departmentName = course.department?.name || 'General';
+      const departmentId = course.department?.id;
+      
+      // 1. Determine level display correctly (parses "Level X" from name)
+      const levelDisplay = getCourseLevelFromName(course.name);
 
-        const course = data.data;
-        const departmentName = course.department?.name || 'General';
-        const departmentId = course.department?.id;
-        
-        // Determine level display
-        let levelDisplay = '';
-        const name = (course.name || '').toLowerCase();
-        if (name.includes('diploma')) levelDisplay = 'Diploma (Level 6)';
-        else if (name.includes('certificate')) levelDisplay = 'Certificate (Level 5)';
-        else if (name.includes('artisan')) levelDisplay = 'Artisan (Level 4)';
-        else levelDisplay = `${course.duration_years} Year Program`;
-
-        // Format fees if available
-        let feesHtml = '<div class="info-row"><span class="info-label">No fee structure available</span></div>';
-        if (course.fees && course.fees.length > 0) {
-          feesHtml = '';
-          course.fees.forEach(fee => {
-            feesHtml += `
-              <div class="info-row">
-                <span class="info-label">Year ${fee.year_of_study}</span>
-                <span class="info-value">Ksh ${(fee.tuition || 0).toLocaleString()} + fees</span>
-              </div>
-            `;
-          });
-        }
-
-        // Format intakes if available
-        let intakesHtml = '<div class="info-row"><span class="info-label">No intake dates available</span></div>';
-        if (course.intake_dates && course.intake_dates.length > 0) {
-          intakesHtml = '';
-          course.intake_dates.forEach(intake => {
-            intakesHtml += `
-              <div class="info-row">
-                <span class="info-label">${intake.label || 'Intake'}</span>
-                <span class="info-value">${intake.date ? new Date(intake.date).toLocaleDateString('en-KE', { year: 'numeric', month: 'long', day: 'numeric' }) : 'TBA'}</span>
-              </div>
-            `;
-          });
-        }
-
-        const html = `
-          <div class="course-header">
-            <h1>${escapeHtml(course.name)}</h1>
-            <p>${escapeHtml(course.description || 'Comprehensive TVET program designed for industry readiness and practical skills development.')}</p>
-            <div class="course-meta-badges">
-              <span class="meta-badge">🏛️ ${escapeHtml(departmentName)}</span>
-              <span class="meta-badge">📚 ${levelDisplay}</span>
-              <span class="meta-badge">📋 ${escapeHtml(course.examining_body || 'N/A')}</span>
-              ${course.cbet_status ? '<span class="meta-badge">✅ CBET Accredited</span>' : ''}
-            </div>
-          </div>
-          
-          <div class="course-grid">
-            <div class="main-info">
-              <div class="section-title">📖 Program Overview</div>
-              <div class="info-row">
-                <span class="info-label">Duration</span>
-                <span class="info-value">${course.duration_years} Year${course.duration_years > 1 ? 's' : ''} (${course.module_count || course.duration_years * 2} Modules)</span>
-              </div>
-              <div class="info-row">
-                <span class="info-label">Examining Body</span>
-                <span class="info-value"><span class="exam-badge">${escapeHtml(course.examining_body || 'N/A')}</span></span>
-              </div>
-              ${course.entry_requirements ? `
-              <div class="info-row">
-                <span class="info-label">Entry Requirements</span>
-                <span class="info-value">${escapeHtml(course.entry_requirements)}</span>
-              </div>
-              ` : ''}
-              
-              <div class="section-title" style="margin-top: 32px;">💰 Fee Structure</div>
-              ${feesHtml}
-              
-              <div class="section-title" style="margin-top: 32px;">📅 Intake Dates</div>
-              ${intakesHtml}
-              
-              <div class="action-buttons">
-                <a href="admissions.html" class="btn-apply">Apply Now →</a>
-                <a href="downloads.html" class="btn-download">Download Brochure</a>
-                <a href="departments.html#dept-${departmentId}" class="btn-department">← View Department Page</a>
-              </div>
-            </div>
-          </div>
-        `;
-        
-        document.getElementById('courseContent').innerHTML = html;
-        
-      } catch (err) {
-        console.error('Failed to load course:', err);
-        document.getElementById('courseContent').innerHTML = '<div class="error-state">❌ Unable to load course details. Please try again later.</div>';
+      // 2. Format duration and modules (handles short courses correctly)
+      let durationDisplay = '';
+      if (course.duration_years === 0) {
+        durationDisplay = '3 Weeks (Internal Exam)';
+      } else {
+        const modCount = course.module_count || 0;
+        durationDisplay = `${course.duration_years} Year${course.duration_years > 1 ? 's' : ''} (${modCount} Module${modCount > 1 ? 's' : ''})`;
       }
-    }
 
-    function escapeHtml(str) {
-      if (!str) return '';
-      const div = document.createElement('div');
-      div.textContent = str;
-      return div.innerHTML;
-    }
+      // Format fees (will now safely fallback to "No fee structure" since table is dropped)
+      let feesHtml = '<div class="info-row"><span class="info-label">No fee structure available</span></div>';
+      if (course.fees && Array.isArray(course.fees) && course.fees.length > 0) {
+        feesHtml = '';
+        course.fees.forEach(fee => {
+          feesHtml += `
+            <div class="info-row">
+              <span class="info-label">Year ${fee.year_of_study}</span>
+              <span class="info-value">Ksh ${(fee.tuition || 0).toLocaleString()} + fees</span>
+            </div>
+          `;
+        });
+      }
 
-    loadCourseDetails();
-  </script>
+      // Format intakes if available
+      let intakesHtml = '<div class="info-row"><span class="info-label">No intake dates available</span></div>';
+      if (course.intake_dates && course.intake_dates.length > 0) {
+        intakesHtml = '';
+        course.intake_dates.forEach(intake => {
+          intakesHtml += `
+            <div class="info-row">
+              <span class="info-label">${intake.label || 'Intake'}</span>
+              <span class="info-value">${intake.date ? new Date(intake.date).toLocaleDateString('en-KE', { year: 'numeric', month: 'long', day: 'numeric' }) : 'TBA'}</span>
+            </div>
+          `;
+        });
+      }
+
+      const html = `
+        <div class="course-header">
+          <h1>${escapeHtml(course.name)}</h1>
+          <p>${escapeHtml(course.description || 'Comprehensive TVET program designed for industry readiness and practical skills development.')}</p>
+          <div class="course-meta-badges">
+            <span class="meta-badge">🏛️ ${escapeHtml(departmentName)}</span>
+            <span class="meta-badge">📚 ${levelDisplay}</span>
+            <span class="meta-badge">📋 ${escapeHtml(course.examining_body || 'N/A')}</span>
+            ${course.cbet_status ? '<span class="meta-badge">✅ CBET Accredited</span>' : ''}
+          </div>
+        </div>
+        
+        <div class="course-grid">
+          <div class="main-info">
+            <div class="section-title">📖 Program Overview</div>
+            <div class="info-row">
+              <span class="info-label">Duration</span>
+              <span class="info-value">${durationDisplay}</span>
+            </div>
+            <div class="info-row">
+              <span class="info-label">Examining Body</span>
+              <span class="info-value"><span class="exam-badge">${escapeHtml(course.examining_body || 'N/A')}</span></span>
+            </div>
+            ${course.entry_requirements ? `
+            <div class="info-row">
+              <span class="info-label">Entry Requirements</span>
+              <span class="info-value">${escapeHtml(course.entry_requirements)}</span>
+            </div>
+            ` : ''}
+            
+            <div class="section-title" style="margin-top: 32px;">💰 Fee Structure</div>
+            ${feesHtml}
+            
+            <div class="section-title" style="margin-top: 32px;">📅 Intake Dates</div>
+            ${intakesHtml}
+            
+            <div class="action-buttons">
+              <a href="admissions.html" class="btn-apply">Apply Now →</a>
+              <a href="downloads.html" class="btn-download">Download Brochure</a>
+              <a href="departments.html#dept-${departmentId}" class="btn-department">← View Department Page</a>
+            </div>
+          </div>
+        </div>
+      `;
+      
+      document.getElementById('courseContent').innerHTML = html;
+      
+    } catch (err) {
+      console.error('Failed to load course:', err);
+      document.getElementById('courseContent').innerHTML = '<div class="error-state">❌ Unable to load course details. Please try again later.</div>';
+    }
+  }
+
+  function escapeHtml(str) {
+    if (!str) return '';
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  loadCourseDetails();
+</script>
 </body>
 </html>
