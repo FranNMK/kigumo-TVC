@@ -36,12 +36,13 @@ const logger = require('../utils/logger');
 router.get('/', async (req, res) => {
     try {
         const { department_id } = req.query;
-        
+
         let sql = `
             SELECT 
                 c.id,
                 c.name,
                 c.duration_years,
+                c.module_count,        -- <--- ADD THIS LINE
                 c.examining_body,
                 c.cbet_status,
                 c.entry_requirements,
@@ -54,18 +55,18 @@ router.get('/', async (req, res) => {
             JOIN departments d ON c.department_id = d.id
             WHERE c.is_active = TRUE
         `;
-        
+
         const params = [];
-        
+
         if (department_id && /^\d+$/.test(department_id)) {
             sql += ` AND c.department_id = ?`;
             params.push(department_id);
         }
-        
+
         sql += ` ORDER BY d.name ASC, c.name ASC`;
-        
+
         const [courses] = await db.execute(sql, params);
-        
+
         if (courses.length === 0) {
             return res.json({
                 success: true,
@@ -73,11 +74,11 @@ router.get('/', async (req, res) => {
                 message: 'No active courses found.'
             });
         }
-        
+
         // Fetch fees for all courses in one query
         const courseIds = courses.map(c => c.id);
         const placeholders = courseIds.map(() => '?').join(',');
-        
+
         const [[fees], [intakes]] = await Promise.all([
             db.execute(
                 `SELECT 
@@ -98,7 +99,7 @@ router.get('/', async (req, res) => {
                 courseIds
             )
         ]);
-        
+
         // Group fees and intakes by course_id
         const feesMap = {};
         fees.forEach(f => {
@@ -111,12 +112,12 @@ router.get('/', async (req, res) => {
                 id_card: parseFloat(f.id_card),
                 other: parseFloat(f.other),
                 other_label: f.other_label,
-                total: parseFloat(f.tuition) + parseFloat(f.examination) + 
-                       parseFloat(f.registration) + parseFloat(f.id_card) + 
-                       parseFloat(f.other)
+                total: parseFloat(f.tuition) + parseFloat(f.examination) +
+                    parseFloat(f.registration) + parseFloat(f.id_card) +
+                    parseFloat(f.other)
             });
         });
-        
+
         const intakeMap = {};
         intakes.forEach(i => {
             if (!intakeMap[i.course_id]) {
@@ -126,12 +127,13 @@ router.get('/', async (req, res) => {
                 };
             }
         });
-        
+
         // Format response
         const formattedCourses = courses.map(course => ({
             id: course.id,
             name: course.name,
             duration_years: course.duration_years,
+            module_count: course.module_count,      // <--- ADD THIS LINE
             examining_body: course.examining_body,
             cbet_status: course.cbet_status === 1,
             entry_requirements: course.entry_requirements,
@@ -144,23 +146,23 @@ router.get('/', async (req, res) => {
             fees: feesMap[course.id] || [],
             next_intake: intakeMap[course.id] || null
         }));
-        
-        logger.debug('Courses fetched', { 
+
+        logger.debug('Courses fetched', {
             count: formattedCourses.length,
             department_id: department_id || 'all'
         });
-        
+
         res.json({
             success: true,
             data: formattedCourses
         });
-        
+
     } catch (error) {
         logger.error('Error fetching courses', {
             error: error.message,
             stack: error.stack
         });
-        
+
         res.status(500).json({
             success: false,
             message: 'Failed to fetch courses.',
@@ -188,7 +190,7 @@ router.get('/', async (req, res) => {
 router.get('/:id', async (req, res) => {
     try {
         const { id } = req.params;
-        
+
         if (!/^\d+$/.test(id)) {
             return res.status(400).json({
                 success: false,
@@ -196,13 +198,14 @@ router.get('/:id', async (req, res) => {
                 code: 'INVALID_ID'
             });
         }
-        
+
         // Fetch course with department info
         const [courses] = await db.execute(
             `SELECT 
                 c.id,
                 c.name,
                 c.duration_years,
+                c.module_count,        -- <--- ADD THIS LINE
                 c.examining_body,
                 c.cbet_status,
                 c.entry_requirements,
@@ -216,7 +219,7 @@ router.get('/:id', async (req, res) => {
             WHERE c.id = ? AND c.is_active = TRUE`,
             [id]
         );
-        
+
         if (courses.length === 0) {
             return res.status(404).json({
                 success: false,
@@ -224,9 +227,9 @@ router.get('/:id', async (req, res) => {
                 code: 'NOT_FOUND'
             });
         }
-        
+
         const course = courses[0];
-        
+
         // Fetch fees
         const [fees] = await db.execute(
             `SELECT 
@@ -237,7 +240,7 @@ router.get('/:id', async (req, res) => {
             ORDER BY year_of_study`,
             [id]
         );
-        
+
         // Format fees with total
         const formattedFees = fees.map(f => ({
             year_of_study: f.year_of_study,
@@ -247,11 +250,11 @@ router.get('/:id', async (req, res) => {
             id_card: parseFloat(f.id_card),
             other: parseFloat(f.other),
             other_label: f.other_label,
-            total: parseFloat(f.tuition) + parseFloat(f.examination) + 
-                   parseFloat(f.registration) + parseFloat(f.id_card) + 
-                   parseFloat(f.other)
+            total: parseFloat(f.tuition) + parseFloat(f.examination) +
+                parseFloat(f.registration) + parseFloat(f.id_card) +
+                parseFloat(f.other)
         }));
-        
+
         // Fetch intake dates
         const [intakes] = await db.execute(
             `SELECT intake_date, label
@@ -260,17 +263,18 @@ router.get('/:id', async (req, res) => {
             ORDER BY intake_date ASC`,
             [id]
         );
-        
+
         const formattedIntakes = intakes.map(i => ({
             date: i.intake_date,
             label: i.label
         }));
-        
+
         // Build response
         const response = {
             id: course.id,
             name: course.name,
             duration_years: course.duration_years,
+            module_count: course.module_count,      // <--- ADD THIS LINE
             examining_body: course.examining_body,
             cbet_status: course.cbet_status === 1,
             entry_requirements: course.entry_requirements,
@@ -284,18 +288,18 @@ router.get('/:id', async (req, res) => {
             fees: formattedFees,
             intake_dates: formattedIntakes
         };
-        
+
         res.json({
             success: true,
             data: response
         });
-        
+
     } catch (error) {
         logger.error('Error fetching course', {
             error: error.message,
             courseId: req.params.id
         });
-        
+
         res.status(500).json({
             success: false,
             message: 'Failed to fetch course details.',
