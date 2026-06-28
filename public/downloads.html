@@ -106,7 +106,7 @@
   <footer id="mainFooter"></footer>
 
   <script src="assets/js/navbar.js"></script>
-  <script>
+<script>
     buildNavbar('downloads');
 
     fetch('/').then(r => r.text()).then(html => {
@@ -119,25 +119,44 @@
 
     async function loadDownloads() {
       try {
-        const res = await fetch('/api/v1/downloads');
-        const data = await res.json();
-        if (!data.success || !data.data || data.data.length === 0) {
+        // Fetch files AND categories in parallel
+        const [dlRes, catRes] = await Promise.all([
+          fetch('/api/v1/downloads'),
+          fetch('/api/v1/download-categories')
+        ]);
+
+        const dlData = await dlRes.json();
+        const catData = await catRes.json();
+
+        if (!dlData.success || !dlData.data || dlData.data.length === 0) {
           document.getElementById('downloadsContainer').innerHTML = '<p style="text-align:center;color:#888;padding:3rem;">No downloads available at this time.</p>';
           return;
         }
 
-        const categories = {
-          admission: '📋 Admission Documents',
-          academic: '📚 Academic Documents',
-          legal: '⚖️ Legal / Compliance',
-          student_welfare: '🤝 Student Welfare'
-        };
+        const allFiles = dlData.data;
+
+        // Build a map of category keys -> display names from the database
+        const categoryMap = {};
+        if (catData.success && catData.data) {
+          catData.data.forEach(c => {
+            categoryMap[c.name] = c.display_name || c.name;
+          });
+        }
+
+        // Extract unique categories from the files themselves
+        const uniqueCategories = [...new Set(allFiles.map(d => d.category).filter(Boolean))];
 
         let html = '';
-        for (const [cat, title] of Object.entries(categories)) {
-          const items = data.data.filter(d => d.category === cat);
+
+        for (const cat of uniqueCategories) {
+          const items = allFiles.filter(d => d.category === cat);
           if (items.length === 0) continue;
+
+          // Get the display name from the DB, or fallback to a nicely formatted version of the key
+          const title = categoryMap[cat] || cat.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+
           html += `<div class="category-section" id="${cat}"><h2 class="category-title">${title}</h2>`;
+          
           items.forEach(item => {
             const size = item.file_size ? formatSize(item.file_size) : 'Unknown size';
             const date = new Date(item.uploaded_at).toLocaleDateString('en-KE', { year: 'numeric', month: 'long', day: 'numeric' });
@@ -152,8 +171,11 @@
           });
           html += `</div>`;
         }
+
         document.getElementById('downloadsContainer').innerHTML = html || '<p style="text-align:center;padding:3rem;">No documents available.</p>';
+
       } catch (err) {
+        console.error('Downloads load error:', err);
         document.getElementById('downloadsContainer').innerHTML = '<p style="text-align:center;color:#c00;padding:3rem;">Failed to load downloads. Please try again later.</p>';
       }
     }
@@ -175,7 +197,6 @@
       downloadAbortController = new AbortController();
 
       try {
-        // Step 1: Get file info
         const infoRes = await fetch(`/api/v1/downloads`);
         const infoData = await infoRes.json();
         const file = infoData.data?.find(d => d.id == id);
@@ -183,7 +204,6 @@
 
         const downloadUrl = file.file_path.startsWith('http') ? file.file_path : `/uploads/${file.file_path}`;
 
-        // Step 2: Start download with progress
         status.textContent = 'Downloading...';
         document.getElementById('progressTitle').textContent = 'Downloading';
 
@@ -213,13 +233,11 @@
           }
         }
 
-        // Complete
         bar.style.width = '100%';
         percent.textContent = '100%';
         status.textContent = '✅ Download complete!';
         document.getElementById('progressTitle').textContent = 'Done! 🎉';
 
-        // Create blob and trigger download
         const blob = new Blob(chunks);
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
@@ -263,7 +281,8 @@
       return div.innerHTML;
     }
 
+    // Initialize
     loadDownloads();
-  </script>
+</script>
 </body>
 </html>
