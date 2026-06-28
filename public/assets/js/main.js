@@ -409,7 +409,8 @@
   }
 })();
 
-// ── Load Departments Preview (WITH REAL IMAGES) ────────────────
+
+  // ── Load Departments Preview (WITH REAL IMAGES) ────────────────
 (async function () {
   try {
     const res = await fetch("/api/v1/departments");
@@ -429,7 +430,10 @@
       return;
     }
 
-    grid.innerHTML = academicDepts
+    // Show only the first 6 departments
+    const firstSixDepts = academicDepts.slice(0, 6);
+
+    grid.innerHTML = firstSixDepts
       .map(
         (dept) => `
       <div class="course-card">

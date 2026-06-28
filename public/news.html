@@ -250,68 +250,80 @@
 
     <footer id="mainFooter"></footer>
 
-    <script>
-        let currentPage = 1;
-        let currentCategory = 'all';
-        const limit = 10;
 
-        (async function () {
-            await loadSharedComponents();
-            await loadNews();
-            setupFilters();
-        })();
+    <script src="assets/js/navbar.js"></script>
+<script>
+    let currentPage = 1;
+    let currentCategory = 'all';
+    const limit = 10;
 
-        async function loadSharedComponents() {
-            try {
-                const res = await fetch('/');
-                const html = await res.text();
-                const doc = new DOMParser().parseFromString(html, 'text/html');
-                const nav = doc.querySelector('header');
-                const footer = doc.querySelector('footer');
-                if (nav) document.getElementById('mainNavbar').innerHTML = nav.outerHTML;
-                if (footer) document.getElementById('mainFooter').innerHTML = footer.outerHTML;
-            } catch (e) { }
+    (async function () {
+        await loadSharedComponents();
+        await loadNews();
+        setupFilters();
+    })();
+
+    async function loadSharedComponents() {
+        try {
+            const res = await fetch('/');
+            const html = await res.text();
+            const doc = new DOMParser().parseFromString(html, 'text/html');
+            const nav = doc.querySelector('header');
+            const footer = doc.querySelector('footer');
+            if (nav) document.getElementById('mainNavbar').innerHTML = nav.outerHTML;
+            if (footer) document.getElementById('mainFooter').innerHTML = footer.outerHTML;
+        } catch (e) {
+            console.error('⚠️ Failed to load shared components (navbar/footer):', e);
         }
+    }
 
-        async function loadNews() {
-            try {
-                let url = `/api/v1/news?page=${currentPage}&limit=${limit}`;
-                if (currentCategory !== 'all') {
-                    url += `&category=${currentCategory}`;
-                }
-
-                const res = await fetch(url);
-                if (!res.ok) throw new Error('Failed to fetch news');
-                const data = await res.json();
-
-                if (!data.success || !data.data) {
-                    document.getElementById('newsGrid').innerHTML = '<p style="text-align:center;color:#888;grid-column:1/-1;padding:2rem;">No news articles found.</p>';
-                    return;
-                }
-
-                renderNews(data.data);
-                renderPagination(data.total, data.page, data.totalPages);
-
-            } catch (e) {
-                console.log('News fetch failed');
-                document.getElementById('newsGrid').innerHTML = '<p style="text-align:center;color:#888;grid-column:1/-1;padding:2rem;">Unable to load news. Please try again later.</p>';
+    async function loadNews() {
+        try {
+            let url = `/api/v1/news?page=${currentPage}&limit=${limit}`;
+            if (currentCategory !== 'all') {
+                url += `&category=${currentCategory}`;
             }
-        }
 
-        function renderNews(articles) {
-            const grid = document.getElementById('newsGrid');
+            const res = await fetch(url);
+            if (!res.ok) throw new Error('Failed to fetch news');
+            const data = await res.json();
 
-            if (articles.length === 0) {
-                grid.innerHTML = '<p style="text-align:center;color:#888;grid-column:1/-1;padding:2rem;">No articles in this category yet.</p>';
+            if (!data.success || !data.data) {
+                document.getElementById('newsGrid').innerHTML = '<p style="text-align:center;color:#888;grid-column:1/-1;padding:2rem;">No news articles found.</p>';
                 return;
             }
 
-            grid.innerHTML = articles.map(article => `
+            renderNews(data.data);
+            renderPagination(data.total, data.page, data.totalPages);
+
+        } catch (e) {
+            console.log('News fetch failed', e);
+            document.getElementById('newsGrid').innerHTML = '<p style="text-align:center;color:#888;grid-column:1/-1;padding:2rem;">Unable to load news. Please try again later.</p>';
+        }
+    }
+
+    function getImageSrc(path) {
+        if (!path) return null;
+        if (path.startsWith('http://') || path.startsWith('https://')) {
+            return path;
+        }
+        return '/uploads/' + path.replace(/^\/+/, '');
+    }
+
+    function renderNews(articles) {
+        const grid = document.getElementById('newsGrid');
+        if (articles.length === 0) {
+            grid.innerHTML = '<p style="text-align:center;color:#888;grid-column:1/-1;padding:2rem;">No articles in this category yet.</p>';
+            return;
+        }
+        grid.innerHTML = articles.map(article => {
+            const imgSrc = getImageSrc(article.image_path);
+            return `
                 <div class="news-card">
                     <div class="news-image">
-                        ${article.image_path
-                    ? `<img src="/uploads/${article.image_path}" alt="${escapeHtml(article.title)}" loading="lazy">`
-                    : `<div class="placeholder-img">📰</div>`}
+                        ${imgSrc
+                            ? `<img src="${imgSrc}" alt="${escapeHtml(article.title)}" loading="lazy">`
+                            : `<div class="placeholder-img">📰</div>`}
                     </div>
                     <div class="news-body">
                         <span class="category-badge cat-${article.category}">${capitalizeFirst(article.category)}</span>
@@ -321,95 +333,82 @@
                         <a href="news-article.html?id=${article.id}" class="read-more-link">Read More →</a>
                     </div>
                 </div>
-            `).join('');
+            `;
+        }).join('');
+    }
+
+    function renderPagination(total, page, totalPages) {
+        const pagination = document.getElementById('pagination');
+        if (totalPages <= 1) {
+            pagination.innerHTML = '';
+            return;
         }
-
-        function renderPagination(total, page, totalPages) {
-            const pagination = document.getElementById('pagination');
-            if (totalPages <= 1) {
-                pagination.innerHTML = '';
-                return;
+        let html = '';
+        if (page > 1) {
+            html += `<button class="page-btn" data-page="${page - 1}">← Previous</button>`;
+        }
+        for (let i = 1; i <= totalPages; i++) {
+            if (i === page) {
+                html += `<button class="page-btn active">${i}</button>`;
+            } else {
+                html += `<button class="page-btn" data-page="${i}">${i}</button>`;
             }
+        }
+        if (page < totalPages) {
+            html += `<button class="page-btn" data-page="${page + 1}">Next →</button>`;
+        }
+        pagination.innerHTML = html;
 
-            let html = '';
-
-            // Previous button
-            if (page > 1) {
-                html += `<button class="page-btn" data-page="${page - 1}">← Previous</button>`;
-            }
-
-            // Page numbers
-            for (let i = 1; i <= totalPages; i++) {
-                if (i === page) {
-                    html += `<button class="page-btn active">${i}</button>`;
-                } else {
-                    html += `<button class="page-btn" data-page="${i}">${i}</button>`;
-                }
-            }
-
-            // Next button
-            if (page < totalPages) {
-                html += `<button class="page-btn" data-page="${page + 1}">Next →</button>`;
-            }
-
-            pagination.innerHTML = html;
-
-            // Add click handlers
-            pagination.querySelectorAll('.page-btn[data-page]').forEach(btn => {
-                btn.addEventListener('click', function () {
-                    currentPage = parseInt(this.getAttribute('data-page'));
-                    loadNews();
-                    window.scrollTo({ top: 400, behavior: 'smooth' });
-                });
+        pagination.querySelectorAll('.page-btn[data-page]').forEach(btn => {
+            btn.addEventListener('click', function () {
+                currentPage = parseInt(this.getAttribute('data-page'));
+                loadNews();
+                window.scrollTo({ top: 400, behavior: 'smooth' });
             });
-        }
+        });
+    }
 
-        function setupFilters() {
-            document.getElementById('filterBar').addEventListener('click', function (e) {
-                if (e.target.classList.contains('filter-btn')) {
-                    // Update active state
-                    this.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-                    e.target.classList.add('active');
+    function setupFilters() {
+        document.getElementById('filterBar').addEventListener('click', function (e) {
+            if (e.target.classList.contains('filter-btn')) {
+                this.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                e.target.classList.add('active');
+                currentCategory = e.target.getAttribute('data-category');
+                currentPage = 1;
+                loadNews();
+            }
+        });
+    }
 
-                    // Update category and reload
-                    currentCategory = e.target.getAttribute('data-category');
-                    currentPage = 1;
-                    loadNews();
-                }
-            });
-        }
+    function getExcerpt(html, maxChars) {
+        const div = document.createElement('div');
+        div.innerHTML = html;
+        const text = div.textContent || div.innerText || '';
+        if (text.length <= maxChars) return text;
+        return text.substring(0, maxChars).trim() + '...';
+    }
 
-        function getExcerpt(html, maxChars) {
-            const div = document.createElement('div');
-            div.innerHTML = html;
-            const text = div.textContent || div.innerText || '';
-            if (text.length <= maxChars) return text;
-            return text.substring(0, maxChars).trim() + '...';
-        }
+    function formatDate(dateStr) {
+        if (!dateStr) return '';
+        const date = new Date(dateStr);
+        return date.toLocaleDateString('en-KE', { year: 'numeric', month: 'long', day: 'numeric' });
+    }
 
-        function formatDate(dateStr) {
-            if (!dateStr) return '';
-            const date = new Date(dateStr);
-            return date.toLocaleDateString('en-KE', { year: 'numeric', month: 'long', day: 'numeric' });
-        }
+    function capitalizeFirst(str) {
+        if (!str) return '';
+        return str.charAt(0).toUpperCase() + str.slice(1);
+    }
 
-        function capitalizeFirst(str) {
-            if (!str) return '';
-            return str.charAt(0).toUpperCase() + str.slice(1);
-        }
+    function escapeHtml(str) {
+        if (!str) return '';
+        const div = document.createElement('div');
+        div.textContent = str;
+        return div.innerHTML;
+    }
 
-        function escapeHtml(str) {
-            if (!str) return '';
-            const div = document.createElement('div');
-            div.textContent = str;
-            return div.innerHTML;
-        }
-    </script>
-
-    <script src="assets/js/navbar.js"></script>
-    <script>
-       buildNavbar('news');
-    </script>
+    // ✅ THE MISSING LINE THAT BUILDS THE NAVBAR
+    buildNavbar('news');
+</script>
 </body>
 
 </html>

@@ -20,6 +20,7 @@ server/certs/
 test-cloudinary.js
 clean-cloudinary.js
 server/test-login.js
+fix-password.js
 *.b64
 
 # ── Operating System ──────────────────────────────────────
@@ -32,6 +33,7 @@ Thumbs.db
 *.swp
 *.swo
 *~
+.deepcode/
 
 # ── Build / Dist (if any) ─────────────────────────────────
 dist/

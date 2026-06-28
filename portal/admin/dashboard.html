@@ -619,6 +619,17 @@
       </nav>
 
       <main class="main-content">
+<!-- Admin Notification Banner -->
+<div id="adminNotificationBanner" style="background:#fff3cd; border-left: 5px solid #f5c518; padding: 1rem; margin-bottom: 1.5rem; border-radius: 8px; display: flex; justify-content: space-between; align-items: center;">
+  <div>
+    <strong style="color:#1a1a2e;">⚠️ Pending Uploads</strong>
+    <p style="margin: 0.2rem 0 0; font-size: 0.9rem; color:#555;">
+      Some User and BOM member photos are missing. Please go to the <strong>Users</strong> and <strong>BOM</strong> tabs to upload them.
+    </p>
+  </div>
+  <button onclick="document.getElementById('adminNotificationBanner').style.display='none'" style="background:transparent; border:none; font-size:1.2rem; cursor:pointer; color:#333;">×</button>
+</div>
+
         <!-- All tab-content divs will be populated by JS -->
         <div class="tab-content active" id="tab-overview">
           <h2>Overview</h2>
