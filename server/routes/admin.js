@@ -30,6 +30,21 @@ async function uploadToCloudinary(file, folder) {
   return result.secure_url;
 }
 
+// ── Helper: Sync HOD assignment for a user ──
+async function syncHodAssignment(userId, departmentId, isHod) {
+  if (isHod && departmentId) {
+    // Remove any existing HOD for this department (so only one HOD per dept)
+    await db.execute("DELETE FROM hod_assignments WHERE department_id = ?", [departmentId]);
+    // Assign this user as HOD
+    await db.execute(
+      "INSERT INTO hod_assignments (department_id, lecturer_id, assigned_at) VALUES (?, ?, NOW())",
+      [departmentId, userId]
+    );
+  } else {
+    // If not HOD, or no department, remove any HOD assignment for this user
+    await db.execute("DELETE FROM hod_assignments WHERE lecturer_id = ?", [userId]);
+  }
+}
 
 // ── PORTALS CRUD ──
 router.get('/portals', async (req, res) => {
@@ -269,21 +284,86 @@ router.put("/page-content/:pageKey/:sectionKey", async (req, res) => {
   res.json({ success: true, message: "Content saved" });
 });
 
-// ── USERS ──
-router.post("/users/add-lecturer", upload.single("photo"), async (req, res) => {
+// CREATE user (admin adds any role)
+router.post("/users", upload.single("photo"), async (req, res) => {
   try {
-    const { full_name, email, phone, department_id } = req.body;
+    const {
+      full_name,
+      email,
+      reg_number,
+      phone,
+      role,
+      department_id,
+      year_of_study,
+      bio,
+    } = req.body;
+    if (!full_name || !phone || !role) {
+      return res.status(400).json({
+        success: false,
+        message: "Full name, phone (password), and role are required",
+      });
+    }
+    // Validate role
+    const validRoles = [
+      "student",
+      "lecturer",
+      "hod",
+      "deputy_principal_academics",
+      "deputy_principal_administration",
+      "chief_principal",
+      "admin",
+      "registrar",
+      "secretary",
+      "dean_of_students",
+    ];
+    if (!validRoles.includes(role)) {
+      return res.status(400).json({ success: false, message: "Invalid role" });
+    }
+    // Hash password (phone)
     const bcrypt = require("bcryptjs");
-    const hash = await bcrypt.hash(phone, 12);
-    const photo = await uploadToCloudinary(req.file, "kigumo-tvc/staff");
-    await db.execute(
-      "INSERT INTO users (full_name, email, password, role, primary_department_id, photo_path) VALUES (?,?,?,?,?,?)",
-      [full_name, email, hash, "lecturer", department_id, photo],
+    const hashedPassword = await bcrypt.hash(phone, 12);
+    const photoPath = req.file
+      ? await uploadToCloudinary(req.file, "kigumo-tvc/staff")
+      : null;
+
+    const [result] = await db.execute(
+      `INSERT INTO users 
+       (full_name, email, reg_number, password, role, primary_department_id, year_of_study, photo_path, bio) 
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        full_name,
+        email || null,
+        reg_number || null,
+        hashedPassword,
+        role,
+        department_id || null,
+        year_of_study || 1,
+        photoPath,
+        bio || null,
+      ]
     );
-    res.json({ success: true, message: "Lecturer added" });
+
+    // ── Auto‑assign HOD if role is 'hod' and department is given ──
+    if (role === 'hod' && department_id) {
+      await syncHodAssignment(result.insertId, department_id, true);
+    }
+
+    res.json({
+      success: true,
+      message: "User added successfully",
+      id: result.insertId,
+    });
   } catch (err) {
-    logger.error("Add lecturer error", { error: err.message });
-    res.status(500).json({ success: false, message: "Failed: " + err.message });
+    if (err.code === "ER_DUP_ENTRY") {
+      return res
+        .status(400)
+        .json({
+          success: false,
+          message: "Email or registration number already exists",
+        });
+    }
+    logger.error("Admin user create error", { error: err.message });
+    res.status(500).json({ success: false, message: "Server error" });
   }
 });
 
@@ -532,6 +612,18 @@ router.put("/users/:id", upload.single("photo"), async (req, res) => {
       `UPDATE users SET ${updateFields.join(", ")} WHERE id = ?`,
       params
     );
+
+    // ── Sync HOD assignment based on new role and department ──
+    const newRole = role !== undefined ? role : existing.role;
+    const newDeptId = department_id !== undefined ? department_id : existing.primary_department_id;
+    const isHod = (newRole === 'hod') && (newDeptId !== null && newDeptId !== undefined);
+
+    // If the role is HOD and we have a department, assign. Otherwise remove any existing assignment.
+    if (isHod) {
+      await syncHodAssignment(req.params.id, newDeptId, true);
+    } else {
+      await syncHodAssignment(req.params.id, null, false);
+    }
 
     res.json({ success: true, message: "User updated successfully" });
   } catch (err) {
@@ -1310,64 +1402,64 @@ router.put("/departments/:id/hod", async (req, res) => {
     const { lecturer_id, assigned_at } = req.body;
     const deptId = req.params.id;
 
-    if (!lecturer_id)
+    if (!lecturer_id) {
       return res
         .status(400)
         .json({ success: false, message: "Lecturer is required" });
+    }
 
-    // Get department info
+    // 1. Get department info
     const [[dept]] = await db.execute(
       "SELECT * FROM departments WHERE id = ?",
-      [deptId],
+      [deptId]
     );
-    if (!dept)
+    if (!dept) {
       return res
         .status(404)
         .json({ success: false, message: "Department not found" });
+    }
 
-    // Get lecturer info
+    // 2. Get lecturer info
     const [[lecturer]] = await db.execute(
       'SELECT * FROM users WHERE id = ? AND role IN ("lecturer","hod")',
-      [lecturer_id],
+      [lecturer_id]
     );
-    if (!lecturer)
+    if (!lecturer) {
       return res.status(400).json({
         success: false,
         message: "Selected user is not a lecturer or HOD",
       });
-
-    // For academic departments: check if lecturer is already HOD of another academic dept
-    if (dept.type === "academic") {
-      const [existingHod] = await db.execute(
-        `SELECT ha.id, d.name FROM hod_assignments ha 
-         JOIN departments d ON ha.department_id = d.id 
-         WHERE ha.lecturer_id = ? AND ha.department_id != ? AND d.type = 'academic'`,
-        [lecturer_id, deptId],
-      );
-      if (existingHod.length > 0) {
-        return res.status(400).json({
-          success: false,
-          message: `This lecturer is already HOD of ${existingHod[0].name}. One lecturer can only be HOD of one academic department.`,
-        });
-      }
     }
 
-    // Remove existing HOD for this department (if any)
+    // 3. ENSURE THEY ARE ONLY HOD OF THIS SPECIFIC DEPARTMENT (by type)
+    // If assigning to an ACADEMIC department: remove them from ALL other academic departments
+    // If assigning to a NON_ACADEMIC department: remove them from ALL other non-academic departments
+    // This allows them to be HOD of 1 academic + 1 non-academic simultaneously.
+    const targetType = dept.type; // 'academic' or 'non_academic'
+    await db.execute(
+      `DELETE FROM hod_assignments 
+       WHERE lecturer_id = ? 
+       AND department_id != ? 
+       AND department_id IN (SELECT id FROM departments WHERE type = ?)`,
+      [lecturer_id, deptId, targetType]
+    );
+
+    // 4. Remove any existing HOD assigned to this department (just in case)
     await db.execute("DELETE FROM hod_assignments WHERE department_id = ?", [
       deptId,
     ]);
 
-    // Assign new HOD
+    // 5. Assign the new HOD
     await db.execute(
       "INSERT INTO hod_assignments (department_id, lecturer_id, assigned_at) VALUES (?,?,?)",
       [
         deptId,
         lecturer_id,
         assigned_at || new Date().toISOString().split("T")[0],
-      ],
+      ]
     );
 
-    // Update user role to HOD if they're currently a lecturer
+    // 6. Update user role to HOD if they are currently a lecturer
     if (lecturer.role === "lecturer") {
       await db.execute('UPDATE users SET role = "hod" WHERE id = ?', [
         lecturer_id,
@@ -1380,6 +1472,7 @@ router.put("/departments/:id/hod", async (req, res) => {
     res.status(500).json({ success: false, message: "Server error" });
   }
 });
+
 
 // ── COURSES CRUD ──
 router.post("/courses", async (req, res) => {
