@@ -23,7 +23,7 @@ const isAuthenticated = (req, res, next) => {
         // User is authenticated, proceed to next middleware/route
         return next();
     }
-    
+
     // Authentication failed - return 401 Unauthorized
     // Never redirect here; frontend handles navigation based on response
     res.status(401).json({
@@ -54,13 +54,13 @@ const hasRole = (...roles) => {
         // This middleware assumes isAuthenticated has already run
         // and req.session.user exists
         const userRole = req.session.user.role;
-        
+
         // Check if user's role is in the allowed roles list
         if (roles.includes(userRole)) {
             // Role is authorized, proceed
             return next();
         }
-        
+
         // Role not authorized - return 403 Forbidden
         // Do NOT reveal which roles are allowed (security best practice)
         res.status(403).json({
@@ -85,7 +85,7 @@ const withDepartment = (req, res, next) => {
         req.userDepartmentId = req.session.user.primary_department_id;
         return next();
     }
-    
+
     // If user has no department (shouldn't happen with proper data)
     res.status(400).json({
         success: false,
@@ -113,14 +113,49 @@ const isHodOfDepartment = (req, res, next) => {
             code: 'HOD_REQUIRED'
         });
     }
-    
+
     // HOD is authorized for their department
     next();
+};
+
+// === Innovation Portal Guards ===
+
+const isInnovationAuthenticated = (req, res, next) => {
+    if (req.session && req.session.innovationUser) {
+        req.innovationUser = req.session.innovationUser;
+        return next();
+    }
+    return res.status(401).json({ error: 'Unauthorized - Please log in to the Innovation Portal' });
+};
+
+const isInnovationAdmin = (req, res, next) => {
+    if (req.innovationUser && req.innovationUser.role === 'admin') {
+        return next();
+    }
+    return res.status(403).json({ error: 'Forbidden - Admin access required' });
+};
+
+const isInnovationCoordinator = (req, res, next) => {
+    if (req.innovationUser && req.innovationUser.role === 'coordinator') {
+        return next();
+    }
+    return res.status(403).json({ error: 'Forbidden - Coordinator access required' });
+};
+
+module.exports = {
+    // ... existing exports
+    isInnovationAuthenticated,
+    isInnovationAdmin,
+    isInnovationCoordinator
 };
 
 module.exports = {
     isAuthenticated,
     hasRole,
     withDepartment,
-    isHodOfDepartment
+    isHodOfDepartment,
+    // ADD THESE NEW ONES:
+    isInnovationAuthenticated,
+    isInnovationAdmin,
+    isInnovationCoordinator
 };

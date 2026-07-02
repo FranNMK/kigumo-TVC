@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Coordinator Dashboard - Innovation Portal</title>
+  <link rel="stylesheet" href="/innovation/assets/css/style.css">
+  <style>
+    .score-form { background: #f1f1f1; padding: 15px; border-radius: 6px; margin: 10px 0; }
+    .score-form select, .score-form input { width: 100%; padding: 8px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 4px; }
+    .rank-table .highlight-gold { background: #ffd700 !important; }
+    .rank-table .highlight-silver { background: #c0c0c0 !important; }
+    .rank-table .highlight-bronze { background: #cd7f32 !important; }
+  </style>
+</head>
+<body>
+  <div class="dashboard-layout">
+    <!-- Sidebar -->
+    <aside class="sidebar" id="coordSidebar">
+      <h2>Coordinator</h2>
+      <ul>
+        <li><a href="#" onclick="switchTab('dashboard')">Dashboard</a></li>
+        <li><a href="#" onclick="switchTab('participants')">Participants</a></li>
+        <li><a href="#" onclick="switchTab('scores')">Enter Scores</a></li>
+        <li><a href="#" onclick="switchTab('rankings')">Rankings</a></li>
+        <li><a href="#" onclick="showLogoutModal()">Logout</a></li>
+      </ul>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- Mobile Toggle Button -->
+      <button class="sidebar-toggle" onclick="toggleSidebar('coordSidebar')">☰ Menu</button>
+
+      <!-- ==================== TAB: DASHBOARD ==================== -->
+      <div id="tab-dashboard" class="tab-content active">
+        <h1>Coordinator Dashboard</h1>
+        <p>Welcome, <span id="coordinatorName"></span> (Department: <span id="deptName"></span>)</p>
+        <div class="stats-grid" id="coordStats">
+          <div class="stat-card"><div class="number" id="totalParticipants">0</div><div>Participants</div></div>
+          <div class="stat-card"><div class="number" id="totalEvents">0</div><div>Events</div></div>
+          <div class="stat-card"><div class="number" id="totalCategories">0</div><div>Categories</div></div>
+        </div>
+      </div>
+
+      <!-- ==================== TAB: PARTICIPANTS ==================== -->
+      <div id="tab-participants" class="tab-content">
+        <h2>Participants</h2>
+        <div style="margin-bottom: 20px;">
+          <button class="btn" onclick="loadParticipants()">Refresh List</button>
+        </div>
+        <table class="rank-table" id="participantsTable">
+          <thead><tr><th>ID</th><th>Admission</th><th>Full Name</th><th>Event</th><th>Department</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+      <!-- ==================== TAB: ENTER SCORES ==================== -->
+      <div id="tab-scores" class="tab-content">
+        <h2>Enter Scores</h2>
+        <div class="score-form" id="scoreFormContainer">
+          <div class="form-group">
+            <label>Event</label>
+            <select id="scoreEvent"><option value="">Select Event</option></select>
+          </div>
+          <div class="form-group">
+            <label>Category</label>
+            <select id="scoreCategory"><option value="">Select Category</option></select>
+          </div>
+          <div class="form-group">
+            <label>Participant</label>
+            <select id="scoreParticipant"><option value="">Select Participant</option></select>
+          </div>
+          <div class="form-group">
+            <label>Score (0-100)</label>
+            <input type="number" id="scoreValue" min="0" max="100" step="0.5" placeholder="Enter score">
+          </div>
+          <div class="form-group">
+            <label>Remarks (optional)</label>
+            <input type="text" id="scoreRemarks" placeholder="e.g., Excellent presentation">
+          </div>
+          <button class="btn" onclick="submitScore()">Submit Score</button>
+          <div id="scoreMsg" style="margin-top: 10px;"></div>
+        </div>
+      </div>
+
+      <!-- ==================== TAB: RANKINGS ==================== -->
+      <div id="tab-rankings" class="tab-content">
+        <h2>Rankings</h2>
+        <div style="display: flex; gap: 20px; margin-bottom: 20px; flex-wrap: wrap;">
+          <select id="rankEvent"><option value="">Select Event</option></select>
+          <select id="rankCategory"><option value="">Select Category</option></select>
+          <button class="btn" onclick="fetchRankings()">View Ranking</button>
+        </div>
+        <table class="rank-table" id="rankTable">
+          <thead><tr><th>Position</th><th>Admission</th><th>Name</th><th>Department</th><th>Score</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- Logout Confirmation Modal -->
+  <div id="logoutOverlay" class="hidden">
+    <div id="logoutModal">
+      <div class="modal-header">
+        <span>🔒</span>
+        <h3>Confirm Logout</h3>
+      </div>
+      <p>Are you sure you want to log out of the coordinator panel?</p>
+      <div class="modal-actions">
+        <button class="btn-yes" onclick="performLogout()">Yes, Logout</button>
+        <button class="btn-cancel" onclick="closeLogoutModal()">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ==================== TAB SWITCHING ====================
+    function toggleSidebar(id) { document.getElementById(id).classList.toggle('open'); }
+
+    function switchTab(tabId) {
+      // Hide all tabs
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+      // Show selected tab
+      const target = document.getElementById('tab-' + tabId);
+      if (target) target.classList.add('active');
+      // Close mobile sidebar after selection
+      const sidebar = document.getElementById('coordSidebar');
+      if (window.innerWidth <= 768) sidebar.classList.remove('open');
+      
+      // Load data specific to the tab being opened
+      if (tabId === 'participants') loadParticipants();
+      else if (tabId === 'scores' || tabId === 'rankings') loadDropdowns();
+    }
+
+    // ==================== SESSION CHECK ====================
+    async function checkSession() {
+      const res = await fetch('/api/v1/innovation/auth/me');
+      if (!res.ok) { window.location.href = '/innovation/login.html'; return; }
+      const user = await res.json();
+      if (user.role !== 'coordinator') { window.location.href = '/innovation/login.html'; return; }
+      document.getElementById('coordinatorName').textContent = user.full_name;
+      if (user.department_id) {
+        const deptRes = await fetch(`/api/v1/departments/${user.department_id}`);
+        if (deptRes.ok) {
+          const dept = await deptRes.json();
+          document.getElementById('deptName').textContent = dept.name;
+        }
+      }
+      loadStats();
+    }
+
+    // ==================== STATS ====================
+    async function loadStats() {
+      try {
+        const participants = await (await fetch('/api/v1/innovation/participants')).json();
+        document.getElementById('totalParticipants').textContent = participants.length;
+        const events = await (await fetch('/api/v1/innovation/events')).json();
+        document.getElementById('totalEvents').textContent = events.length;
+        const categories = await (await fetch('/api/v1/innovation/categories')).json();
+        document.getElementById('totalCategories').textContent = categories.length;
+      } catch {}
+    }
+
+    // ==================== PARTICIPANTS ====================
+    async function loadParticipants() {
+      const res = await fetch('/api/v1/innovation/participants');
+      const data = await res.json();
+      const tbody = document.querySelector('#participantsTable tbody');
+      tbody.innerHTML = data.map(p => `
+        <tr><td>${p.id}</td><td>${p.admission_number}</td><td>${p.full_name}</td><td>${p.event_name}</td><td>${p.department_name}</td></tr>
+      `).join('');
+    }
+
+    // ==================== DROPDOWN HELPERS ====================
+    async function loadDropdowns() {
+      // Events
+      const events = await (await fetch('/api/v1/innovation/events')).json();
+      const evOpts = events.map(e => `<option value="${e.id}">${e.name}</option>`).join('');
+      document.getElementById('scoreEvent').innerHTML = `<option value="">Select</option>` + evOpts;
+      document.getElementById('rankEvent').innerHTML = `<option value="">Select</option>` + evOpts;
+
+      // Categories
+      const categories = await (await fetch('/api/v1/innovation/categories')).json();
+      const catOpts = categories.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+      document.getElementById('scoreCategory').innerHTML = `<option value="">Select</option>` + catOpts;
+      document.getElementById('rankCategory').innerHTML = `<option value="">Select</option>` + catOpts;
+
+      // Participants (for score entry)
+      const participants = await (await fetch('/api/v1/innovation/participants')).json();
+      const partOpts = participants.map(p => `<option value="${p.id}">${p.full_name} (${p.admission_number})</option>`).join('');
+      document.getElementById('scoreParticipant').innerHTML = `<option value="">Select</option>` + partOpts;
+    }
+
+    // ==================== SCORE SUBMISSION ====================
+    async function submitScore() {
+      const eventId = document.getElementById('scoreEvent').value;
+      const categoryId = document.getElementById('scoreCategory').value;
+      const participantId = document.getElementById('scoreParticipant').value;
+      const score = parseFloat(document.getElementById('scoreValue').value);
+      const remarks = document.getElementById('scoreRemarks').value;
+      const msg = document.getElementById('scoreMsg');
+      if (!eventId || !categoryId || !participantId || isNaN(score)) { msg.textContent = 'Fill all fields.'; return; }
+      if (score < 0 || score > 100) { msg.textContent = 'Score must be 0-100.'; return; }
+
+      const res = await fetch('/api/v1/innovation/scores', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          participant_id: parseInt(participantId), 
+          event_id: parseInt(eventId), 
+          category_id: parseInt(categoryId), 
+          score, 
+          remarks: remarks || null 
+        })
+      });
+      if (res.ok) { 
+        msg.style.color = 'green';
+        msg.textContent = 'Score saved!'; 
+        document.getElementById('scoreValue').value = ''; 
+        document.getElementById('scoreRemarks').value = ''; 
+      } else { 
+        const data = await res.json();
+        msg.style.color = 'red';
+        msg.textContent = data.error || 'Failed.'; 
+      }
+    }
+
+    // ==================== RANKINGS ====================
+    async function fetchRankings() {
+      const eventId = document.getElementById('rankEvent').value;
+      const categoryId = document.getElementById('rankCategory').value;
+      if (!eventId || !categoryId) return alert('Select both event and category.');
+      const res = await fetch(`/api/v1/innovation/scores/ranking?event_id=${eventId}&category_id=${categoryId}`);
+      const data = await res.json();
+      const tbody = document.querySelector('#rankTable tbody');
+      tbody.innerHTML = data.map((r, i) => {
+        let cls = r.position === 1 ? 'highlight-gold' : r.position === 2 ? 'highlight-silver' : r.position === 3 ? 'highlight-bronze' : '';
+        return `<tr class="${cls}"><td>${r.position}</td><td>${r.admission_number}</td><td>${r.full_name}</td><td>${r.department_name}</td><td>${r.score}</td></tr>`;
+      }).join('');
+    }
+
+    // ==================== LOGOUT MODAL ====================
+    function showLogoutModal() {
+      document.getElementById('logoutOverlay').classList.remove('hidden');
+    }
+    function closeLogoutModal() {
+      document.getElementById('logoutOverlay').classList.add('hidden');
+    }
+    async function performLogout() {
+      await fetch('/api/v1/innovation/auth/logout', { method: 'POST' });
+      window.location.href = '/innovation/login.html';
+    }
+
+    // ==================== INIT ====================
+    document.addEventListener('DOMContentLoaded', checkSession);
+  </script>
+</body>
+</html>

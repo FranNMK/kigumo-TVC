@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard - Innovation Portal</title>
+  <link rel="stylesheet" href="/innovation/assets/css/style.css">
+</head>
+<body>
+  <div class="dashboard-layout">
+    <!-- SIDEBAR -->
+    <aside class="sidebar" id="adminSidebar">
+      <h2>Innovation Admin</h2>
+      <ul>
+        <li><a href="#" onclick="switchTab('dashboard')">Dashboard</a></li>
+        <li><a href="#" onclick="switchTab('events')">Events</a></li>
+        <li><a href="#" onclick="switchTab('participants')">Participants</a></li>
+        <li><a href="#" onclick="switchTab('categories')">Categories</a></li>
+        <li><a href="#" onclick="switchTab('coordinators')">Coordinators</a></li>
+        <li><a href="#" onclick="switchTab('results')">Results</a></li>
+        <li><a href="#" onclick="switchTab('exports')">Exports</a></li>
+        <li><a href="#" onclick="showLogoutModal()">Logout</a></li>
+      </ul>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="main-content">
+      <!-- Mobile Toggle Button -->
+      <button class="sidebar-toggle" onclick="toggleSidebar('adminSidebar')">☰ Menu</button>
+
+      <!-- ==================== TAB: DASHBOARD ==================== -->
+      <div id="tab-dashboard" class="tab-content active">
+        <h1>Admin Dashboard</h1>
+        <div class="stats-grid" id="adminStats">
+          <div class="stat-card"><div class="number" id="totalEvents">0</div><div>Events</div></div>
+          <div class="stat-card"><div class="number" id="totalParticipants">0</div><div>Participants</div></div>
+          <div class="stat-card"><div class="number" id="totalCategories">0</div><div>Categories</div></div>
+        </div>
+      </div>
+
+      <!-- ==================== TAB: EVENTS ==================== -->
+      <div id="tab-events" class="tab-content">
+        <h2>Events Management</h2>
+        <!-- Create Event Form -->
+        <div style="background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); margin-bottom: 30px;">
+          <h3>Create New Event</h3>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+            <div class="form-group"><label>Event Name</label><input type="text" id="eventName" placeholder="e.g. Skills Comp 2026"></div>
+            <div class="form-group">
+              <label>Type</label>
+              <select id="eventType">
+                <option value="skills_competition">Skills Competition</option>
+                <option value="innovation_exhibition">Innovation Exhibition</option>
+                <option value="research_project">Research Project</option>
+              </select>
+            </div>
+            <div class="form-group"><label>Start Date</label><input type="date" id="eventStart"></div>
+            <div class="form-group"><label>End Date</label><input type="date" id="eventEnd"></div>
+          </div>
+          <button class="btn" onclick="createEvent()">Create Event</button>
+          <div id="eventMsg" style="margin-top: 10px;"></div>
+        </div>
+        <!-- Events List -->
+        <table class="rank-table admin-table" id="eventsTable">
+          <thead><tr><th>ID</th><th>Name</th><th>Type</th><th>Dates</th><th>Status</th><th>Actions</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+      <!-- ==================== TAB: PARTICIPANTS ==================== -->
+      <div id="tab-participants" class="tab-content">
+        <h2>Participants Management</h2>
+        <div style="background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); margin-bottom: 30px;">
+          <h3>Add New Participant</h3>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+            <div class="form-group"><label>Admission Number</label><input type="text" id="partAdmission"></div>
+            <div class="form-group"><label>Full Name</label><input type="text" id="partName"></div>
+            <div class="form-group"><label>Event</label><select id="partEvent"></select></div>
+            <div class="form-group"><label>Department</label><select id="partDept"></select></div>
+          </div>
+          <button class="btn" onclick="addParticipant()">Add Participant</button>
+          <div id="partMsg" style="margin-top: 10px;"></div>
+        </div>
+        <table class="rank-table admin-table" id="participantsTable">
+          <thead><tr><th>ID</th><th>Admission</th><th>Name</th><th>Event</th><th>Department</th><th>Actions</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+      <!-- ==================== TAB: CATEGORIES ==================== -->
+      <div id="tab-categories" class="tab-content">
+        <h2>Categories Management</h2>
+        <div style="background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); margin-bottom: 30px;">
+          <h3>Create Category</h3>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+            <div class="form-group"><label>Category Name</label><input type="text" id="catName"></div>
+            <div class="form-group"><label>Department</label><select id="catDept"></select></div>
+          </div>
+          <button class="btn" onclick="addCategory()">Create Category</button>
+          <div id="catMsg" style="margin-top: 10px;"></div>
+        </div>
+        <table class="rank-table admin-table" id="categoriesTable">
+          <thead><tr><th>ID</th><th>Name</th><th>Department</th><th>Actions</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+      <!-- ==================== TAB: COORDINATORS ==================== -->
+      <div id="tab-coordinators" class="tab-content">
+        <h2>Coordinators Management</h2>
+        <div style="background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); margin-bottom: 30px;">
+          <h3>Add Coordinator</h3>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+            <div class="form-group"><label>Full Name</label><input type="text" id="coordName"></div>
+            <div class="form-group"><label>Email</label><input type="email" id="coordEmail"></div>
+            <div class="form-group"><label>Phone</label><input type="text" id="coordPhone"></div>
+            <div class="form-group"><label>Department</label><select id="coordDept"></select></div>
+          </div>
+          <button class="btn" onclick="addCoordinator()">Add Coordinator</button>
+          <div id="coordMsg" style="margin-top: 10px;"></div>
+        </div>
+        <table class="rank-table admin-table" id="coordinatorsTable">
+          <thead><tr><th>ID</th><th>Name</th><th>Email</th><th>Department</th><th>Actions</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+      <!-- ==================== TAB: RESULTS ==================== -->
+      <div id="tab-results" class="tab-content">
+        <h2>Public Results Overview</h2>
+        <div style="display: flex; gap: 20px; margin-bottom: 20px; flex-wrap: wrap;">
+          <select id="resEvent"><option value="">Select Event</option></select>
+          <select id="resCategory"><option value="">Select Category</option></select>
+          <button class="btn" onclick="fetchAdminRankings()">View Ranking</button>
+        </div>
+        <table class="rank-table" id="resRankTable">
+          <thead><tr><th>Position</th><th>Admission</th><th>Name</th><th>Department</th><th>Score</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+      <!-- ==================== TAB: EXPORTS ==================== -->
+      <div id="tab-exports" class="tab-content">
+        <h2>Export Results for Mail Merge</h2>
+        <div style="background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+            <div class="form-group"><label>Event</label><select id="expEvent"></select></div>
+            <div class="form-group"><label>Category</label><select id="expCategory"></select></div>
+          </div>
+          <button class="btn" onclick="exportExcel()">Download Excel (CSV)</button>
+          <button class="btn" onclick="exportPDF()" style="background: #dc3545;">Download PDF</button>
+          <div id="expMsg" style="margin-top: 10px;"></div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <script>
+    // ==================== TAB SWITCHING ====================
+    function toggleSidebar(id) { document.getElementById(id).classList.toggle('open'); }
+
+    function switchTab(tabId) {
+      // Hide all tabs
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+      // Show selected tab
+      const target = document.getElementById('tab-' + tabId);
+      if (target) target.classList.add('active');
+      // Close mobile sidebar after selection (better UX)
+      const sidebar = document.getElementById('adminSidebar');
+      if (window.innerWidth <= 768) sidebar.classList.remove('open');
+      
+      // Load data specific to the tab being opened
+      if (tabId === 'events') loadEvents();
+      else if (tabId === 'participants') loadParticipantsAdmin();
+      else if (tabId === 'categories') loadCategoriesAdmin();
+      else if (tabId === 'coordinators') loadCoordinators();
+      else if (tabId === 'results' || tabId === 'exports') loadDropdownsAdmin();
+    }
+
+    // ==================== SESSION CHECK ====================
+    async function checkSession() {
+      const res = await fetch('/api/v1/innovation/auth/me');
+      if (!res.ok) { window.location.href = '/innovation/login.html'; return; }
+      const user = await res.json();
+      if (user.role !== 'admin') window.location.href = '/innovation/login.html';
+      loadStats();
+      // Preload dropdowns for exports/results
+      loadDropdownsAdmin();
+    }
+
+    // ==================== STATS ====================
+    async function loadStats() {
+      try {
+        const ev = await (await fetch('/api/v1/innovation/events')).json();
+        document.getElementById('totalEvents').textContent = ev.length;
+        const pt = await (await fetch('/api/v1/innovation/participants')).json();
+        document.getElementById('totalParticipants').textContent = pt.length;
+        const ct = await (await fetch('/api/v1/innovation/categories')).json();
+        document.getElementById('totalCategories').textContent = ct.length;
+      } catch {}
+    }
+
+    // ==================== EVENTS CRUD ====================
+    async function loadEvents() {
+      const res = await fetch('/api/v1/innovation/events');
+      const data = await res.json();
+      const tbody = document.querySelector('#eventsTable tbody');
+      tbody.innerHTML = data.map(e => `
+        <tr>
+          <td>${e.id}</td><td>${e.name}</td><td>${e.event_type.replace(/_/g, ' ')}</td>
+          <td>${e.start_date} → ${e.end_date}</td>
+          <td><span style="text-transform: capitalize;">${e.status}</span></td>
+          <td><button class="btn" style="padding: 4px 10px; font-size: 0.8rem; background: #dc3545;" onclick="deleteEvent(${e.id})">Delete</button></td>
+        </tr>
+      `).join('');
+    }
+    async function createEvent() {
+      const name = document.getElementById('eventName').value;
+      const type = document.getElementById('eventType').value;
+      const start = document.getElementById('eventStart').value;
+      const end = document.getElementById('eventEnd').value;
+      const msg = document.getElementById('eventMsg');
+      if (!name || !start || !end) { msg.textContent = 'Fill all fields.'; return; }
+      const res = await fetch('/api/v1/innovation/events', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, event_type: type, start_date: start, end_date: end })
+      });
+      if (res.ok) { msg.textContent = 'Event created!'; loadEvents(); loadStats(); } 
+      else { msg.textContent = (await res.json()).error || 'Failed.'; }
+    }
+    async function deleteEvent(id) {
+      if (!confirm('Delete this event?')) return;
+      await fetch(`/api/v1/innovation/events/${id}`, { method: 'DELETE' });
+      loadEvents(); loadStats();
+    }
+
+    // ==================== DROPDOWN HELPERS ====================
+    async function loadDropdownsAdmin() {
+      // Shared function to populate event & category dropdowns across tabs
+      const events = await (await fetch('/api/v1/innovation/events')).json();
+      const evOpts = events.map(e => `<option value="${e.id}">${e.name}</option>`).join('');
+      ['partEvent', 'resEvent', 'expEvent', 'rankEvent'].forEach(id => {
+        const el = document.getElementById(id);
+        if(el) el.innerHTML = `<option value="">Select Event</option>` + evOpts;
+      });
+      const categories = await (await fetch('/api/v1/innovation/categories')).json();
+      const catOpts = categories.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+      ['resCategory', 'expCategory', 'rankCategory'].forEach(id => {
+        const el = document.getElementById(id);
+        if(el) el.innerHTML = `<option value="">Select Category</option>` + catOpts;
+      });
+      // Department dropdowns
+      const depts = await (await fetch('/api/v1/departments')).json();
+      const deptOpts = depts.map(d => `<option value="${d.id}">${d.name}</option>`).join('');
+      ['partDept', 'catDept', 'coordDept'].forEach(id => {
+        const el = document.getElementById(id);
+        if(el) el.innerHTML = `<option value="">Select Department</option>` + deptOpts;
+      });
+    }
+
+    // ==================== PARTICIPANTS ====================
+    async function loadParticipantsAdmin() {
+      const res = await fetch('/api/v1/innovation/participants');
+      const data = await res.json();
+      const tbody = document.querySelector('#participantsTable tbody');
+      tbody.innerHTML = data.map(p => `
+        <tr><td>${p.id}</td><td>${p.admission_number}</td><td>${p.full_name}</td>
+        <td>${p.event_name}</td><td>${p.department_name}</td>
+        <td><button class="btn" style="padding: 4px 10px; font-size: 0.8rem; background: #dc3545;" onclick="deleteParticipant(${p.id})">Remove</button></td></tr>
+      `).join('');
+    }
+    async function addParticipant() {
+      const admission = document.getElementById('partAdmission').value;
+      const name = document.getElementById('partName').value;
+      const eventId = document.getElementById('partEvent').value;
+      const deptId = document.getElementById('partDept').value;
+      const msg = document.getElementById('partMsg');
+      if(!admission || !name || !eventId || !deptId) { msg.textContent = 'Fill all fields.'; return; }
+      const res = await fetch('/api/v1/innovation/participants', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ event_id: eventId, admission_number: admission, full_name: name, department_id: deptId })
+      });
+      if (res.ok) { msg.textContent = 'Added!'; loadParticipantsAdmin(); loadStats(); } else { msg.textContent = (await res.json()).error || 'Failed.'; }
+    }
+    async function deleteParticipant(id) {
+      if (!confirm('Remove this participant?')) return;
+      await fetch(`/api/v1/innovation/participants/${id}`, { method: 'DELETE' });
+      loadParticipantsAdmin(); loadStats();
+    }
+
+    // ==================== CATEGORIES ====================
+    async function loadCategoriesAdmin() {
+      const res = await fetch('/api/v1/innovation/categories');
+      const data = await res.json();
+      const tbody = document.querySelector('#categoriesTable tbody');
+      tbody.innerHTML = data.map(c => `
+        <tr><td>${c.id}</td><td>${c.name}</td><td>${c.department_name}</td>
+        <td><button class="btn" style="padding: 4px 10px; font-size: 0.8rem; background: #dc3545;" onclick="deleteCategory(${c.id})">Delete</button></td></tr>
+      `).join('');
+    }
+    async function addCategory() {
+      const name = document.getElementById('catName').value;
+      const deptId = document.getElementById('catDept').value;
+      const msg = document.getElementById('catMsg');
+      if(!name || !deptId) { msg.textContent = 'Fill all fields.'; return; }
+      const res = await fetch('/api/v1/innovation/categories', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ department_id: deptId, name })
+      });
+      if (res.ok) { msg.textContent = 'Created!'; loadCategoriesAdmin(); loadStats(); } else { msg.textContent = (await res.json()).error || 'Failed.'; }
+    }
+    async function deleteCategory(id) {
+      if (!confirm('Delete this category?')) return;
+      // Ideally add DELETE endpoint for categories, but for now just reload
+      alert('DELETE endpoint not yet implemented in backend, but UI is ready.');
+    }
+
+    // ==================== COORDINATORS ====================
+    async function loadCoordinators() {
+      // Reuse innovation_users list endpoint (Note: we need a GET /innovation/users endpoint - I'll just mock for now)
+      const tbody = document.querySelector('#coordinatorsTable tbody');
+      tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;">Backend GET for coordinators not yet implemented, but form is ready.</td></tr>`;
+    }
+    async function addCoordinator() {
+      // Backend POST for coordinators needs to hash password and insert into innovation_users
+      alert('Backend endpoint for creating coordinators not yet implemented. UI is ready.');
+    }
+
+    // ==================== RESULTS & EXPORTS ====================
+    async function fetchAdminRankings() {
+      const eid = document.getElementById('resEvent').value;
+      const cid = document.getElementById('resCategory').value;
+      if (!eid || !cid) return alert('Select event and category');
+      const res = await fetch(`/api/v1/innovation/scores/ranking?event_id=${eid}&category_id=${cid}`);
+      const data = await res.json();
+      const tbody = document.querySelector('#resRankTable tbody');
+      tbody.innerHTML = data.map(r => `<tr><td>${r.position}</td><td>${r.admission_number}</td><td>${r.full_name}</td><td>${r.department_name}</td><td>${r.score}</td></tr>`).join('');
+    }
+    async function exportExcel() {
+      alert('Excel export (CSV) will be built in Phase 5!');
+    }
+    async function exportPDF() {
+      alert('PDF generation will be built in Phase 5!');
+    }
+
+   // Modal functions
+function showLogoutModal() {
+  document.getElementById('logoutOverlay').classList.remove('hidden');
+}
+function closeLogoutModal() {
+  document.getElementById('logoutOverlay').classList.add('hidden');
+}
+async function performLogout() {
+  await fetch('/api/v1/innovation/auth/logout', { method: 'POST' });
+  window.location.href = '/innovation/login.html';
+}
+
+    document.addEventListener('DOMContentLoaded', checkSession);
+  </script>
+
+  <!-- Logout Confirmation Modal -->
+<div id="logoutOverlay" class="hidden">
+  <div id="logoutModal">
+    <div class="modal-header">
+      <span>🔒</span>
+      <h3>Confirm Logout</h3>
+    </div>
+    <p>Are you sure you want to log out of the admin panel?</p>
+    <div class="modal-actions">
+      <button class="btn-yes" onclick="performLogout()">Yes, Logout</button>
+      <button class="btn-cancel" onclick="closeLogoutModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+</body>
+</html>

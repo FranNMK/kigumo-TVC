@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Innovation Portal - Kigumo TVC</title>
+  <link rel="stylesheet" href="/innovation/assets/css/style.css">
+</head>
+<body>
+  <nav class="navbar">
+  <div class="container">
+    <h2>Kigumo TVC | Innovation</h2>
+    
+    <!-- Hamburger Button -->
+    <button class="hamburger" onclick="toggleMobileMenu()">☰</button>
+    
+    <div class="nav-links" id="navLinks">
+      <a href="/innovation">Home</a>
+      <a href="/innovation/about.html">About</a>
+      <a href="/innovation/results.html">Results</a>
+      <a href="/innovation/login.html">Login</a>
+    </div>
+  </div>
+</nav>
+
+  <section class="hero">
+    <div class="container">
+      <h1>Research, Innovation & Skills Competition</h1>
+      <p>Showcasing talent, creativity, and excellence at Kigumo TVC</p>
+      <a href="/innovation/results.html" class="btn">View Results</a>
+    </div>
+  </section>
+
+  <div class="container">
+    <div class="stats-grid" id="statsGrid">
+      <div class="stat-card"><div class="number" id="deptCount">0</div><div>Departments</div></div>
+      <div class="stat-card"><div class="number" id="eventCount">0</div><div>Events</div></div>
+      <div class="stat-card"><div class="number" id="participantCount">0</div><div>Participants</div></div>
+      <div class="stat-card"><div class="number" id="projectCount">0</div><div>Projects</div></div>
+    </div>
+  </div>
+
+  <script src="/innovation/assets/js/app.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', async () => {
+    // 1. Departments (from main Kigumo TVC API)
+    try {
+      const res = await fetch('/api/v1/stats');
+      const data = await res.json();
+      document.getElementById('deptCount').textContent = data.departments || 0;
+    } catch { document.getElementById('deptCount').textContent = '0'; }
+
+    // 2. Innovation Events
+    try {
+      const res = await fetch('/api/v1/innovation/events');
+      const events = await res.json();
+      document.getElementById('eventCount').textContent = events.length || 0;
+    } catch { document.getElementById('eventCount').textContent = '0'; }
+
+    // 3. Innovation Participants (This was causing the empty card)
+    try {
+      const res = await fetch('/api/v1/innovation/participants');
+      const participants = await res.json();
+      document.getElementById('participantCount').textContent = participants.length || 0;
+    } catch { 
+      document.getElementById('participantCount').textContent = '0'; 
+    }
+
+    // 4. Projects (Placeholder until implemented)
+    document.getElementById('projectCount').textContent = '0';
+  });
+</script>
+</body>
+</html>

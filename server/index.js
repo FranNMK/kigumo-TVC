@@ -4,6 +4,13 @@ const path = require("path");
 require("dotenv").config();
 const logger = require("./utils/logger");
 const requestLogger = require("./middleware/requestLogger");
+// === Innovation Portal Routes ===
+const innovationAuthRoutes = require('./routes/innovation-auth');
+const innovationEventsRoutes = require('./routes/innovation-events');
+const innovationParticipantsRoutes = require('./routes/innovation-participants');
+const innovationCategoriesRoutes = require('./routes/innovation-categories');
+const innovationScoresRoutes = require('./routes/innovation-scores');
+
 
 const app = express();
 app.set('trust proxy', 1);
@@ -41,6 +48,20 @@ app.use("/portal", express.static(path.join(__dirname, "../portal")));
 
 // Serve uploaded files (materials, images, documents)
 app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
+
+
+
+// ... existing static middleware ...
+app.use(express.static(path.join(__dirname, '../public')));
+app.use(express.static(path.join(__dirname, '../portal')));
+
+// ADD THIS NEW ONE (use the existing path variable)
+app.use('/innovation', express.static(path.join(__dirname, '../public/innovation')));
+
+// And the route for /innovation
+app.get('/innovation', (req, res) => {
+  res.sendFile(path.join(__dirname, '../public/innovation/index.html'));
+});
 
 // Session configuration - UPDATED with security best practices
 app.use(
@@ -88,6 +109,11 @@ app.use("/api/v1/slides", require("./routes/slides"));
 app.use("/api/v1/partners", require("./routes/partners"));
 app.use("/api/v1/applications", require("./routes/applications"));
 app.use("/api/v1/portals", require("./routes/portals"));
+app.use('/api/v1/innovation/auth', innovationAuthRoutes);
+app.use('/api/v1/innovation/events', innovationEventsRoutes);
+app.use('/api/v1/innovation/participants', innovationParticipantsRoutes);
+app.use('/api/v1/innovation/categories', innovationCategoriesRoutes);
+app.use('/api/v1/innovation/scores', innovationScoresRoutes);
 
 // ── Portal Page Routes ─────────────────────────────────────
 // CRITICAL ADDITION: These routes serve portal HTML pages
@@ -96,6 +122,8 @@ app.use("/api/v1/portals", require("./routes/portals"));
 /**
  * GET /portal - Redirects to login page
  */
+
+
 app.get("/portal", (req, res) => {
   res.redirect("/portal/login");
 });
@@ -173,6 +201,11 @@ app.get("/api/ping", (req, res) => {
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV || "development",
   });
+});
+
+// Right after the static middleware, before your API routes
+app.get('/innovation', (req, res) => {
+  res.sendFile(path.join(__dirname, '../public/innovation/index.html'));
 });
 
 // ── 404 handler ─────────────────────────────────────────────

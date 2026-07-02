@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head><title>Results - Innovation Portal</title><link rel="stylesheet" href="/innovation/assets/css/style.css"></head>
+<body>
+<nav class="navbar">
+  <div class="container">
+    <div class="nav-left">
+      <img src="/public/innovation/assets/images/innovation-logo.png.png" alt="Research & Innovation">
+    </div>
+
+    <!-- Hamburger Button -->
+    <button class="hamburger" onclick="toggleMobileMenu()">☰</button>
+
+    <div class="nav-links" id="navLinks">
+      <a href="/innovation">Home</a>
+      <a href="/innovation/about.html">About</a>
+      <a href="/innovation/results.html">Results</a>
+      <a href="/innovation/login.html">Login</a>
+    </div>
+
+    <div class="nav-right">
+      <img src="/public/innovation/assets/images/kigumo-logo.png.png" alt="Kigumo TVC">
+    </div>
+  </div>
+</nav>
+
+  <div class="container">
+    <h1>Competition Results</h1>
+    <div style="display: flex; gap: 20px; margin-bottom: 20px;">
+      <select id="eventSelect"><option>Select Event</option></select>
+      <select id="categorySelect"><option>Select Category</option></select>
+      <button class="btn" onclick="fetchResults()">View Ranking</button>
+    </div>
+    <table class="rank-table" id="rankTable">
+      <thead><tr><th>Position</th><th>Admission</th><th>Name</th><th>Department</th><th>Score</th></tr></thead>
+      <tbody></tbody>
+    </table>
+  </div>
+    <script src="/innovation/assets/js/app.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      // Load events and categories into dropdowns
+      const events = await (await fetch('/api/v1/innovation/events')).json();
+      const cat = await (await fetch('/api/v1/innovation/categories')).json();
+      const evtSel = document.getElementById('eventSelect');
+      const catSel = document.getElementById('categorySelect');
+      evtSel.innerHTML = '<option value="">Select Event</option>' + events.map(e => `<option value="${e.id}">${e.name}</option>`).join('');
+      catSel.innerHTML = '<option value="">Select Category</option>' + cat.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+    });
+    async function fetchResults() {
+      const eid = document.getElementById('eventSelect').value;
+      const cid = document.getElementById('categorySelect').value;
+      if (!eid || !cid) return alert('Select event and category');
+      const res = await fetch(`/api/v1/innovation/scores/ranking?event_id=${eid}&category_id=${cid}`);
+      const data = await res.json();
+      const tbody = document.querySelector('#rankTable tbody');
+      tbody.innerHTML = data.map(r => `<tr><td>${r.position}</td><td>${r.admission_number}</td><td>${r.full_name}</td><td>${r.department_name}</td><td>${r.score}</td></tr>`).join('');
+    }
+  </script>
+</body>
+</html>
