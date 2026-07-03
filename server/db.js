@@ -18,9 +18,10 @@ const poolConfig = {
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0,
-  enableKeepAlive: true,
+  enableKeepAlive: true,          // keep connections alive
   keepAliveInitialDelay: 10000,
   connectTimeout: 15000,
+  idleTimeout: 30000,             // close idle connections gracefully
 };
 
 // ── SSL/TLS Configuration for TiDB Cloud ───────────────────
@@ -92,6 +93,32 @@ try {
   throw err;
 }
 
+// ── Custom execute() with retry and logging ────────────────
+async function execute(sql, params = []) {
+  const start = Date.now();
+  try {
+    const [rows] = await pool.execute(sql, params);
+    const duration = Date.now() - start;
+    logger.debug(`DB Query (${duration}ms): ${sql}`, { duration, params, rowCount: rows.length });
+    return [rows];
+  } catch (err) {
+    const duration = Date.now() - start;
+    logger.error(`DB Query Failed (${duration}ms): ${sql}`, { error: err.message, code: err.code, params, duration });
+    // If connection is dead, try one retry
+    if (err.code === 'ECONNRESET' || err.code === 'PROTOCOL_CONNECTION_LOST') {
+      logger.warn('Connection lost, retrying once...');
+      try {
+        const [rows] = await pool.execute(sql, params);
+        logger.info(`DB Query Retry Success (${Date.now() - start}ms): ${sql}`);
+        return [rows];
+      } catch (retryErr) {
+        throw retryErr;
+      }
+    }
+    throw err;
+  }
+}
+
 // ── Warm up frequently used tables ────────────────────────
 async function warmupTables() {
   const tables = [
@@ -113,8 +140,14 @@ warmupTables().catch(() => {});
 
 // ── Query logging (development only) ───────────────────────
 if (process.env.NODE_ENV !== 'production' || process.env.LOG_LEVEL === 'DEBUG') {
+  // This wraps the pool to log all queries automatically, but our custom execute()
+  // also logs. This is fine, it just duplicates logs in development, which is okay.
   pool = wrapPoolWithLogging(pool);
-  logger.info('Database query logging enabled');
+  logger.info('Database query logging enabled (wrapped)');
 }
 
-module.exports = pool;
+// ── Exports ────────────────────────────────────────────────
+module.exports = {
+  pool,
+  execute,   // Always use this in your route files instead of pool.execute()
+};

@@ -97,4 +97,29 @@ router.put('/:id', isInnovationAuthenticated, isInnovationAdmin, [
   }
 });
 
+// DELETE /api/v1/innovation/events/:id (Admin only)
+router.delete('/:id', isInnovationAuthenticated, isInnovationAdmin, [
+  param('id').isInt()
+], async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+
+  const { id } = req.params;
+
+  try {
+    const [result] = await db.execute('DELETE FROM innovation_events WHERE id = ?', [id]);
+    
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: 'Event not found' });
+    }
+    
+    res.json({ message: 'Event deleted successfully' });
+  } catch (err) {
+    console.error('Error deleting event:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 module.exports = router;
