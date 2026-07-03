@@ -1,31 +1,352 @@
 <!DOCTYPE html>
-<html>
-<head><title>About Innovation Portal</title><link rel="stylesheet" href="/innovation/assets/css/style.css"></head>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>About - Innovation Portal | Kigumo TVC</title>
+  <link rel="stylesheet" href="/innovation/assets/css/style.css">
+  <style>
+    /* --- About Page Specific Styles --- */
+    .about-hero {
+      background: linear-gradient(135deg, #1a3a5c 0%, #2c5a7a 100%);
+      color: white;
+      padding: 80px 20px 60px;
+      text-align: center;
+    }
+    .about-hero h1 { font-size: 2.8rem; margin-bottom: 15px; }
+    .about-hero h1 span { color: #e8a838; }
+    .about-hero p.subtitle { font-size: 1.3rem; opacity: 0.9; max-width: 800px; margin: 0 auto 20px; }
+    .about-hero .intro { font-size: 1.1rem; max-width: 900px; margin: 0 auto; opacity: 0.85; line-height: 1.6; }
+
+    .about-section { padding: 50px 20px; background: #fff; }
+    .about-section:nth-child(even) { background: #f8f9fa; }
+    .about-section .container { max-width: 1200px; margin: 0 auto; }
+    .about-section h2 { 
+      color: #1a3a5c; 
+      font-size: 2rem; 
+      margin-bottom: 20px; 
+      border-left: 5px solid #e8a838; 
+      padding-left: 15px; 
+    }
+    .about-section h3 { color: #1a3a5c; margin-top: 25px; margin-bottom: 10px; }
+    .about-section p { line-height: 1.7; color: #444; margin-bottom: 15px; }
+
+    /* Grid & Cards */
+    .benefits-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 25px;
+      margin-top: 20px;
+    }
+    .about-card {
+      background: white;
+      padding: 25px;
+      border-radius: 10px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      border-top: 4px solid #e8a838;
+      transition: transform 0.2s;
+    }
+    .about-card:hover { transform: translateY(-5px); }
+    .about-card .icon { font-size: 2.5rem; display: block; margin-bottom: 10px; }
+    .about-card h4 { color: #1a3a5c; margin-bottom: 10px; }
+    .about-card ul { margin: 0; padding-left: 20px; }
+
+    .icon-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 15px;
+      list-style: none;
+      padding: 0;
+    }
+    .icon-list li {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: white;
+      padding: 12px 18px;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+      font-weight: 500;
+    }
+    .icon-list li span { font-size: 1.5rem; }
+    .icon-list li .text { color: #333; }
+
+    /* Values & Contact */
+    .values-grid { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; }
+    .value-pill { 
+      background: #1a3a5c; 
+      color: white; 
+      padding: 10px 25px; 
+      border-radius: 50px; 
+      font-weight: 600; 
+      font-size: 1rem;
+    }
+
+    .contact-box {
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+      border-left: 6px solid #e8a838;
+      max-width: 600px;
+    }
+    .contact-box p { margin: 8px 0; }
+
+    /* Mobile Tweaks */
+    @media (max-width: 768px) {
+      .about-hero h1 { font-size: 2rem; }
+      .about-hero p.subtitle { font-size: 1.1rem; }
+      .about-section h2 { font-size: 1.6rem; }
+      .icon-list { grid-template-columns: 1fr; }
+      .benefits-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
 <body>
- <nav class="navbar">
-  <div class="container">
-    <div class="nav-left">
-      <img src="/public/innovation/assets/images/innovation-logo.png.png" alt="Research & Innovation">
+
+  <!-- ===== EXACT NAVBAR (UNCHANGED) ===== -->
+  <nav class="navbar">
+    <div class="container">
+      <div class="nav-left">
+        <img src="/public/innovation/assets/images/innovation-logo.png.png" alt="Research & Innovation">
+      </div>
+
+      <!-- Hamburger Button -->
+      <button class="hamburger" onclick="toggleMobileMenu()">☰</button>
+
+      <div class="nav-links" id="navLinks">
+        <a href="/innovation">Home</a>
+        <a href="/innovation/about.html">About</a>
+        <a href="/innovation/results.html">Results</a>
+        <a href="/innovation/login.html">Login</a>
+      </div>
+
+      <div class="nav-right">
+        <img src="/public/innovation/assets/images/kigumo-logo.png.png" alt="Kigumo TVC">
+      </div>
     </div>
+  </nav>
 
-    <!-- Hamburger Button -->
-    <button class="hamburger" onclick="toggleMobileMenu()">☰</button>
+  <!-- ===== CONTENT STARTS ===== -->
 
-    <div class="nav-links" id="navLinks">
-      <a href="/innovation">Home</a>
-      <a href="/innovation/about.html">About</a>
-      <a href="/innovation/results.html">Results</a>
-      <a href="/innovation/login.html">Login</a>
+  <!-- SECTION 1: HERO -->
+  <section class="about-hero">
+    <div class="container">
+      <h1>Research, Innovation & <span>Skills Competition</span> Portal</h1>
+      <p class="subtitle">Promoting Creativity, Innovation, Research Excellence and Skills Development at Kigumo Technical and Vocational College.</p>
+      <p class="intro">
+        This portal serves as the central hub for managing research activities, innovation projects, 
+        skills competitions, and the transparent dissemination of results across the college community.
+      </p>
     </div>
+  </section>
 
-    <div class="nav-right">
-      <img src="/public/innovation/assets/images/kigumo-logo.png.png" alt="Kigumo TVC">
+  <!-- SECTION 2: ABOUT THE DEPARTMENT -->
+  <section class="about-section">
+    <div class="container">
+      <h2>🏛️ About the Research and Innovation Department</h2>
+      <p>The Research and Innovation Department is mandated to drive a culture of inquiry, creativity, and technical excellence at Kigumo TVC. We bridge the gap between classroom training and real-world problem-solving.</p>
+      <h3>Key Functions:</h3>
+      <ul class="icon-list">
+        <li><span>🔬</span><span class="text">Coordinate institutional research activities</span></li>
+        <li><span>💡</span><span class="text">Promote a culture of innovation and creativity</span></li>
+        <li><span>📂</span><span class="text">Support development of student and trainer projects</span></li>
+        <li><span>🏆</span><span class="text">Organize internal and external research exhibitions</span></li>
+        <li><span>⚙️</span><span class="text">Coordinate skills competitions</span></li>
+        <li><span>🤝</span><span class="text">Facilitate collaboration with industry and stakeholders</span></li>
+        <li><span>🧠</span><span class="text">Identify and nurture innovative solutions</span></li>
+        <li><span>🚀</span><span class="text">Support commercialization and incubation of innovations</span></li>
+        <li><span>📜</span><span class="text">Promote intellectual property awareness</span></li>
+      </ul>
     </div>
-  </div>
-</nav>
+  </section>
 
-  <div class="container"><h1>About the Innovation Portal</h1><p>The Research and Innovation Department of Kigumo TVC manages competitions, exhibitions, and research projects to foster creativity and technical excellence.</p></div>
+  <!-- SECTION 3: RESEARCH AT KIGUMO TVC -->
+  <section class="about-section">
+    <div class="container">
+      <h2>🔬 Research at Kigumo TVC</h2>
+      <p>Within the TVET sector, applied research is essential for solving practical problems and advancing industry standards. Our research focus areas include:</p>
+      <ul class="icon-list">
+        <li><span>🧪</span><span class="text">Applied Research</span></li>
+        <li><span>🔍</span><span class="text">Problem-solving Research</span></li>
+        <li><span>🏘️</span><span class="text">Community-based Research</span></li>
+        <li><span>🏭</span><span class="text">Industry-driven Research</span></li>
+        <li><span>🎓</span><span class="text">Student Research Projects</span></li>
+        <li><span>👨‍🏫</span><span class="text">Trainer Research Initiatives</span></li>
+      </ul>
+      <h3>Objectives:</h3>
+      <ul style="columns: 2; column-gap: 30px; padding-left: 20px;">
+        <li style="margin-bottom: 8px;">Solve real-world challenges</li>
+        <li style="margin-bottom: 8px;">Improve training quality</li>
+        <li style="margin-bottom: 8px;">Promote evidence-based decision making</li>
+        <li style="margin-bottom: 8px;">Encourage creativity and critical thinking</li>
+        <li style="margin-bottom: 8px;">Support socio-economic development</li>
+      </ul>
+    </div>
+  </section>
 
-    <script src="/innovation/assets/js/app.js"></script>
+  <!-- SECTION 4: INNOVATION AT KIGUMO TVC -->
+  <section class="about-section">
+    <div class="container">
+      <h2>💡 Innovation at Kigumo TVC</h2>
+      <p>Innovation is at the heart of our institution's agenda. We focus on transforming ideas into practical solutions that directly benefit society and industry.</p>
+      <ul class="icon-list">
+        <li><span>👨‍🎓</span><span class="text">Student Innovations</span></li>
+        <li><span>🧑‍🏫</span><span class="text">Trainer Innovations</span></li>
+        <li><span>💻</span><span class="text">Technology Innovations</span></li>
+        <li><span>⚡</span><span class="text">Engineering Innovations</span></li>
+        <li><span>📈</span><span class="text">Business Innovations</span></li>
+        <li><span>🌍</span><span class="text">Community Innovations</span></li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- SECTION 5: INTERNAL SKILLS COMPETITIONS -->
+  <section class="about-section">
+    <div class="container">
+      <h2>🏆 Internal Skills Competitions</h2>
+      <p>Our skills competitions are designed to identify talent, promote practical excellence, and prepare students for national TVET contests.</p>
+      <h3>Objectives:</h3>
+      <ul style="columns: 2; column-gap: 30px; padding-left: 20px; margin-bottom: 20px;">
+        <li style="margin-bottom: 8px;">Identify talent</li>
+        <li style="margin-bottom: 8px;">Promote practical excellence</li>
+        <li style="margin-bottom: 8px;">Prepare students for industry</li>
+        <li style="margin-bottom: 8px;">Prepare students for national TVET competitions</li>
+        <li style="margin-bottom: 8px;">Encourage teamwork and professionalism</li>
+        <li style="margin-bottom: 8px;">Recognize outstanding performers</li>
+      </ul>
+      <h3>Example Categories:</h3>
+      <div style="display: flex; flex-wrap: wrap; gap: 10px;">
+        <span style="background: #e8a838; color: #fff; padding: 6px 15px; border-radius: 20px; font-size: 0.9rem;">Web Development</span>
+        <span style="background: #e8a838; color: #fff; padding: 6px 15px; border-radius: 20px; font-size: 0.9rem;">Programming</span>
+        <span style="background: #e8a838; color: #fff; padding: 6px 15px; border-radius: 20px; font-size: 0.9rem;">Networking</span>
+        <span style="background: #e8a838; color: #fff; padding: 6px 15px; border-radius: 20px; font-size: 0.9rem;">Graphic Design</span>
+        <span style="background: #e8a838; color: #fff; padding: 6px 15px; border-radius: 20px; font-size: 0.9rem;">Electrical Installation</span>
+        <span style="background: #e8a838; color: #fff; padding: 6px 15px; border-radius: 20px; font-size: 0.9rem;">Welding and Fabrication</span>
+        <span style="background: #e8a838; color: #fff; padding: 6px 15px; border-radius: 20px; font-size: 0.9rem;">Plumbing</span>
+        <span style="background: #e8a838; color: #fff; padding: 6px 15px; border-radius: 20px; font-size: 0.9rem;">Building Technology</span>
+        <span style="background: #e8a838; color: #fff; padding: 6px 15px; border-radius: 20px; font-size: 0.9rem;">Hairdressing & Beauty</span>
+        <span style="background: #e8a838; color: #fff; padding: 6px 15px; border-radius: 20px; font-size: 0.9rem;">Fashion and Design</span>
+        <span style="background: #e8a838; color: #fff; padding: 6px 15px; border-radius: 20px; font-size: 0.9rem;">Food Production</span>
+        <span style="background: #e8a838; color: #fff; padding: 6px 15px; border-radius: 20px; font-size: 0.9rem;">Entrepreneurship</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECTION 6: PURPOSE OF THIS PORTAL -->
+  <section class="about-section">
+    <div class="container">
+      <h2>🎯 Purpose of This Portal</h2>
+      <p>The portal serves as a centralized digital platform for managing the entire lifecycle of research, innovation, and skills competitions:</p>
+      <ul class="icon-list">
+        <li><span>📋</span><span class="text">Managing research projects</span></li>
+        <li><span>💡</span><span class="text">Managing innovation activities</span></li>
+        <li><span>🏆</span><span class="text">Managing skills competitions</span></li>
+        <li><span>📝</span><span class="text">Registering participants</span></li>
+        <li><span>👥</span><span class="text">Managing coordinators and assessors</span></li>
+        <li><span>📊</span><span class="text">Recording assessment scores</span></li>
+        <li><span>📢</span><span class="text">Publishing competition results</span></li>
+        <li><span>📈</span><span class="text">Generating reports</span></li>
+        <li><span>📄</span><span class="text">Exporting data for certificates</span></li>
+        <li><span>📉</span><span class="text">Tracking competition performance</span></li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- SECTION 7: BENEFITS OF THE PORTAL -->
+  <section class="about-section">
+    <div class="container">
+      <h2>✅ Benefits of the Portal</h2>
+      <div class="benefits-grid">
+        <div class="about-card">
+          <span class="icon">🧑‍🎓</span>
+          <h4>For Students</h4>
+          <ul>
+            <li>Easy access to competition information</li>
+            <li>Transparent results publication</li>
+            <li>Recognition of achievements</li>
+            <li>Better participation opportunities</li>
+          </ul>
+        </div>
+        <div class="about-card">
+          <span class="icon">👨‍🏫</span>
+          <h4>For Coordinators</h4>
+          <ul>
+            <li>Efficient participant management</li>
+            <li>Simplified score entry</li>
+            <li>Faster result processing</li>
+            <li>Automated ranking</li>
+          </ul>
+        </div>
+        <div class="about-card">
+          <span class="icon">🏢</span>
+          <h4>For Management</h4>
+          <ul>
+            <li>Centralized data management</li>
+            <li>Accurate reporting</li>
+            <li>Improved decision making</li>
+            <li>Historical competition records</li>
+          </ul>
+        </div>
+        <div class="about-card">
+          <span class="icon">🏫</span>
+          <h4>For the Institution</h4>
+          <ul>
+            <li>Improved visibility of innovations</li>
+            <li>Better documentation of research activities</li>
+            <li>Enhanced talent identification</li>
+            <li>Support for TVET excellence and QA</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECTIONS 8, 9, 10: VISION, MISSION, VALUES -->
+  <section class="about-section">
+    <div class="container">
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px;">
+        <div class="about-card">
+          <span class="icon">👁️</span>
+          <h4>Our Vision</h4>
+          <p>To become a leading centre of excellence in research, innovation, entrepreneurship and skills development within the TVET sector.</p>
+        </div>
+        <div class="about-card">
+          <span class="icon">🚀</span>
+          <h4>Our Mission</h4>
+          <p>To nurture creativity, innovation, research and practical skills through a supportive environment that empowers learners and trainers to develop solutions that positively impact society and industry.</p>
+        </div>
+      </div>
+
+      <h3 style="margin-top: 40px; text-align: center; color: #1a3a5c;">Core Values</h3>
+      <div class="values-grid">
+        <span class="value-pill">Innovation</span>
+        <span class="value-pill">Excellence</span>
+        <span class="value-pill">Integrity</span>
+        <span class="value-pill">Creativity</span>
+        <span class="value-pill">Professionalism</span>
+        <span class="value-pill">Collaboration</span>
+        <span class="value-pill">Inclusivity</span>
+        <span class="value-pill">Lifelong Learning</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECTION 11: CONTACT INFORMATION -->
+  <section class="about-section">
+    <div class="container">
+      <h2>📍 Contact Information</h2>
+      <div class="contact-box">
+        <h3 style="color: #1a3a5c;">Research and Innovation Department</h3>
+        <p><strong>🏛️ Office Location:</strong> Kigumo Technical and Vocational College, Main Administration Block, 2nd Floor</p>
+        <p><strong>📧 Official Email:</strong> <a href="mailto:innovation@kigumotvc.ac.ke" style="color: #e8a838; text-decoration: none;">innovation@kigumotvc.ac.ke</a></p>
+        <p><strong>📞 Phone Number:</strong> +254 712 345 678</p>
+        <p><strong>⏰ Working Hours:</strong> Monday – Friday, 8:00 AM – 5:00 PM EAT</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== FOOTER / SCRIPT ===== -->
+  <script src="/innovation/assets/js/app.js"></script>
 </body>
 </html>
