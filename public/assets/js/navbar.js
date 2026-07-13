@@ -174,8 +174,13 @@
       overlay.addEventListener("click", closeNav);
     }
 
-    // Close when clicking any nav link
+        // Close when clicking any nav link EXCEPT dropdown toggles
     navLinks.querySelectorAll("a").forEach((link) => {
+      const parentLi = link.closest('li');
+      // Skip if this link is a toggle for a dropdown or sub-dropdown
+      if (parentLi && (parentLi.classList.contains('nav-dropdown') || parentLi.classList.contains('sub-dropdown'))) {
+        return;
+      }
       link.addEventListener("click", closeNav);
     });
 
