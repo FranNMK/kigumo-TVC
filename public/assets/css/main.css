@@ -317,7 +317,7 @@ ul {
   height: 85vh;
   min-height: 500px;
   overflow: hidden;
-  background: var(--green-dark);
+  /* background: var(--green-dark); */
 }
 .slide {
   position: absolute;
@@ -337,11 +337,11 @@ ul {
 .slide-overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(
+  /* background: linear-gradient(
     135deg,
     rgba(26, 122, 26, 0.904) 0%,
     rgba(26, 26, 46, 0.75) 100%
-  );
+  ); */
 }
 .slide-content {
   position: relative;
