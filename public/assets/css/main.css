@@ -337,12 +337,14 @@ ul {
 .slide-overlay {
   position: absolute;
   inset: 0;
-  /* background: linear-gradient(
+  /* Middle-ground gradient: lighter opacity so the photo shows through */
+  background: linear-gradient(
     135deg,
-    rgba(26, 122, 26, 0.904) 0%,
-    rgba(26, 26, 46, 0.75) 100%
-  ); */
+    rgba(26, 122, 26, 0.55) 0%,
+    rgba(26, 26, 46, 0.30) 100%
+  );
 }
+
 .slide-content {
   position: relative;
   z-index: 2;
