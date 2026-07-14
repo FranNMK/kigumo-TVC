@@ -1452,30 +1452,83 @@ ul {
 }
 
 /* Mobile dropdowns */
-@media (max-width: 992px) {
-  .nav-links .dropdown-menu {
-    position: static;
-    box-shadow: none;
-    border-left: none;
-    background: #f8f9fa;
-    border-radius: 0;
-    padding-left: 1rem;
+  /* Mobile dropdowns - Force main dropdowns to drop down vertically */
+  @media (max-width: 992px) {
+    
+    /* 1. CRITICAL FIX: Force the parent <li> to stack vertically */
+    .nav-links li.nav-dropdown {
+      display: flex !important;
+      flex-direction: column !important; /* a on top, ul below */
+      align-items: stretch !important;
+      width: 100% !important;
+    }
+
+    /* 2. Reset the main dropdown menu */
+    .nav-links .dropdown-menu {
+      position: static !important;
+      left: 0 !important;
+      top: 0 !important;
+      width: 100% !important;
+      box-shadow: none !important;
+      border-left: none !important;
+      border-radius: 0 !important;
+      background: #f8f9fa;
+      padding: 0 !important;
+      margin: 0 !important;
+      display: none !important;
+    }
+    .nav-links .dropdown-menu.open {
+      display: block !important;
+    }
+
+    /* 3. Reset the sub-dropdown menu (Administration) */
+    .sub-dropdown-menu {
+      position: static !important;
+      left: 0 !important;
+      top: 0 !important;
+      width: 100% !important;
+      box-shadow: none !important;
+      border-left: none !important;
+      border-radius: 0 !important;
+      background: #e9ecef;
+      padding: 0 !important;
+      margin: 0 !important;
+      display: none !important;
+    }
+    .sub-dropdown-menu.open {
+      display: block !important;
+    }
+
+    /* 4. Style the links beautifully */
+    .nav-links .dropdown-menu a,
+    .nav-links .sub-dropdown-menu a,
+    .nav-links .dropdown-menu .dropdown-group-title {
+      display: block !important;
+      padding: 12px 20px !important;
+      border-bottom: 1px solid rgba(0,0,0,0.05);
+      width: 100% !important;
+      box-sizing: border-box !important;
+      font-size: 0.95rem !important;
+    }
+
+    /* 5. Push sub-dropdown text slightly further to show hierarchy */
+    .sub-dropdown-menu a {
+      padding-left: 40px !important;
+    }
+
+    /* 6. Ensure grouping inside Departments works correctly */
+    .dropdown-group {
+      padding: 0 !important;
+      margin: 0 !important;
+      width: 100% !important;
+    }
+
+    /* 7. Remove the bottom border for the last item */
+    .nav-links .dropdown-menu a:last-child,
+    .nav-links .sub-dropdown-menu a:last-child {
+      border-bottom: none;
+    }
   }
-  .nav-links .dropdown-menu.open {
-    display: block;
-  }
-  .sub-dropdown-menu {
-    position: static;
-    box-shadow: none;
-    border-left: none;
-    background: #e9ecef;
-    border-radius: 0;
-    padding-left: 1.5rem;
-  }
-  .sub-dropdown-menu.open {
-    display: block;
-  }
-}
 
 /* ═══════════════════════════════════════
    PRINCIPAL'S MESSAGE (Unified Card)
