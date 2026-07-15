@@ -1077,18 +1077,18 @@ ul {
   }
 
   /* Mobile Navbar Setup */
-  .nav-links {
-    display: flex;
+   .nav-links {
+    display: flex !important;
+    flex-direction: column !important;
     position: fixed;
-    top: 116px !important; /* Adjusted to sit below the fixed nav header + top bar */
+    top: 116px !important;
     right: -100%;
-    align-items: stretch;
-    width: 100%;
-    max-width: 280px;
-    height: auto;
-    background: var(--white);
-    flex-direction: column;
-    padding: 8px 0;
+    width: 100% !important;
+    max-width: 280px !important;
+    height: auto !important;
+    background: var(--white) !important;
+    padding: 0 !important;
+    margin: 0 !important;
     box-shadow: -4px 4px 20px rgba(0, 0, 0, 0.15);
     border-left: 4px solid var(--yellow);
     border-top: 4px solid var(--yellow);
@@ -1097,12 +1097,24 @@ ul {
     gap: 0;
     z-index: 999;
     transition: right 0.35s cubic-bezier(0.4, 0, 0.2, 1);
-    max-height: calc(100vh - 116px) !important; /* Scrollable */
-    overflow-y: auto !important;
-    padding-bottom: 40px !important;
+    overflow-x: hidden !important; /* 🟢 Fix: Removes horizontal scrollbar */
+    box-sizing: border-box !important;
   }
+
   .nav-links.open {
-    right: 0;
+    right: 0 !important;
+    max-height: calc(100vh - 135px) !important; /* 🟢 Fix: Adds breathing room for bottom buttons */
+    overflow-y: auto !important;
+    padding-bottom: 20px !important;
+  }
+
+   /* 🟢 Fix: Resets all top-level list items to block width 100% */
+  .nav-links > li {
+    display: block !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-sizing: border-box !important;
   }
 
   /* Mobile Links Styling */
@@ -1212,6 +1224,16 @@ ul {
   }
   .nav-overlay.open {
     display: block;
+  }
+
+   /* 🟢 Fix: Ensures internal dropdowns don't overflow horizontally */
+  .nav-links .dropdown-menu {
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+  .nav-links .dropdown-menu > li {
+    display: block !important;
+    width: 100% !important;
   }
 
   /* Hamburger turns into X */
