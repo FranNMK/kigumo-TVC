@@ -1214,6 +1214,33 @@ ul {
     border-bottom: none;
   }
 
+      /* Fix for Departments dropdown inner lists & hierarchy alignment */
+    .dropdown-group ul {
+      padding-left: 0 !important;
+      margin: 0 !important;
+      width: 100% !important;
+      list-style: none !important;
+    }
+    .dropdown-group ul li {
+      display: block !important;
+      width: 100% !important;
+    }
+    .dropdown-group ul li a {
+      display: block !important;
+      width: 100% !important;
+      padding: 10px 20px 10px 30px !important; /* Slightly indented to show hierarchy */
+      box-sizing: border-box !important;
+      border-bottom: 1px solid rgba(0,0,0,0.05);
+      color: #333;
+      font-size: 0.95rem !important;
+      transition: background 0.15s ease, color 0.15s ease;
+    }
+    .dropdown-group ul li a:hover {
+      background: var(--green-light);
+      color: var(--green);
+    }
+
+
   /* Overlay behind the mobile menu */
   .nav-overlay {
     display: none;
