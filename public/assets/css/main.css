@@ -294,7 +294,6 @@ ul {
   background: var(--green-dark);
   color: #ffffff;
 }
-/* Remove the old separate .btn-apply rule (duplicate) – we already have it above */
 /* Hamburger */
 .hamburger {
   display: none;
@@ -317,7 +316,6 @@ ul {
   height: 85vh;
   min-height: 500px;
   overflow: hidden;
-  /* background: var(--green-dark); */
 }
 .slide {
   position: absolute;
@@ -337,12 +335,7 @@ ul {
 .slide-overlay {
   position: absolute;
   inset: 0;
-  /* Middle-ground gradient: lighter opacity so the photo shows through */
-  background: linear-gradient(
-    135deg,
-    rgba(26, 122, 26, 0.55) 0%,
-    rgba(26, 26, 46, 0.30) 100%
-  );
+  background: linear-gradient(135deg, rgba(26, 122, 26, 0.55) 0%, rgba(26, 26, 46, 0.30) 100%);
 }
 
 .slide-content {
@@ -759,11 +752,6 @@ ul {
 .news-section {
   background: var(--white);
 }
-
-/* ── News Section ─────────────────────────────────────────── */
-.news-section {
-  background: var(--white);
-}
 .news-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -1077,15 +1065,10 @@ ul {
   }
 }
 
+/* ═══════════════════════════════════════════════════════════
+   MOBILE RESPONSIVE (MAX-WIDTH: 768px)
+   ═══════════════════════════════════════════════════════════ */
 @media (max-width: 768px) {
-  .nav-links a:active,
-  .nav-links a:focus {
-    background: var(--green-light) !important;
-    color: var(--green) !important;
-    padding-left: 28px !important;
-    outline: none;
-  }
-
   .top-bar .container {
     justify-content: left;
   }
@@ -1093,10 +1076,11 @@ ul {
     display: none;
   }
 
+  /* Mobile Navbar Setup */
   .nav-links {
     display: flex;
     position: fixed;
-    top: 70px;
+    top: 116px !important; /* Adjusted to sit below the fixed nav header + top bar */
     right: -100%;
     align-items: stretch;
     width: 100%;
@@ -1113,10 +1097,15 @@ ul {
     gap: 0;
     z-index: 999;
     transition: right 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    max-height: calc(100vh - 116px) !important; /* Scrollable */
+    overflow-y: auto !important;
+    padding-bottom: 40px !important;
   }
   .nav-links.open {
     right: 0;
   }
+
+  /* Mobile Links Styling */
   .nav-links a {
     width: 100%;
     padding: 13px 20px;
@@ -1132,10 +1121,7 @@ ul {
     box-sizing: border-box;
     cursor: pointer;
     -webkit-tap-highlight-color: transparent;
-    transition:
-      background 0.15s ease,
-      color 0.15s ease,
-      padding-left 0.15s ease;
+    transition: background 0.15s ease, color 0.15s ease, padding-left 0.15s ease;
     cursor: pointer;
   }
   .nav-links a:last-child {
@@ -1145,22 +1131,75 @@ ul {
     background: var(--green-light);
     color: var(--green);
   }
-
   .nav-links a.active {
-    background: var(--green-light);
-    color: var(--green);
+    background: var(--white);
+    color: var(--dark);
     font-weight: 600;
-  }
-
-  @media (max-width: 768px) {
-    .nav-links a.active {
-      background: var(--white);
-      color: var(--dark);
-      font-weight: 600;
-    }
   }
   .hamburger {
     display: flex;
+  }
+
+  /* Mobile Dropdowns - Force down & scrollable */
+  .nav-links li.nav-dropdown {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    width: 100% !important;
+  }
+
+  .nav-links .dropdown-menu {
+    position: static !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100% !important;
+    box-shadow: none !important;
+    border-left: none !important;
+    border-radius: 0 !important;
+    background: #f8f9fa;
+    padding: 0 !important;
+    margin: 0 !important;
+    display: none !important;
+  }
+  .nav-links .dropdown-menu.open {
+    display: block !important;
+  }
+
+  .sub-dropdown-menu {
+    position: static !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100% !important;
+    box-shadow: none !important;
+    border-left: none !important;
+    border-radius: 0 !important;
+    background: #e9ecef;
+    padding: 0 !important;
+    margin: 0 !important;
+    display: none !important;
+  }
+  .sub-dropdown-menu.open {
+    display: block !important;
+  }
+
+  /* Mobile Dropdown Hierarchy */
+  .nav-links .dropdown-menu > li > a,
+  .nav-links .dropdown-menu .dropdown-group-title {
+    display: block !important;
+    padding: 12px 20px !important;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    width: 100% !important;
+    box-sizing: border-box !important;
+    font-size: 0.95rem !important;
+  }
+
+  .sub-dropdown-menu a {
+    padding-left: 40px !important;
+  }
+
+  .nav-links .dropdown-menu > li:last-child > a,
+  .nav-links .sub-dropdown-menu > li:last-child > a {
+    border-bottom: none;
   }
 
   /* Overlay behind the mobile menu */
@@ -1187,20 +1226,7 @@ ul {
     transform: translateY(-8px) rotate(-45deg);
   }
   .hamburger span {
-    transition:
-      transform 0.3s ease,
-      opacity 0.3s ease;
-  }
-
-  /* Close button inside the mobile menu */
-  .nav-close-label {
-    position: absolute;
-    top: 20px;
-    right: 20px;
-    font-size: 0.8rem;
-    color: var(--mid);
-    font-weight: 600;
-    letter-spacing: 0.5px;
+    transition: transform 0.3s ease, opacity 0.3s ease;
   }
 
   .hero {
@@ -1227,12 +1253,6 @@ ul {
   .footer-bottom {
     justify-content: center;
     text-align: center;
-  }
-
-  .nav-links a:active {
-    background: var(--green-light) !important;
-    color: var(--green) !important;
-    padding-left: 28px !important;
   }
 }
 
@@ -1295,16 +1315,6 @@ ul {
   right: 0;
 }
 
-/* push nav-links down to sit below the header */
-.nav-links {
-  top: 116px !important;
-}
-
-.nav-links {
-  display: flex;
-  /*align-items: center; This ensures all items are vertically centered*/
-  gap: 4px;
-}
 /* ═══════════════════════════════════
    LANGUAGE SWITCHER
    ═══════════════════════════════════ */
@@ -1450,161 +1460,6 @@ ul {
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
-
-/* Mobile dropdowns */
-  /* Mobile dropdowns - Force main dropdowns to drop down vertically */
-  @media (max-width: 992px) {
-    
-    /* 1. CRITICAL FIX: Force the parent <li> to stack vertically */
-    .nav-links li.nav-dropdown {
-      display: flex !important;
-      flex-direction: column !important; /* a on top, ul below */
-      align-items: stretch !important;
-      width: 100% !important;
-    }
-
-    /* 2. Reset the main dropdown menu */
-    .nav-links .dropdown-menu {
-      position: static !important;
-      left: 0 !important;
-      top: 0 !important;
-      width: 100% !important;
-      box-shadow: none !important;
-      border-left: none !important;
-      border-radius: 0 !important;
-      background: #f8f9fa;
-      padding: 0 !important;
-      margin: 0 !important;
-      display: none !important;
-    }
-    .nav-links .dropdown-menu.open {
-      display: block !important;
-    }
-
-    /* 3. Reset the sub-dropdown menu (Administration) */
-    .sub-dropdown-menu {
-      position: static !important;
-      left: 0 !important;
-      top: 0 !important;
-      width: 100% !important;
-      box-shadow: none !important;
-      border-left: none !important;
-      border-radius: 0 !important;
-      background: #e9ecef;
-      padding: 0 !important;
-      margin: 0 !important;
-      display: none !important;
-    }
-    .sub-dropdown-menu.open {
-      display: block !important;
-    }
-
-    /* 4. Style the links beautifully */
-    .nav-links .dropdown-menu a,
-    .nav-links .sub-dropdown-menu a,
-    .nav-links .dropdown-menu .dropdown-group-title {
-      display: block !important;
-      padding: 12px 20px !important;
-      border-bottom: 1px solid rgba(0,0,0,0.05);
-      width: 100% !important;
-      box-sizing: border-box !important;
-      font-size: 0.95rem !important;
-    }
-
-    /* 5. Push sub-dropdown text slightly further to show hierarchy */
-    .sub-dropdown-menu a {
-      padding-left: 40px !important;
-    }
-
-    /* 6. Ensure grouping inside Departments works correctly */
-    .dropdown-group {
-      padding: 0 !important;
-      margin: 0 !important;
-      width: 100% !important;
-    }
-
-    /* 7. Remove the bottom border for the last item */
-    .nav-links .dropdown-menu a:last-child,
-    .nav-links .sub-dropdown-menu a:last-child {
-      border-bottom: none;
-    }
-  }
-
-    @media (max-width: 992px) {
-    /* --- Make the menu scrollable --- */
-    .nav-links.open {
-      right: 0;
-      max-height: calc(100vh - 116px) !important; /* Fits perfectly below top nav */
-      overflow-y: auto !important; /* Enables scrolling */
-      padding-bottom: 40px !important; /* Nice bottom padding so the last item isn't stuck to edge */
-    }
-
-    /* --- Force the parent <li> to stack vertically --- */
-    .nav-links li.nav-dropdown {
-      display: flex !important;
-      flex-direction: column !important;
-      align-items: stretch !important;
-      width: 100% !important;
-    }
-
-    /* --- Reset the dropdown menus --- */
-    .nav-links .dropdown-menu {
-      position: static !important;
-      left: 0 !important;
-      top: 0 !important;
-      width: 100% !important;
-      box-shadow: none !important;
-      border-left: none !important;
-      border-radius: 0 !important;
-      background: #f8f9fa;
-      padding: 0 !important;
-      margin: 0 !important;
-      display: none !important;
-    }
-    .nav-links .dropdown-menu.open {
-      display: block !important;
-    }
-
-    .sub-dropdown-menu {
-      position: static !important;
-      left: 0 !important;
-      top: 0 !important;
-      width: 100% !important;
-      box-shadow: none !important;
-      border-left: none !important;
-      border-radius: 0 !important;
-      background: #e9ecef;
-      padding: 0 !important;
-      margin: 0 !important;
-      display: none !important;
-    }
-    .sub-dropdown-menu.open {
-      display: block !important;
-    }
-
-    /* --- HIERARCHY: Proper visual nesting --- */
-    /* Main Dropdown Text (e.g., About KTVC, Service Charter) */
-    .nav-links .dropdown-menu > li > a,
-    .nav-links .dropdown-menu .dropdown-group-title {
-      display: block !important;
-      padding: 12px 20px !important;
-      border-bottom: 1px solid rgba(0,0,0,0.05);
-      width: 100% !important;
-      box-sizing: border-box !important;
-      font-size: 0.95rem !important;
-    }
-
-    /* Sub-Dropdown Text (e.g., Board of Management, Chief Principal) */
-    .sub-dropdown-menu a {
-      padding-left: 40px !important; /* Indent further to show it belongs to Administration */
-    }
-
-    /* Remove bottom border for the very last item */
-    .nav-links .dropdown-menu > li:last-child > a,
-    .nav-links .sub-dropdown-menu > li:last-child > a {
-      border-bottom: none;
-    }
-  }
 
 /* ═══════════════════════════════════════
    PRINCIPAL'S MESSAGE (Unified Card)
@@ -1849,7 +1704,7 @@ ul {
   }
 }
 
-/* Aplly Button Styes */
+/* Apply Button Styes */
 .btn-apply {
   background: #f5c518;
   color: #1a1a2e;
