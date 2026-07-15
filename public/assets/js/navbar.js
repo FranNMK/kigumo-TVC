@@ -201,8 +201,8 @@
   }
 
   /**
-  * Dropdown menu hover (desktop) and tap (mobile) behavior.
-  */
+   * Dropdown menu hover (desktop) and tap (mobile) behavior.
+   */
   function initDropdowns() {
     const dropdowns = document.querySelectorAll(".nav-dropdown");
 
@@ -260,8 +260,6 @@
           subMenu.style.display = "";
         }
       });
-
-      
 
       // Mobile tap toggle with AUTO-CLOSE logic
       subToggle.addEventListener("click", function (e) {
