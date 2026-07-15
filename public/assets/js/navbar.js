@@ -190,7 +190,7 @@
     }
   }
 
-  /**
+   /**
    * Dropdown menu hover (desktop) and tap (mobile) behavior.
    */
   function initDropdowns() {
@@ -214,16 +214,26 @@
         }
       });
 
-      // Mobile tap toggle
+      // Mobile tap toggle with AUTO-CLOSE logic
       toggle.addEventListener("click", function (e) {
         if (window.innerWidth <= 992) {
           e.preventDefault();
+          
+          // 1. Find ALL other open dropdown menus and close them
+          const allOpenMenus = document.querySelectorAll('.nav-links .dropdown-menu.open');
+          allOpenMenus.forEach(openMenu => {
+            if (openMenu !== menu) {
+              openMenu.classList.remove('open');
+            }
+          });
+
+          // 2. Toggle the clicked one
           menu.classList.toggle("open");
         }
       });
     });
 
-    // Sub-dropdowns for Administration
+    // Sub-dropdowns for Administration with AUTO-CLOSE logic
     const subDrops = document.querySelectorAll(".sub-dropdown");
     subDrops.forEach((sub) => {
       const subToggle = sub.querySelector(":scope > a");
@@ -240,9 +250,21 @@
           subMenu.style.display = "";
         }
       });
+
+      // Mobile tap toggle with AUTO-CLOSE logic
       subToggle.addEventListener("click", function (e) {
         if (window.innerWidth <= 992) {
           e.preventDefault();
+
+          // 1. Find ALL other open sub-menus and close them
+          const allOpenSubMenus = document.querySelectorAll('.sub-dropdown-menu.open');
+          allOpenSubMenus.forEach(openSub => {
+            if (openSub !== subMenu) {
+              openSub.classList.remove('open');
+            }
+          });
+
+          // 2. Toggle the clicked one
           subMenu.classList.toggle("open");
         }
       });

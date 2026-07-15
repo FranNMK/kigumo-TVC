@@ -1530,6 +1530,82 @@ ul {
     }
   }
 
+    @media (max-width: 992px) {
+    /* --- Make the menu scrollable --- */
+    .nav-links.open {
+      right: 0;
+      max-height: calc(100vh - 116px) !important; /* Fits perfectly below top nav */
+      overflow-y: auto !important; /* Enables scrolling */
+      padding-bottom: 40px !important; /* Nice bottom padding so the last item isn't stuck to edge */
+    }
+
+    /* --- Force the parent <li> to stack vertically --- */
+    .nav-links li.nav-dropdown {
+      display: flex !important;
+      flex-direction: column !important;
+      align-items: stretch !important;
+      width: 100% !important;
+    }
+
+    /* --- Reset the dropdown menus --- */
+    .nav-links .dropdown-menu {
+      position: static !important;
+      left: 0 !important;
+      top: 0 !important;
+      width: 100% !important;
+      box-shadow: none !important;
+      border-left: none !important;
+      border-radius: 0 !important;
+      background: #f8f9fa;
+      padding: 0 !important;
+      margin: 0 !important;
+      display: none !important;
+    }
+    .nav-links .dropdown-menu.open {
+      display: block !important;
+    }
+
+    .sub-dropdown-menu {
+      position: static !important;
+      left: 0 !important;
+      top: 0 !important;
+      width: 100% !important;
+      box-shadow: none !important;
+      border-left: none !important;
+      border-radius: 0 !important;
+      background: #e9ecef;
+      padding: 0 !important;
+      margin: 0 !important;
+      display: none !important;
+    }
+    .sub-dropdown-menu.open {
+      display: block !important;
+    }
+
+    /* --- HIERARCHY: Proper visual nesting --- */
+    /* Main Dropdown Text (e.g., About KTVC, Service Charter) */
+    .nav-links .dropdown-menu > li > a,
+    .nav-links .dropdown-menu .dropdown-group-title {
+      display: block !important;
+      padding: 12px 20px !important;
+      border-bottom: 1px solid rgba(0,0,0,0.05);
+      width: 100% !important;
+      box-sizing: border-box !important;
+      font-size: 0.95rem !important;
+    }
+
+    /* Sub-Dropdown Text (e.g., Board of Management, Chief Principal) */
+    .sub-dropdown-menu a {
+      padding-left: 40px !important; /* Indent further to show it belongs to Administration */
+    }
+
+    /* Remove bottom border for the very last item */
+    .nav-links .dropdown-menu > li:last-child > a,
+    .nav-links .sub-dropdown-menu > li:last-child > a {
+      border-bottom: none;
+    }
+  }
+
 /* ═══════════════════════════════════════
    PRINCIPAL'S MESSAGE (Unified Card)
    ═══════════════════════════════════════ */
