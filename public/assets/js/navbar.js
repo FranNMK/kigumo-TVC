@@ -114,6 +114,7 @@
    <!-- Apply Now button -->
   <li><a href="/apply.html" class="btn-apply ${current === "apply" ? "active" : ""}">Apply Now</a></li>
   <li><a href="/portals.html" class="btn-portal">Portals</a></li>
+</ul>                
         </div>
       </nav>
       <div class="nav-overlay" id="nav-overlay"></div>
@@ -156,8 +157,17 @@
     function closeNav() {
       navLinks.classList.remove("open");
       overlay.classList.remove("open");
-      hamburger.classList.remove("open"); // ← removes X animation
+      hamburger.classList.remove("open");
       document.body.style.overflow = "";
+
+      // Reset any expanded dropdowns/sub-dropdowns so the menu
+      // always reopens in a clean, collapsed state
+      navLinks
+        .querySelectorAll(".dropdown-menu.open, .sub-dropdown-menu.open")
+        .forEach((el) => el.classList.remove("open"));
+
+      // Also reset scroll position so it doesn't reopen mid-scroll
+      navLinks.scrollTop = 0;
     }
 
     // Toggle on hamburger click (open/close)
@@ -174,7 +184,7 @@
       overlay.addEventListener("click", closeNav);
     }
 
-        // Close when clicking any nav link EXCEPT dropdown toggles
+    // Close when clicking any nav link EXCEPT dropdown toggles
     navLinks.querySelectorAll("a").forEach((link) => {
       const parentLi = link.closest('li');
       // Skip if this link is a toggle for a dropdown or sub-dropdown
@@ -190,9 +200,9 @@
     }
   }
 
-   /**
-   * Dropdown menu hover (desktop) and tap (mobile) behavior.
-   */
+  /**
+  * Dropdown menu hover (desktop) and tap (mobile) behavior.
+  */
   function initDropdowns() {
     const dropdowns = document.querySelectorAll(".nav-dropdown");
 
@@ -218,7 +228,7 @@
       toggle.addEventListener("click", function (e) {
         if (window.innerWidth <= 992) {
           e.preventDefault();
-          
+
           // 1. Find ALL other open dropdown menus and close them
           const allOpenMenus = document.querySelectorAll('.nav-links .dropdown-menu.open');
           allOpenMenus.forEach(openMenu => {
@@ -250,6 +260,8 @@
           subMenu.style.display = "";
         }
       });
+
+      
 
       // Mobile tap toggle with AUTO-CLOSE logic
       subToggle.addEventListener("click", function (e) {
