@@ -225,8 +225,6 @@
   }
 })();
 
-
-
 // ── Load Real Stats & Animate ─────────────────────────────────
 (async function () {
   try {
@@ -368,8 +366,7 @@
   }
 })();
 
-
-  // ── Load Departments Preview (WITH REAL IMAGES) ────────────────
+// ── Load Departments Preview (WITH REAL IMAGES) ────────────────
 (async function () {
   try {
     const res = await fetch("/api/v1/departments");
