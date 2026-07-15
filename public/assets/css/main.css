@@ -1214,21 +1214,31 @@ ul {
     border-bottom: none;
   }
 
-      /* Fix for Departments dropdown inner lists & hierarchy alignment */
+         /* Fix for Departments dropdown inner lists & hierarchy alignment */
+    .nav-links .dropdown-menu > li.dropdown-group {
+      display: block !important;
+      width: 100% !important;
+      padding: 0 !important;
+      margin: 0 !important;
+    }
     .dropdown-group ul {
+      display: block !important;
+      width: 100% !important;
       padding-left: 0 !important;
       margin: 0 !important;
-      width: 100% !important;
       list-style: none !important;
+      border-top: 1px solid rgba(0,0,0,0.05); /* Gently separates Academic/Non-Academic titles */
     }
     .dropdown-group ul li {
       display: block !important;
       width: 100% !important;
+      margin: 0 !important;
+      padding: 0 !important;
     }
     .dropdown-group ul li a {
       display: block !important;
       width: 100% !important;
-      padding: 10px 20px 10px 30px !important; /* Slightly indented to show hierarchy */
+      padding: 10px 20px 10px 30px !important;
       box-sizing: border-box !important;
       border-bottom: 1px solid rgba(0,0,0,0.05);
       color: #333;

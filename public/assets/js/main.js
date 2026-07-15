@@ -225,48 +225,7 @@
   }
 })();
 
-// ── Mobile Nav ───────────────────────────────────────────────
-(function () {
-  const hamburger = document.querySelector(".hamburger");
-  const navLinks = document.querySelector(".nav-links");
-  const overlay = document.getElementById("nav-overlay");
-  if (!hamburger) return;
 
-  const mobileHeader = document.querySelector(".nav-mobile-header");
-
-  function openNav() {
-    navLinks.classList.add("open");
-    overlay.classList.add("open");
-    hamburger.classList.add("open");
-    if (mobileHeader) mobileHeader.classList.add("open");
-    document.body.style.overflow = "hidden";
-  }
-
-  function closeNav() {
-    navLinks.classList.remove("open");
-    overlay.classList.remove("open");
-    hamburger.classList.remove("open");
-    if (mobileHeader) mobileHeader.classList.remove("open");
-    document.body.style.overflow = "";
-  }
-
-  // Toggle on hamburger click
-  hamburger.addEventListener("click", () => {
-    navLinks.classList.contains("open") ? closeNav() : openNav();
-  });
-
-  // Close when clicking the dark overlay
-  overlay.addEventListener("click", closeNav);
-
-  // Close when clicking any nav link
-  navLinks.querySelectorAll("a").forEach((link) => {
-    link.addEventListener("click", closeNav);
-  });
-
-  // Close when clicking the X button
-  const closeBtn = document.getElementById("nav-close-btn");
-  if (closeBtn) closeBtn.addEventListener("click", closeNav);
-})();
 
 // ── Load Real Stats & Animate ─────────────────────────────────
 (async function () {
