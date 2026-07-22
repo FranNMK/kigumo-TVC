@@ -30,6 +30,7 @@
           <div class="top-bar-left">
             <span>📞  +254 769-394 273</span>
             <span>✉️ <a href="mailto:info@kigumotvc.ac.ke">info@kigumotvc.ac.ke</a></span>
+            <span>✉️ <a href="mailto:info@kigumotvc.ac.ke">kigumotvc@gmail.com</a></span>
           </div>
           <div class="top-bar-right">
             <div class="lang-switcher">
