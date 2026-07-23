@@ -10,9 +10,9 @@ const { isAuthenticated, hasRole } = require("../middleware/auth");
 router.get("/", async (req, res) => {
   try {
     const { role } = req.query;
-    // bio is excluded — it's not needed by the public API callers (departments.html, etc.)
+    // bio is included so the about page can display deputy principal / HOD profiles.
     // photo_path is kept because departments.html uses it to display HOD photos.
-    let sql = `SELECT id, full_name, email, reg_number, role, primary_department_id, photo_path FROM users WHERE is_active = TRUE`;
+    let sql = `SELECT id, full_name, email, reg_number, role, primary_department_id, photo_path, bio FROM users WHERE is_active = TRUE`;
     const params = [];
     if (role) {
       sql += ` AND role = ?`;
