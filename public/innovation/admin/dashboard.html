@@ -574,6 +574,17 @@
         </div>
 
         <!-- List Table -->
+                <!-- Search Bar -->
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
+          <div style="flex: 1; min-width: 200px; max-width: 500px;">
+            <input type="text" id="participantSearch" placeholder="🔍 Search by Admission, Name, Event or Department..." 
+                   oninput="searchParticipants()" 
+                   style="width: 100%; padding: 10px 15px; border: 1px solid #ddd; border-radius: 6px; font-size: 0.95rem;">
+          </div>
+        </div>
+
+        <!-- List Table -->
+        <div class="table-wrapper">
         <div class="table-wrapper">
           <table class="rank-table admin-table" id="participantsTable">
             <thead>
@@ -628,6 +639,7 @@
       </div>
 
     <!-- ==================== TAB: CATEGORIES ==================== -->
+         <!-- ==================== TAB: CATEGORIES ==================== -->
     <div id="tab-categories" class="tab-content">
       <h2>Categories Management</h2>
       <div class="card">
@@ -662,6 +674,7 @@
         </table>
       </div>
     </div>
+   
 
     <!-- ==================== TAB: COORDINATORS ==================== -->
     <div id="tab-coordinators" class="tab-content">
@@ -904,6 +917,7 @@
     }
 
     function switchTab(tabId) {
+      console.log('Switching to:', tabId); 
       // Hide all tabs
       document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
       // Show target
@@ -1345,6 +1359,7 @@
             </td>
           </tr>
         `).join('');
+        searchParticipants();
       } catch (e) {
         toast('Failed to load participants.', 'error');
       }
@@ -1715,6 +1730,32 @@
       window.location.href = '/innovation/login.html';
     }
 
+        // ============================================================
+    //  SEARCH PARTICIPANTS (Client-side filter)
+    // ============================================================
+    function searchParticipants() {
+      const input = document.getElementById('participantSearch');
+      const filter = input.value.toLowerCase().trim();
+      const table = document.getElementById('participantsTable');
+      const tbody = table.getElementsByTagName('tbody')[0];
+      const rows = tbody.getElementsByTagName('tr');
+
+      for (let i = 0; i < rows.length; i++) {
+        const row = rows[i];
+        let match = false;
+        const cells = row.getElementsByTagName('td');
+        // Search through all columns (ID, Admission, Name, Event, Department, Reg Date)
+        for (let j = 0; j < cells.length; j++) {
+          const cellText = cells[j].textContent || cells[j].innerText;
+          if (cellText.toLowerCase().indexOf(filter) > -1) {
+            match = true;
+            break;
+          }
+        }
+        // Toggle row visibility
+        row.style.display = match ? '' : 'none';
+      }
+    }
     // ============================================================
     //  INIT
     // ============================================================

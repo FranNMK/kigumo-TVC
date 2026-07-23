@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcryptjs');
 const db = require('../db');
+const logger = require('../utils/logger');
 const { body, validationResult } = require('express-validator');
 
 // POST /api/v1/innovation/auth/login
@@ -52,7 +53,7 @@ router.post('/login', [
     : '/innovation/coordinator/dashboard.html' // ← add .html
 });
   } catch (err) {
-    console.error('Innovation login error:', err);
+    logger.error('Innovation login error', { error: err.message });
     res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -61,7 +62,7 @@ router.post('/login', [
 router.post('/logout', (req, res) => {
   req.session.destroy(err => {
     if (err) {
-      console.error('Logout error:', err);
+      logger.error('Innovation logout error', { error: err.message });
       return res.status(500).json({ error: 'Failed to logout' });
     }
     res.clearCookie('connect.sid');

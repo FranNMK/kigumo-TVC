@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../db');
+const logger = require('../utils/logger');
 const { body, param, validationResult } = require('express-validator');
 const { isInnovationAuthenticated, isInnovationAdmin } = require('../middleware/auth');
 
@@ -16,7 +17,7 @@ router.get('/', async (req, res) => {
     `);
     res.json(rows);
   } catch (err) {
-    console.error('Error fetching categories:', err);
+    logger.error('Error fetching innovation categories', { error: err.message });
     res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -42,7 +43,7 @@ router.post('/', isInnovationAuthenticated, isInnovationAdmin, [
     if (err.code === 'ER_DUP_ENTRY') {
       return res.status(409).json({ error: 'Category already exists for this department' });
     }
-    console.error('Error creating category:', err);
+    logger.error('Error creating innovation category', { error: err.message });
     res.status(500).json({ error: 'Internal server error' });
   }
 });

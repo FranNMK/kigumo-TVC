@@ -21,19 +21,15 @@ const upload = multer({
   }
 });
 
-// ── HELPER: Upload to Cloudinary with dynamic resource_type ──
+// ── HELPER: Upload to Cloudinary with correct resource_type ──
+// PDFs are stored as 'raw' so they remain downloadable as original files.
+// Images are stored as 'image' for optimised delivery.
 async function uploadToCloudinary(file, folder) {
   if (!file) return null;
   const base64 = file.buffer.toString('base64');
   const dataURI = `data:${file.mimetype};base64,${base64}`;
 
-  // Use 'image' for PDFs so they render inline
-  let resourceType = 'auto';
-  if (file.mimetype === 'application/pdf') {
-    resourceType = 'image';
-  } else if (file.mimetype.startsWith('image/')) {
-    resourceType = 'image';
-  }
+  const resourceType = file.mimetype.startsWith('image/') ? 'image' : 'raw';
 
   const result = await uploadFile(dataURI, {
     folder,
@@ -157,7 +153,7 @@ router.post('/', upload.fields([
 
   } catch (err) {
     logger.error('Application submission error', { error: err.message, stack: err.stack });
-    res.status(500).json({ success: false, message: 'Server error: ' + err.message });
+    res.status(500).json({ success: false, message: 'Submission failed. Please try again.' });
   }
 });
 

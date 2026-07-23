@@ -5,6 +5,9 @@ node_modules/
 .env
 .env.local
 .env.*.local
+github_kigumo
+github_kigumo.pub
+
 
 # ── Logs ──────────────────────────────────────────────────
 logs/

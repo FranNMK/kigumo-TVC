@@ -10,14 +10,36 @@ const { uploadFile, deleteFile } = require("../utils/cloudinary");
 router.use(isAuthenticated);
 router.use(hasRole("admin"));
 
-// Switch to memory storage for Cloudinary uploads
+// Allowed extensions → their accepted MIME types.
+// Both the extension AND the MIME type must match; extension-only checks
+// can be bypassed by renaming a file.
+const ALLOWED_TYPES = {
+  jpg:  'image/jpeg',
+  jpeg: 'image/jpeg',
+  png:  'image/png',
+  gif:  'image/gif',
+  webp: 'image/webp',
+  pdf:  'application/pdf',
+  doc:  'application/msword',
+  docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  xls:  'application/vnd.ms-excel',
+  xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  ppt:  'application/vnd.ms-powerpoint',
+  pptx: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+  zip:  'application/zip',
+  rar:  'application/x-rar-compressed',
+};
+
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 50 * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
-    const allowed =
-      /jpeg|jpg|png|gif|webp|pdf|docx|doc|xlsx|xls|pptx|ppt|zip|rar/;
-    cb(null, allowed.test(path.extname(file.originalname).toLowerCase()));
+    const ext = path.extname(file.originalname).toLowerCase().replace('.', '');
+    const expectedMime = ALLOWED_TYPES[ext];
+    if (expectedMime && file.mimetype === expectedMime) {
+      return cb(null, true);
+    }
+    cb(new Error(`File type not allowed: .${ext} / ${file.mimetype}`));
   },
 });
 
@@ -379,32 +401,26 @@ router.patch("/users/:id/deactivate", async (req, res) => {
 router.get("/users", async (req, res) => {
   try {
     const { role, department } = req.query;
-    let sql = `SELECT id, full_name, email, reg_number, role, primary_department_id, 
-                      year_of_study, photo_path, bio, is_active, created_at, updated_at
-               FROM users WHERE 1=1`;
+    // Single JOIN — avoids N+1 queries (one per user) to the remote TiDB instance
+    let sql = `
+      SELECT u.id, u.full_name, u.email, u.reg_number, u.role,
+             u.primary_department_id, u.year_of_study, u.photo_path,
+             u.bio, u.is_active, u.created_at, u.updated_at,
+             d.name AS department_name
+      FROM users u
+      LEFT JOIN departments d ON d.id = u.primary_department_id
+      WHERE 1=1`;
     const params = [];
     if (role) {
-      sql += ` AND role = ?`;
+      sql += ` AND u.role = ?`;
       params.push(role);
     }
     if (department) {
-      sql += ` AND primary_department_id = ?`;
+      sql += ` AND u.primary_department_id = ?`;
       params.push(department);
     }
-    sql += ` ORDER BY full_name`;
+    sql += ` ORDER BY u.full_name`;
     const [rows] = await db.execute(sql, params);
-    // For each user, fetch department name
-    for (let u of rows) {
-      if (u.primary_department_id) {
-        const [[dept]] = await db.execute(
-          "SELECT name FROM departments WHERE id = ?",
-          [u.primary_department_id]
-        );
-        u.department_name = dept ? dept.name : null;
-      } else {
-        u.department_name = null;
-      }
-    }
     res.json({ success: true, data: rows });
   } catch (err) {
     logger.error("Admin users fetch error", { error: err.message });
@@ -437,83 +453,6 @@ router.get("/users/:id", async (req, res) => {
     res.json({ success: true, data: user });
   } catch (err) {
     logger.error("Admin user fetch error", { error: err.message });
-    res.status(500).json({ success: false, message: "Server error" });
-  }
-});
-
-// CREATE user (admin adds any role)
-router.post("/users", upload.single("photo"), async (req, res) => {
-  try {
-    const {
-      full_name,
-      email,
-      reg_number,
-      phone,
-      role,
-      department_id,
-      year_of_study,
-      bio,
-    } = req.body;
-    if (!full_name || !phone || !role) {
-      return res.status(400).json({
-        success: false,
-        message: "Full name, phone (password), and role are required",
-      });
-    }
-        // Validate role
-    const validRoles = [
-      "student",
-      "lecturer",
-      "hod",
-      "deputy_principal_academics",
-      "deputy_principal_administration",
-      "chief_principal",
-      "admin",
-      "registrar",
-      "secretary",
-      "dean_of_students",
-    ];
-    if (!validRoles.includes(role)) {
-      return res.status(400).json({ success: false, message: "Invalid role" });
-    }
-    // Hash password (phone)
-    const bcrypt = require("bcryptjs");
-    const hashedPassword = await bcrypt.hash(phone, 12);
-    const photoPath = req.file
-      ? await uploadToCloudinary(req.file, "kigumo-tvc/staff")
-      : null;
-
-    const [result] = await db.execute(
-      `INSERT INTO users 
-       (full_name, email, reg_number, password, role, primary_department_id, year_of_study, photo_path, bio) 
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [
-        full_name,
-        email || null,
-        reg_number || null,
-        hashedPassword,
-        role,
-        department_id || null,
-        year_of_study || 1,
-        photoPath,
-        bio || null,
-      ]
-    );
-    res.json({
-      success: true,
-      message: "User added successfully",
-      id: result.insertId,
-    });
-  } catch (err) {
-    if (err.code === "ER_DUP_ENTRY") {
-      return res
-        .status(400)
-        .json({
-          success: false,
-          message: "Email or registration number already exists",
-        });
-    }
-    logger.error("Admin user create error", { error: err.message });
     res.status(500).json({ success: false, message: "Server error" });
   }
 });
@@ -642,33 +581,47 @@ router.put("/users/:id", upload.single("photo"), async (req, res) => {
 
 // DELETE user (soft delete)
 router.delete("/users/:id", async (req, res) => {
+  // Fetch the user first (uses the shared pool — safe, no FK side-effects)
+  let row;
   try {
-    const [[row]] = await db.execute("SELECT * FROM users WHERE id = ?", [
+    const [[found]] = await db.execute("SELECT * FROM users WHERE id = ?", [
       req.params.id,
     ]);
-    if (!row) {
+    if (!found) {
       return res.status(404).json({ success: false, message: "User not found" });
     }
+    row = found;
+  } catch (err) {
+    logger.error("Admin user delete error (fetch)", { error: err.message });
+    return res.status(500).json({ success: false, message: "Server error" });
+  }
 
+  // Archive + FK-disabled delete must run on a DEDICATED connection so that
+  // `SET foreign_key_checks = 0` is scoped to this connection only and cannot
+  // leak back into the shared pool even if an error occurs mid-sequence.
+  const conn = await db.getConnection();
+  try {
     // 1. Archive to recycle_bin
-    await db.execute(
+    await conn.execute(
       "INSERT INTO recycle_bin (original_table, original_id, data_snapshot, deleted_by) VALUES (?,?,?,?)",
       ["users", row.id, JSON.stringify(row), req.session.user.id]
     );
 
-    // 2. Disable FK checks temporarily to allow the delete
-    await db.execute("SET foreign_key_checks = 0");
+    // 2. Disable FK checks on this connection only
+    await conn.execute("SET foreign_key_checks = 0");
 
     // 3. Hard delete the user
-    await db.execute("DELETE FROM users WHERE id = ?", [req.params.id]);
-
-    // 4. Re-enable FK checks
-    await db.execute("SET foreign_key_checks = 1");
+    await conn.execute("DELETE FROM users WHERE id = ?", [req.params.id]);
 
     res.json({ success: true, message: "User permanently deleted and archived" });
   } catch (err) {
     logger.error("Admin user delete error", { error: err.message });
     res.status(500).json({ success: false, message: "Server error" });
+  } finally {
+    // Always restore FK checks and release the connection, even if step 3 threw.
+    // This guarantees the connection is never returned to the pool with FK checks off.
+    try { await conn.execute("SET foreign_key_checks = 1"); } catch (_) {}
+    conn.release();
   }
 });
 

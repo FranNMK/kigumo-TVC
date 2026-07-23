@@ -20,8 +20,12 @@ const poolConfig = {
   queueLimit: 0,
   enableKeepAlive: true,          // keep connections alive
   keepAliveInitialDelay: 10000,
-  connectTimeout: 15000,
+  connectTimeout: 15000,          // max time to establish a new TCP connection
   idleTimeout: 30000,             // close idle connections gracefully
+  // Per-query execution timeout (ms). A stalled query against the remote TiDB
+  // instance cannot hold a pool connection indefinitely and block all 10 slots.
+  // 30 s is generous for normal queries; long reports should use their own connection.
+  queryTimeout: 30000,
 };
 
 // ── SSL/TLS Configuration for TiDB Cloud ───────────────────
@@ -150,4 +154,11 @@ if (process.env.NODE_ENV !== 'production' || process.env.LOG_LEVEL === 'DEBUG') 
 module.exports = {
   pool,
   execute,   // Always use this in your route files instead of pool.execute()
+
+  /**
+   * Obtain a raw connection from the pool for manual transaction control.
+   * IMPORTANT: always call connection.release() in a finally block.
+   * @returns {Promise<import('mysql2/promise').PoolConnection>}
+   */
+  getConnection: () => pool.getConnection(),
 };

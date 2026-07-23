@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../db');
+const logger = require('../utils/logger');
 const { body, query, param, validationResult } = require('express-validator');
 const { isInnovationAuthenticated, isInnovationCoordinator } = require('../middleware/auth');
 
@@ -26,7 +27,7 @@ router.post('/', isInnovationAuthenticated, isInnovationCoordinator, [
     );
     res.json({ message: 'Score saved successfully', id: result.insertId || 'updated' });
   } catch (err) {
-    console.error('Error saving score:', err);
+    logger.error('Error saving innovation score', { error: err.message });
     res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -58,7 +59,7 @@ router.get('/ranking', [
     `, [event_id, category_id]);
     res.json(rows);
   } catch (err) {
-    console.error('Error fetching ranking:', err);
+    logger.error('Error fetching innovation ranking', { error: err.message });
     res.status(500).json({ error: 'Internal server error' });
   }
 });

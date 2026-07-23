@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../db');
+const logger = require('../utils/logger');
 const { body, param, validationResult } = require('express-validator');
 const { isInnovationAuthenticated, isInnovationAdmin } = require('../middleware/auth');
 
@@ -12,7 +13,7 @@ router.get('/', async (req, res) => {
     );
     res.json(rows);
   } catch (err) {
-    console.error('Error fetching innovation events:', err);
+    logger.error('Error fetching innovation events', { error: err.message });
     res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -29,7 +30,7 @@ router.get('/:id', [
     if (rows.length === 0) return res.status(404).json({ error: 'Event not found' });
     res.json(rows[0]);
   } catch (err) {
-    console.error('Error fetching event:', err);
+    logger.error('Error fetching innovation event', { error: err.message, id: req.params.id });
     res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -54,7 +55,7 @@ router.post('/', isInnovationAuthenticated, isInnovationAdmin, [
     );
     res.status(201).json({ id: result.insertId, message: 'Event created successfully' });
   } catch (err) {
-    console.error('Error creating event:', err);
+    logger.error('Error creating innovation event', { error: err.message });
     res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -92,7 +93,7 @@ router.put('/:id', isInnovationAuthenticated, isInnovationAdmin, [
     if (result.affectedRows === 0) return res.status(404).json({ error: 'Event not found' });
     res.json({ message: 'Event updated successfully' });
   } catch (err) {
-    console.error('Error updating event:', err);
+    logger.error('Error updating innovation event', { error: err.message, id: req.params.id });
     res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -117,7 +118,7 @@ router.delete('/:id', isInnovationAuthenticated, isInnovationAdmin, [
     
     res.json({ message: 'Event deleted successfully' });
   } catch (err) {
-    console.error('Error deleting event:', err);
+    logger.error('Error deleting innovation event', { error: err.message, id: req.params.id });
     res.status(500).json({ error: 'Internal server error' });
   }
 });

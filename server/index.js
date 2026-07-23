@@ -1,5 +1,6 @@
 const express = require("express");
 const session = require("express-session");
+const MySQLStore = require("express-mysql-session")(session);
 const path = require("path");
 require("dotenv").config();
 const logger = require("./utils/logger");
@@ -19,14 +20,38 @@ app.use(requestLogger);
 
 const cors = require("cors");
 
-// CORS configuration
+// ── CORS configuration ─────────────────────────────────────
+// APP_ORIGINS  – comma-separated list of production/staging origins, set in .env
+//               e.g. APP_ORIGINS=https://www.kigumotvc.ac.ke,https://assets.kigumotvc.ac.ke
+// RAILWAY_PUBLIC_DOMAIN – kept so it can be removed from .env when Railway is retired;
+//                         it contributes nothing when the var is unset.
+const envOrigins = process.env.APP_ORIGINS
+  ? process.env.APP_ORIGINS.split(",").map((o) => o.trim()).filter(Boolean)
+  : [];
+
+const devOrigins =
+  process.env.NODE_ENV !== "production"
+    ? ["http://localhost:3000", "http://localhost:8080"]
+    : [];
+
+// Railway origin: kept for backward compatibility — remove RAILWAY_PUBLIC_DOMAIN
+// from .env once the Railway deployment is fully retired.
+const railwayOrigins = [
+  "https://kigumo-tvc-production.up.railway.app",
+  process.env.RAILWAY_PUBLIC_DOMAIN || "",
+].filter(Boolean);
+
+const allowedOrigins = [...envOrigins, ...devOrigins, ...railwayOrigins];
+
+if (process.env.NODE_ENV === "production" && envOrigins.length === 0) {
+  logger.warn(
+    "⚠️  APP_ORIGINS is not set — no production domains are in the CORS allowlist. " +
+    "Add APP_ORIGINS=https://www.kigumotvc.ac.ke,https://assets.kigumotvc.ac.ke to your .env file."
+  );
+}
+
 const corsOptions = {
-  origin: [
-    "http://localhost:3000",
-    "http://localhost:8080",
-    "https://kigumo-tvc-production.up.railway.app",
-    process.env.RAILWAY_PUBLIC_DOMAIN || "",
-  ].filter(Boolean),
+  origin: allowedOrigins,
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
@@ -63,14 +88,42 @@ app.get('/innovation', (req, res) => {
   res.sendFile(path.join(__dirname, '../public/innovation/index.html'));
 });
 
-// Session configuration - UPDATED with security best practices
+// ── Session secret ─────────────────────────────────────────
+// Crash loudly at startup if SESSION_SECRET is missing in production.
+// A missing secret would silently fall back to a known public string,
+// which allows anyone to forge session cookies.
+if (process.env.NODE_ENV === "production" && !process.env.SESSION_SECRET) {
+  logger.error("FATAL: SESSION_SECRET environment variable is not set. Server will not start.");
+  process.exit(1);
+}
+const sessionSecret =
+  process.env.SESSION_SECRET || "kigumo-tvc-dev-only-secret-do-not-use-in-prod";
+
+// ── Session store ───────────────────────────────────────────
+// Use the existing mysql2 pool (from db.js) so sessions survive process
+// restarts and are shared across Passenger worker processes.
+// express-mysql-session creates the `sessions` table automatically on first run.
+const { pool: dbPool } = require("./db");
+const sessionStore = new MySQLStore(
+  {
+    // Reuse the existing pool — do NOT create a second connection.
+    // These options are ignored when a connection is passed in:
+    createDatabaseTable: true,   // auto-create `sessions` table if absent
+    clearExpired: true,          // periodically DELETE expired rows
+    checkExpirationInterval: 15 * 60 * 1000, // check every 15 min
+    expiration: 30 * 60 * 1000,              // match cookie maxAge (30 min)
+    endConnectionOnClose: false, // don't close the shared pool on store.close()
+  },
+  dbPool
+);
+
+// Session configuration
 app.use(
   session({
-    secret:
-      process.env.SESSION_SECRET ||
-      "kigumo-tvc-dev-secret-change-in-production",
+    secret: sessionSecret,
     resave: false,
     saveUninitialized: false,
+    store: sessionStore,
     cookie: {
       httpOnly: true, // Prevents client-side JS from reading cookie
       secure: process.env.NODE_ENV === "production", // HTTPS only in production
@@ -261,16 +314,15 @@ app.use((req, res) => {
 });
 
 // ── Global Error Handler ────────────────────────────────────
-// CRITICAL ADDITION: Catches unhandled errors in routes
 app.use((err, req, res, next) => {
-  // Log error internally
-  if (process.env.NODE_ENV !== "production") {
-    console.error("Server Error:", err.stack);
-  } else {
-    console.error("Server Error:", err.message);
-  }
+  // Log full detail server-side; never expose stack traces to the client
+  logger.error("Unhandled server error", {
+    error: err.message,
+    stack: process.env.NODE_ENV !== "production" ? err.stack : undefined,
+    method: req.method,
+    url: req.originalUrl,
+  });
 
-  // Never expose error details to client in production
   res.status(500).json({
     success: false,
     message:

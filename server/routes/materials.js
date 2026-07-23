@@ -13,22 +13,54 @@ const path = require("path");
 const { uploadFile, deleteFile } = require("../utils/cloudinary");
 const cloudinary = require("cloudinary").v2;
 
+// Image MIME types — anything else (PDF, DOCX, PPTX, …) is uploaded as raw
+const IMAGE_MIMETYPES = new Set([
+  "image/jpeg", "image/png", "image/gif", "image/webp",
+  "image/svg+xml", "image/bmp", "image/tiff"
+]);
+
+// Allowed extensions → their accepted MIME types.
+// Both must match so a renamed file is rejected before it reaches Cloudinary.
+const ALLOWED_TYPES = {
+  jpg:  'image/jpeg',
+  jpeg: 'image/jpeg',
+  png:  'image/png',
+  gif:  'image/gif',
+  webp: 'image/webp',
+  pdf:  'application/pdf',
+  doc:  'application/msword',
+  docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  ppt:  'application/vnd.ms-powerpoint',
+  pptx: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+  mp4:  'video/mp4',
+  txt:  'text/plain',
+};
+
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 50 * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
-    const allowed = /jpeg|jpg|png|gif|pdf|docx|pptx|mp4|txt|doc/;
-    cb(null, allowed.test(path.extname(file.originalname).toLowerCase()));
+    const ext = path.extname(file.originalname).toLowerCase().replace('.', '');
+    const expectedMime = ALLOWED_TYPES[ext];
+    if (expectedMime && file.mimetype === expectedMime) {
+      return cb(null, true);
+    }
+    cb(new Error(`File type not allowed: .${ext} / ${file.mimetype}`));
   },
 });
 
 // ── Helper: generate download URL with original filename ──
-function getDownloadUrl(public_id, original_filename) {
+function getDownloadUrl(public_id, original_filename, resource_type) {
   if (!public_id || !original_filename) return null;
-  // Build the download URL manually so the filename is always included
-  const cloudName = 'dabo8y2bw';   // your Cloudinary cloud name
-  // URL format: https://res.cloudinary.com/{cloud_name}/raw/upload/fl_attachment:{filename}/v1/{public_id}
-  return `https://res.cloudinary.com/${cloudName}/raw/upload/fl_attachment:${encodeURIComponent(original_filename)}/v1/${public_id}`;
+  // Use the Cloudinary SDK to build a properly-versioned URL so we never
+  // hardcode /v1/ or the cloud name.  resource_type comes from the upload result
+  // stored per-file (defaults to 'raw' for non-image materials).
+  return cloudinary.url(public_id, {
+    secure: true,
+    resource_type: resource_type || "raw",
+    type: "upload",
+    flags: `attachment:${encodeURIComponent(original_filename)}`,
+  });
 }
 
 // ── Helper: extract admission prefix from reg_number ───────
@@ -129,11 +161,16 @@ router.post(
         }
       }
 
-      // Upload to Cloudinary
+      // Upload to Cloudinary.
+      // Non-image files (PDF, DOCX, PPTX, …) must use resource_type 'raw' so
+      // that Cloudinary stores and delivers them as their original bytes.
+      // Images keep resource_type 'image' so transformations still work.
+      const isImage = IMAGE_MIMETYPES.has(req.file.mimetype);
       const fileBase64 = req.file.buffer.toString("base64");
       const dataURI = `data:${req.file.mimetype};base64,${fileBase64}`;
       const cloudinaryResult = await uploadFile(dataURI, {
         folder: "kigumo-tvc/materials",
+        resource_type: isImage ? "image" : "raw",
       });
 
       // Insert material
@@ -153,12 +190,13 @@ router.post(
         ],
       );
 
-      // Insert cohort associations
-      if (prefixes.length > 0) {
-        const values = prefixes.map((prefix) => [result.insertId, prefix]);
-        await db.query(
-          `INSERT INTO material_cohorts (material_id, admission_prefix) VALUES ?`,
-          [values],
+      // Insert cohort associations — one row per prefix using db.execute()
+      // (db.query is not exported; mysql2's execute() doesn't support the
+      //  bulk-values shorthand, so we insert rows individually in a loop)
+      for (const prefix of prefixes) {
+        await db.execute(
+          `INSERT INTO material_cohorts (material_id, admission_prefix) VALUES (?, ?)`,
+          [result.insertId, prefix],
         );
       }
 

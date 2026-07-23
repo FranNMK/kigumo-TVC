@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../db');
+const logger = require('../utils/logger');
 const { body, param, validationResult } = require('express-validator');
 const { isInnovationAuthenticated, isInnovationAdmin } = require('../middleware/auth');
 
@@ -30,7 +31,7 @@ router.get('/', isInnovationAuthenticated, async (req, res) => {
     const [rows] = await db.execute(sql, params);
     res.json(rows);
   } catch (err) {
-    console.error('Error fetching participants:', err);
+    logger.error('Error fetching innovation participants', { error: err.message });
     res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -57,7 +58,7 @@ router.get('/:id', isInnovationAuthenticated, isInnovationAdmin, [
     if (rows.length === 0) return res.status(404).json({ error: 'Participant not found' });
     res.json(rows[0]);
   } catch (err) {
-    console.error('Error fetching participant:', err);
+    logger.error('Error fetching innovation participant', { error: err.message, id: req.params.id });
     res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -86,7 +87,7 @@ router.post('/', isInnovationAuthenticated, isInnovationAdmin, [
     if (err.code === 'ER_DUP_ENTRY') {
       return res.status(409).json({ error: 'Participant already registered for this event' });
     }
-    console.error('Error adding participant:', err);
+    logger.error('Error adding innovation participant', { error: err.message });
     res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -128,7 +129,7 @@ router.put('/:id', isInnovationAuthenticated, isInnovationAdmin, [
     if (result.affectedRows === 0) return res.status(404).json({ error: 'Participant not found' });
     res.json({ message: 'Participant updated successfully' });
   } catch (err) {
-    console.error('Error updating participant:', err);
+    logger.error('Error updating innovation participant', { error: err.message, id: req.params.id });
     res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -147,7 +148,7 @@ router.delete('/:id', isInnovationAuthenticated, isInnovationAdmin, [
     if (result.affectedRows === 0) return res.status(404).json({ error: 'Participant not found' });
     res.json({ message: 'Participant deleted successfully' });
   } catch (err) {
-    console.error('Error deleting participant:', err);
+    logger.error('Error deleting innovation participant', { error: err.message, id: req.params.id });
     res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -198,7 +199,7 @@ router.post('/import', isInnovationAuthenticated, isInnovationAdmin, [
     });
   } catch (err) {
     await connection.rollback();
-    console.error('Error importing participants:', err);
+    logger.error('Error importing innovation participants', { error: err.message });
     if (err.code === 'ER_DUP_ENTRY') {
       return res.status(409).json({ error: 'Duplicate admission numbers found in import batch.', errorRows });
     }

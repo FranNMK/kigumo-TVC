@@ -254,7 +254,7 @@ router.post("/logout", (req, res) => {
   if (req.session) {
     req.session.destroy((err) => {
       if (err) {
-        console.error("Logout error:", err.message);
+        logger.error("Logout error", { error: err.message });
         return res.status(500).json({
           success: false,
           message: "Error logging out. Please try again.",
