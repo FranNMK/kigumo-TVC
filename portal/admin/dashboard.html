@@ -566,6 +566,10 @@
           <span class="nav-icon">📋</span>
           <span class="nav-link-text">Applications</span>
         </a>
+        <a href="#" class="nav-link" data-tab="intake-dates">
+          <span class="nav-icon">📆</span>
+          <span class="nav-link-text">Intake Dates</span>
+        </a>
 
         <hr style="border-color: #444; margin: 0.5rem 0" />
 
@@ -706,6 +710,10 @@
           <h2>Applications</h2>
           <div id="applicationsContent">Loading...</div>
         </div>
+        <div class="tab-content" id="tab-intake-dates">
+          <h2>Intake Dates</h2>
+          <div id="intakeDatesContent">Loading...</div>
+        </div>
       </main>
     </div>
 
@@ -745,25 +753,26 @@
             .getElementById("tab-" + this.dataset.tab)
             .classList.add("active");
           const loader = {
-            overview: loadOverview,
-            slider: loadSlides,
-            principal: loadPrincipal,
-            "page-content": loadPageContent,
-            users: loadUsers,
-            departments: loadDepartments,
-            courses: loadCourses,
-            timetable: loadTimetable,
-            news: loadNews,
-            downloads: loadDownloads,
-            gallery: loadGallery,
-            recycle: loadRecycle,
-            enquiries: loadEnquiries,
-            bom: loadBOM,
-            partners: loadPartners,
-            cohorts: loadCohortsTab,
-            applications: loadApplications,
-            portals: loadPortalsAdmin,
-          }[this.dataset.tab];
+          overview: loadOverview,
+          slider: loadSlides,
+          principal: loadPrincipal,
+          "page-content": loadPageContent,
+          users: loadUsers,
+          departments: loadDepartments,
+          courses: loadCourses,
+          timetable: loadTimetable,
+          news: loadNews,
+          downloads: loadDownloads,
+          gallery: loadGallery,
+          recycle: loadRecycle,
+          enquiries: loadEnquiries,
+          bom: loadBOM,
+          partners: loadPartners,
+          cohorts: loadCohortsTab,
+          applications: loadApplications,
+          portals: loadPortalsAdmin,
+          'intake-dates': loadIntakeDates,
+        }[this.dataset.tab];
           if (loader) loader();
         });
       });
@@ -3360,6 +3369,237 @@
           finishProgress(false, "Network error. Please try again.");
         }
       }
+      // ── INTAKE DATES ──────────────────────────────────────────────────────
+      async function loadIntakeDates() {
+        const el = document.getElementById('intakeDatesContent');
+        el.innerHTML = '<p>Loading…</p>';
+        try {
+          const [datesRes, settingsRes] = await Promise.all([
+            fetch(`${API}/intake-dates`),
+            fetch(`${API}/intake-settings`),
+          ]);
+          const datesData    = await datesRes.json();
+          const settingsData = await settingsRes.json();
+          const s = settingsData.data || {};
+
+          let h = `
+            <div style="display:flex; gap:0.8rem; flex-wrap:wrap; margin-bottom:1.2rem; align-items:center;">
+              <button class="btn btn-green btn-sm" onclick="openIntakeForm()">+ Add Intake</button>
+              <button class="btn btn-sm" style="background:#6c757d;color:#fff;" onclick="openIntakeSettings()">⚙️ Deadline Settings</button>
+            </div>
+            <div class="card" style="background:#f8fdf8; border-left:4px solid #1a7a1a; margin-bottom:1.2rem; padding:1rem;">
+              <strong style="color:#1a7a1a;">⚙️ Current Deadline Settings</strong>
+              <span style="margin-left:1.5rem; font-size:0.85rem; color:#555;">
+                Jan close day: <strong>${s.jan_close_day ?? '—'}</strong> &nbsp;|&nbsp;
+                May close day: <strong>${s.may_close_day ?? '—'}</strong> &nbsp;|&nbsp;
+                Sep close day: <strong>${s.sep_close_day ?? '—'}</strong>
+                <em style="color:#888; font-size:0.8rem;">(day-of-month the applications close in that month)</em>
+              </span>
+            </div>
+            <div style="overflow-x:auto;">
+            <table>
+              <thead>
+                <tr>
+                  <th>Label</th>
+                  <th>Application Deadline</th>
+                  <th>Reporting Date</th>
+                  <th>Programs Available</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>`;
+
+          if (datesData.success && datesData.data && datesData.data.length > 0) {
+            datesData.data.forEach(row => {
+              const statusBadge = {
+                open:     '<span class="badge badge-active">Open</span>',
+                upcoming: '<span class="badge badge-unread">Upcoming</span>',
+                closed:   '<span class="badge badge-inactive">Closed</span>',
+              }[row.status] || row.status;
+              const fmtD = v => v ? new Date(v).toDateString() : '—';
+              h += `<tr>
+                <td><strong>${escapeHtml(row.label)}</strong></td>
+                <td>${fmtD(row.application_deadline)}</td>
+                <td>${fmtD(row.intake_date)}</td>
+                <td>${escapeHtml(row.programs_available || '')}</td>
+                <td>${statusBadge}</td>
+                <td>
+                  <button class="btn btn-yellow btn-sm" onclick="editIntake(${row.id})">✏️ Edit</button>
+                  <button class="btn btn-red btn-sm" onclick="deleteIntake(${row.id})">🗑️ Del</button>
+                </td>
+              </tr>`;
+            });
+          } else {
+            h += '<tr><td colspan="6" style="text-align:center;color:#888;">No intake dates found. Click "+ Add Intake" to create one.</td></tr>';
+          }
+          h += '</tbody></table></div>';
+          el.innerHTML = h;
+        } catch (err) {
+          el.innerHTML = '<p style="color:#c00;">Error loading intake dates.</p>';
+        }
+      }
+
+      function openIntakeForm(existing) {
+        const isEdit = !!existing;
+        const d = existing || {};
+        function fmtDate(v) {
+          if (!v) return '';
+          return new Date(v).toISOString().split('T')[0];
+        }
+        openModal(`
+          <h3>${isEdit ? '✏️ Edit Intake Date' : '➕ Add Intake Date'}</h3>
+          <form onsubmit="${isEdit ? `saveIntake(event,${d.id})` : 'saveIntake(event)'}">
+            <div class="form-group">
+              <label>Label <span style="color:#c00;">*</span></label>
+              <input name="label" value="${escapeHtml(d.label || '')}" required placeholder="e.g. January 2026">
+            </div>
+            <div class="form-group">
+              <label>Application Deadline <span style="color:#c00;">*</span></label>
+              <input type="date" name="application_deadline" value="${fmtDate(d.application_deadline)}" required>
+            </div>
+            <div class="form-group">
+              <label>Reporting / Start Date <span style="color:#c00;">*</span></label>
+              <input type="date" name="intake_date" value="${fmtDate(d.intake_date)}" required>
+            </div>
+            <div class="form-group">
+              <label>Programs Available</label>
+              <input name="programs_available" value="${escapeHtml(d.programs_available || 'All Diploma & Certificate')}" placeholder="e.g. All Diploma & Certificate">
+            </div>
+            <div class="form-group">
+              <label>Status <span style="color:#c00;">*</span></label>
+              <select name="status" required>
+                <option value="open"     ${d.status === 'open'     ? 'selected' : ''}>Open</option>
+                <option value="upcoming" ${d.status === 'upcoming' || !d.status ? 'selected' : ''}>Upcoming</option>
+                <option value="closed"   ${d.status === 'closed'   ? 'selected' : ''}>Closed</option>
+              </select>
+            </div>
+            <hr style="margin:1rem 0;">
+            <button class="btn btn-green">💾 Save</button>
+            <button type="button" class="btn btn-red" onclick="closeModal()">❌ Cancel</button>
+          </form>
+        `);
+      }
+
+      async function editIntake(id) {
+        try {
+          const r   = await fetch(`${API}/intake-dates`);
+          const d   = await r.json();
+          const row = d.data?.find(x => x.id === id);
+          if (!row) return alert('Intake date not found');
+          openIntakeForm(row);
+        } catch (err) {
+          alert('Error loading intake date');
+        }
+      }
+
+      async function saveIntake(e, id) {
+        e.preventDefault();
+        const f = new FormData(e.target);
+        const payload = {
+          label:                f.get('label'),
+          intake_date:          f.get('intake_date'),
+          application_deadline: f.get('application_deadline'),
+          programs_available:   f.get('programs_available'),
+          status:               f.get('status'),
+        };
+        const isEdit = id != null;
+        const url    = isEdit ? `${API}/intake-dates/${id}` : `${API}/intake-dates`;
+        const method = isEdit ? 'PUT' : 'POST';
+        showProgress(isEdit ? 'Updating intake date…' : 'Adding intake date…');
+        updateProgress(40, 'Saving…');
+        try {
+          const r      = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+          const result = await r.json();
+          if (result.success) {
+            finishProgress(true, isEdit ? 'Intake date updated!' : 'Intake date added!');
+            closeModal();
+            loadIntakeDates();
+          } else {
+            finishProgress(false, result.message || 'Save failed');
+          }
+        } catch (err) {
+          finishProgress(false, 'Network error. Please try again.');
+        }
+      }
+
+      async function deleteIntake(id) {
+        if (!confirm('Delete this intake date? This cannot be undone.')) return;
+        showProgress('Deleting…');
+        updateProgress(50, 'Removing record…');
+        try {
+          const r      = await fetch(`${API}/intake-dates/${id}`, { method: 'DELETE' });
+          const result = await r.json();
+          if (result.success) {
+            finishProgress(true, 'Intake date deleted!');
+            loadIntakeDates();
+          } else {
+            finishProgress(false, result.message || 'Delete failed');
+          }
+        } catch (err) {
+          finishProgress(false, 'Network error. Please try again.');
+        }
+      }
+
+      function openIntakeSettings() {
+        fetch(`${API}/intake-settings`)
+          .then(r => r.json())
+          .then(d => {
+            const s = d.data || {};
+            openModal(`
+              <h3>⚙️ Intake Deadline Settings</h3>
+              <p style="font-size:0.85rem; color:#666; margin-bottom:1rem;">
+                These are the day-of-month values used when auto-calculating deadlines in the
+                student application form. For example, if Jan close day = 31, applications
+                close on 31st December (the month before the intake).
+              </p>
+              <form onsubmit="saveIntakeSettings(event)">
+                <div class="form-group">
+                  <label>January Intake — Application close day (of December)</label>
+                  <input type="number" name="jan_close_day" min="1" max="31" value="${s.jan_close_day ?? 15}" required>
+                </div>
+                <div class="form-group">
+                  <label>May Intake — Application close day (of April)</label>
+                  <input type="number" name="may_close_day" min="1" max="31" value="${s.may_close_day ?? 15}" required>
+                </div>
+                <div class="form-group">
+                  <label>September Intake — Application close day (of August)</label>
+                  <input type="number" name="sep_close_day" min="1" max="31" value="${s.sep_close_day ?? 15}" required>
+                </div>
+                <hr style="margin:1rem 0;">
+                <button class="btn btn-green">💾 Save Settings</button>
+                <button type="button" class="btn btn-red" onclick="closeModal()">❌ Cancel</button>
+              </form>
+            `);
+          })
+          .catch(() => alert('Error loading settings'));
+      }
+
+      async function saveIntakeSettings(e) {
+        e.preventDefault();
+        const f = new FormData(e.target);
+        const payload = {
+          jan_close_day: parseInt(f.get('jan_close_day')),
+          may_close_day: parseInt(f.get('may_close_day')),
+          sep_close_day: parseInt(f.get('sep_close_day')),
+        };
+        showProgress('Saving settings…');
+        updateProgress(50, 'Updating database…');
+        try {
+          const r      = await fetch(`${API}/intake-settings`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+          const result = await r.json();
+          if (result.success) {
+            finishProgress(true, 'Settings saved!');
+            closeModal();
+            loadIntakeDates();
+          } else {
+            finishProgress(false, result.message || 'Save failed');
+          }
+        } catch (err) {
+          finishProgress(false, 'Network error. Please try again.');
+        }
+      }
+
     </script>
   </body>
 </html>

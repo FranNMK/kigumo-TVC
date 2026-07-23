@@ -1728,4 +1728,155 @@ router.patch("/applications/:id/status", async (req, res) => {
   }
 });
 
+// ── INTAKE DATES ─────────────────────────────────────────────────────────────
+
+// PUBLIC endpoint — no auth — used by admissions.html
+// MUST be declared before /:id so Express does not match 'public' as an id.
+router.get('/intake-dates/public', async (req, res) => {
+  try {
+    const [rows] = await db.execute(
+      `SELECT id, label, intake_date, application_deadline, programs_available, status
+       FROM intake_dates_global
+       WHERE YEAR(intake_date) >= YEAR(CURDATE())
+       ORDER BY intake_date ASC`
+    );
+    res.json({ success: true, data: rows });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+/**
+ * GET /api/v1/admin/intake-dates
+ * Return all intake date records (with optional year filter).
+ */
+router.get('/intake-dates', isAuthenticated, hasRole('admin'), async (req, res) => {
+  try {
+    const { year } = req.query;
+    let sql = `
+      SELECT id, label, intake_date, application_deadline, programs_available, status
+      FROM intake_dates_global
+      ORDER BY intake_date ASC`;
+    const params = [];
+    if (year) {
+      sql = `
+        SELECT id, label, intake_date, application_deadline, programs_available, status
+        FROM intake_dates_global
+        WHERE YEAR(intake_date) = ?
+        ORDER BY intake_date ASC`;
+      params.push(year);
+    }
+    const [rows] = await db.execute(sql, params);
+    res.json({ success: true, data: rows });
+  } catch (err) {
+    logger.error('GET intake-dates error', { error: err.message });
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+/**
+ * POST /api/v1/admin/intake-dates
+ * Create a new intake date entry.
+ */
+router.post('/intake-dates', isAuthenticated, hasRole('admin'), async (req, res) => {
+  try {
+    const { label, intake_date, application_deadline, programs_available, status } = req.body;
+    if (!label || !intake_date || !application_deadline) {
+      return res.status(400).json({ success: false, message: 'label, intake_date and application_deadline are required' });
+    }
+    const [result] = await db.execute(
+      `INSERT INTO intake_dates_global (label, intake_date, application_deadline, programs_available, status)
+       VALUES (?, ?, ?, ?, ?)`,
+      [label, intake_date, application_deadline, programs_available || 'All Diploma & Certificate', status || 'upcoming']
+    );
+    res.json({ success: true, message: 'Intake date created', id: result.insertId });
+  } catch (err) {
+    logger.error('POST intake-dates error', { error: err.message });
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+/**
+ * PUT /api/v1/admin/intake-dates/:id
+ * Update an existing intake date.
+ */
+router.put('/intake-dates/:id', isAuthenticated, hasRole('admin'), async (req, res) => {
+  try {
+    const { label, intake_date, application_deadline, programs_available, status } = req.body;
+    if (!label || !intake_date || !application_deadline) {
+      return res.status(400).json({ success: false, message: 'label, intake_date and application_deadline are required' });
+    }
+    await db.execute(
+      `UPDATE intake_dates_global
+       SET label = ?, intake_date = ?, application_deadline = ?, programs_available = ?, status = ?
+       WHERE id = ?`,
+      [label, intake_date, application_deadline, programs_available || 'All Diploma & Certificate', status || 'upcoming', req.params.id]
+    );
+    res.json({ success: true, message: 'Intake date updated' });
+  } catch (err) {
+    logger.error('PUT intake-dates error', { error: err.message });
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+/**
+ * DELETE /api/v1/admin/intake-dates/:id
+ * Remove an intake date record.
+ */
+router.delete('/intake-dates/:id', isAuthenticated, hasRole('admin'), async (req, res) => {
+  try {
+    await db.execute('DELETE FROM intake_dates_global WHERE id = ?', [req.params.id]);
+    res.json({ success: true, message: 'Intake date deleted' });
+  } catch (err) {
+    logger.error('DELETE intake-dates error', { error: err.message });
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+/**
+ * GET /api/v1/admin/intake-settings
+ * Return the single intake_settings row (for deadline day offsets).
+ */
+router.get('/intake-settings', isAuthenticated, hasRole('admin'), async (req, res) => {
+  try {
+    const [rows] = await db.execute(
+      'SELECT * FROM intake_settings ORDER BY id DESC LIMIT 1'
+    );
+    res.json({ success: true, data: rows[0] || null });
+  } catch (err) {
+    logger.error('GET intake-settings error', { error: err.message });
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+/**
+ * PUT /api/v1/admin/intake-settings
+ * Upsert intake_settings deadline day offsets.
+ */
+router.put('/intake-settings', isAuthenticated, hasRole('admin'), async (req, res) => {
+  try {
+    const { jan_close_day, may_close_day, sep_close_day } = req.body;
+    if (jan_close_day == null || may_close_day == null || sep_close_day == null) {
+      return res.status(400).json({ success: false, message: 'All three close_day values are required' });
+    }
+    // Get current latest row
+    const [existing] = await db.execute('SELECT id FROM intake_settings ORDER BY id DESC LIMIT 1');
+    if (existing.length > 0) {
+      await db.execute(
+        'UPDATE intake_settings SET jan_close_day = ?, may_close_day = ?, sep_close_day = ?, updated_by = ? WHERE id = ?',
+        [jan_close_day, may_close_day, sep_close_day, req.session.user?.id || null, existing[0].id]
+      );
+    } else {
+      await db.execute(
+        'INSERT INTO intake_settings (jan_close_day, may_close_day, sep_close_day, updated_by) VALUES (?,?,?,?)',
+        [jan_close_day, may_close_day, sep_close_day, req.session.user?.id || null]
+      );
+    }
+    res.json({ success: true, message: 'Intake settings saved' });
+  } catch (err) {
+    logger.error('PUT intake-settings error', { error: err.message });
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
 module.exports = router;
