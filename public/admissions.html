@@ -21,47 +21,205 @@
             }, 'google_translate_element');
         }
     </script>
-    <!-- Google Translate Widget -->
-    <script type="text/javascript">
-        function googleTranslateElementInit() {
-            new google.translate.TranslateElement(
-                {
-                    pageLanguage: 'en',
-                    includedLanguages: 'sw',
-                    layout: google.translate.TranslateElement.InlineLayout.SIMPLE
-                },
-                'google_translate_element'
-            );
-        }
-    </script>
     <script src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
 
     <style>
+        /* ── Hero ──────────────────────────────────────────────── */
         .admissions-hero {
-            background: linear-gradient(135deg, #1a1a2e, #1a7a1a);
+            position: relative;
+            background: linear-gradient(135deg, #0d1b0d 0%, #1a3a1a 45%, #1a7a1a 100%);
             color: #fff;
-            padding: 4rem 2rem 2.5rem;
+            padding: 6rem 2rem 5rem;
             text-align: center;
+            overflow: hidden;
+        }
+
+        .admissions-hero::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background:
+                radial-gradient(circle at 20% 50%, rgba(245, 197, 24, 0.08) 0%, transparent 55%),
+                radial-gradient(circle at 80% 20%, rgba(26, 122, 26, 0.2) 0%, transparent 50%);
+            pointer-events: none;
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(245, 197, 24, 0.15);
+            border: 1px solid rgba(245, 197, 24, 0.4);
+            color: #f5c518;
+            font-size: 0.78rem;
+            font-weight: 600;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            padding: 6px 16px;
+            border-radius: 100px;
+            margin-bottom: 1.4rem;
         }
 
         .admissions-hero h1 {
-            font-size: 2.5rem;
+            font-size: clamp(2rem, 5vw, 3.2rem);
+            font-weight: 800;
+            line-height: 1.15;
+            margin-bottom: 1rem;
+            letter-spacing: -0.02em;
         }
 
+        .admissions-hero h1 span {
+            color: #f5c518;
+        }
+
+        .admissions-hero p {
+            font-size: 1.1rem;
+            color: rgba(255, 255, 255, 0.82);
+            max-width: 580px;
+            margin: 0 auto 2.5rem;
+            line-height: 1.7;
+        }
+
+        .hero-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn-apply {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: #f5c518;
+            color: #1a1a2e;
+            font-weight: 700;
+            font-size: 1rem;
+            padding: 14px 32px;
+            border-radius: 8px;
+            text-decoration: none;
+            transition: all 0.25s ease;
+            box-shadow: 0 4px 20px rgba(245, 197, 24, 0.35);
+        }
+
+        .btn-apply:hover {
+            background: #e0b000;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 28px rgba(245, 197, 24, 0.45);
+        }
+
+        .btn-outline {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: transparent;
+            color: #fff;
+            font-weight: 600;
+            font-size: 1rem;
+            padding: 14px 28px;
+            border-radius: 8px;
+            border: 2px solid rgba(255, 255, 255, 0.4);
+            text-decoration: none;
+            transition: all 0.25s ease;
+        }
+
+        .btn-outline:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.7);
+        }
+
+        .hero-stats {
+            display: flex;
+            justify-content: center;
+            gap: 3rem;
+            margin-top: 3.5rem;
+            padding-top: 2.5rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.12);
+            flex-wrap: wrap;
+        }
+
+        .hero-stat {
+            text-align: center;
+        }
+
+        .hero-stat strong {
+            display: block;
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: #f5c518;
+        }
+
+        .hero-stat span {
+            font-size: 0.82rem;
+            color: rgba(255, 255, 255, 0.65);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        /* ── Section containers ─────────────────────────────── */
         .section-container {
             max-width: 1100px;
             margin: 0 auto;
-            padding: 3rem 1.5rem;
+            padding: 4rem 1.5rem;
+        }
+
+        .section-label {
+            display: inline-block;
+            font-size: 0.72rem;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: #1a7a1a;
+            background: #e8f5e8;
+            padding: 4px 12px;
+            border-radius: 100px;
+            margin-bottom: 0.75rem;
         }
 
         .section-container h2 {
-            color: #1a7a1a;
-            font-size: 1.8rem;
-            margin-bottom: 1.5rem;
-            padding-bottom: 0.5rem;
-            border-bottom: 3px solid #f5c518;
+            color: #1a1a2e;
+            font-size: clamp(1.5rem, 3vw, 2rem);
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            line-height: 1.25;
         }
 
+        .section-container h2 span {
+            color: #1a7a1a;
+        }
+
+        .section-desc {
+            color: #666;
+            font-size: 1rem;
+            max-width: 600px;
+            line-height: 1.7;
+            margin-bottom: 2.5rem;
+        }
+
+        /* ── Apply CTA Banner ───────────────────────────────── */
+        .apply-cta-banner {
+            background: linear-gradient(135deg, #1a7a1a, #145c14);
+            color: #fff;
+            padding: 3rem 2rem;
+            text-align: center;
+        }
+
+        .apply-cta-banner h2 {
+            font-size: 1.7rem;
+            font-weight: 700;
+            margin-bottom: 0.75rem;
+        }
+
+        .apply-cta-banner p {
+            color: rgba(255, 255, 255, 0.82);
+            font-size: 1rem;
+            margin-bottom: 2rem;
+            max-width: 500px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        /* ── How-to cards ───────────────────────────────────── */
         .steps-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -70,107 +228,340 @@
 
         .step-card {
             background: #fff;
-            border-radius: 10px;
-            padding: 1.8rem;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+            border-radius: 14px;
+            padding: 2rem;
+            box-shadow: 0 2px 16px rgba(0, 0, 0, 0.07);
+            border: 1px solid #e8edf0;
+            transition: transform 0.25s ease, box-shadow 0.25s ease;
+        }
+
+        .step-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+        }
+
+        .step-card-icon {
+            width: 52px;
+            height: 52px;
+            background: #e8f5e8;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            margin-bottom: 1.2rem;
         }
 
         .step-card h3 {
-            color: #1a7a1a;
+            color: #1a1a2e;
+            font-size: 1.1rem;
+            font-weight: 700;
             margin-bottom: 1rem;
         }
 
         .step-card ol {
             padding-left: 1.2rem;
             color: #555;
-            line-height: 2;
+            line-height: 1.9;
         }
 
         .step-card ol li {
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.4rem;
         }
 
+        /* ── Info banner ────────────────────────────────────── */
+        .info-section {
+            background: #f4f8f4;
+        }
+
+        .kuccps-box {
+            background: #fff;
+            border-radius: 14px;
+            padding: 2rem;
+            border-left: 5px solid #1a7a1a;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
+        }
+
+        .kuccps-box p {
+            color: #555;
+            line-height: 1.8;
+        }
+
+        .kuccps-box a {
+            color: #1a7a1a;
+            font-weight: 600;
+            text-decoration: underline;
+        }
+
+        /* ── Intake table ───────────────────────────────────── */
         .intake-table {
             width: 100%;
             border-collapse: collapse;
             background: #fff;
-            border-radius: 8px;
+            border-radius: 12px;
             overflow: hidden;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+        }
+
+        .intake-table thead tr {
+            background: linear-gradient(90deg, #1a7a1a, #145c14);
         }
 
         .intake-table th {
-            background: #1a7a1a;
             color: #fff;
-            padding: 0.8rem 1rem;
+            padding: 1rem 1.2rem;
             text-align: left;
+            font-size: 0.88rem;
+            font-weight: 600;
+            letter-spacing: 0.03em;
         }
 
         .intake-table td {
-            padding: 0.7rem 1rem;
-            border-bottom: 1px solid #eee;
-            color: #555;
+            padding: 0.85rem 1.2rem;
+            border-bottom: 1px solid #f0f0f0;
+            color: #444;
+            font-size: 0.95rem;
         }
 
-        .intake-table tr:hover {
-            background: #f8f9fa;
+        .intake-table tr:last-child td {
+            border-bottom: none;
         }
 
-        .download-links {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 1rem;
+        .intake-table tr:hover td {
+            background: #f8fdf8;
         }
 
-        .download-card {
-            background: #f8f9fa;
-            border-radius: 8px;
-            padding: 1.2rem;
-            border-left: 4px solid #f5c518;
-        }
-
-        .download-card a {
-            color: #1a7a1a;
+        .intake-badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 100px;
+            font-size: 0.75rem;
             font-weight: 600;
-            text-decoration: none;
         }
 
-        .download-card a:hover {
-            text-decoration: underline;
+        .badge-open {
+            background: #dcfce7;
+            color: #16a34a;
         }
 
+        .badge-upcoming {
+            background: #fef9c3;
+            color: #ca8a04;
+        }
+
+        /* ── Requirements grid ──────────────────────────────── */
         .requirements-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
             gap: 1.5rem;
         }
 
         .req-card {
             background: #fff;
-            border-radius: 10px;
-            padding: 1.5rem;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
-            border-top: 4px solid #1a7a1a;
+            border-radius: 14px;
+            padding: 1.75rem;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+            border: 1px solid #e8edf0;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.25s ease, box-shadow 0.25s ease;
+        }
+
+        .req-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #1a7a1a, #f5c518);
+        }
+
+        .req-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 28px rgba(0, 0, 0, 0.1);
+        }
+
+        .req-icon {
+            font-size: 1.8rem;
+            margin-bottom: 0.9rem;
         }
 
         .req-card h3 {
+            color: #1a1a2e;
+            font-size: 1rem;
+            font-weight: 700;
+            margin-bottom: 0.6rem;
+        }
+
+        .req-grade {
+            font-size: 1.4rem;
+            font-weight: 800;
             color: #1a7a1a;
-            margin-bottom: 0.8rem;
+            margin-bottom: 0.4rem;
         }
 
         .req-card p {
-            color: #555;
+            color: #666;
+            font-size: 0.9rem;
             line-height: 1.6;
         }
 
-        @media (max-width: 768px) {
-            .steps-grid {
-                grid-template-columns: 1fr;
-            }
+        /* ── Download cards ─────────────────────────────────── */
+        .download-links {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 1.2rem;
+        }
 
-            .admissions-hero h1 {
-                font-size: 1.8rem;
-            }
+        .download-card {
+            background: #fff;
+            border-radius: 12px;
+            padding: 1.4rem 1.6rem;
+            border: 1px solid #e8edf0;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+            transition: all 0.22s ease;
+        }
+
+        .download-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.09);
+            border-color: #1a7a1a;
+        }
+
+        .dl-icon {
+            width: 44px;
+            height: 44px;
+            background: #e8f5e8;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            flex-shrink: 0;
+        }
+
+        .dl-info a {
+            color: #1a7a1a;
+            font-weight: 700;
+            font-size: 0.95rem;
+            text-decoration: none;
+        }
+
+        .dl-info a:hover {
+            text-decoration: underline;
+        }
+
+        .dl-info p {
+            color: #888;
+            font-size: 0.82rem;
+            margin-top: 3px;
+        }
+
+        /* ── International section ──────────────────────────── */
+        .intl-section {
+            background: linear-gradient(135deg, #0d1b0d, #1a3a1a);
+            color: #fff;
+        }
+
+        .intl-section .section-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 3rem;
+            align-items: center;
+        }
+
+        .intl-section h2 {
+            color: #fff !important;
+            margin-bottom: 1rem;
+        }
+
+        .intl-section p {
+            color: rgba(255, 255, 255, 0.75);
+            line-height: 1.8;
+            margin-bottom: 1rem;
+        }
+
+        .intl-section strong {
+            color: #f5c518;
+        }
+
+        .intl-cards {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .intl-card {
+            background: rgba(255, 255, 255, 0.07);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 12px;
+            padding: 1.2rem;
+        }
+
+        .intl-card h4 {
+            color: #f5c518;
+            font-size: 0.88rem;
+            font-weight: 700;
+            margin-bottom: 0.4rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .intl-card p {
+            color: rgba(255, 255, 255, 0.65);
+            font-size: 0.85rem;
+            margin: 0;
+        }
+
+        /* ── Reveal animation ───────────────────────────────── */
+        .reveal {
+            opacity: 0;
+            transform: translateY(36px);
+            transition: opacity 0.65s ease, transform 0.65s ease;
+        }
+
+        .reveal.revealed {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .reveal-left {
+            opacity: 0;
+            transform: translateX(-36px);
+            transition: opacity 0.65s ease, transform 0.65s ease;
+        }
+
+        .reveal-left.revealed {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .reveal-right {
+            opacity: 0;
+            transform: translateX(36px);
+            transition: opacity 0.65s ease, transform 0.65s ease;
+        }
+
+        .reveal-right.revealed {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .delay-1 { transition-delay: 0.1s; }
+        .delay-2 { transition-delay: 0.2s; }
+        .delay-3 { transition-delay: 0.3s; }
+        .delay-4 { transition-delay: 0.4s; }
+
+        /* ── Responsive ─────────────────────────────────────── */
+        @media (max-width: 768px) {
+            .steps-grid { grid-template-columns: 1fr; }
+            .intl-section .section-container { grid-template-columns: 1fr; }
+            .intl-cards { grid-template-columns: 1fr; }
+            .hero-stats { gap: 1.8rem; }
         }
     </style>
 </head>
@@ -179,63 +570,135 @@
     <div id="google_translate_element" style="position:fixed;top:10px;right:10px;z-index:9999;"></div>
     <header id="mainNavbar"></header>
 
+    <!-- ── Hero ──────────────────────────────────────────────── -->
     <section class="admissions-hero">
-        <h1>Admissions</h1>
-        <p>Join Kigumo TVC - Applications open for 2026 intakes</p>
+        <div class="hero-badge">🎓 2026 Intakes Now Open</div>
+        <h1>Begin Your Journey at<br><span>Kigumo TVC</span></h1>
+        <p>Quality technical and vocational training that prepares you for a successful career. Apply today — no application fee.</p>
+        <div class="hero-actions">
+            <a href="apply.html" class="btn-apply">
+                ✏️ Apply Online — It's Free
+            </a>
+            <a href="#how-to-apply" class="btn-outline">
+                Learn More ↓
+            </a>
+        </div>
+        <div class="hero-stats">
+            <div class="hero-stat">
+                <strong>3</strong>
+                <span>Annual Intakes</span>
+            </div>
+            <div class="hero-stat">
+                <strong>20+</strong>
+                <span>Programmes</span>
+            </div>
+            <div class="hero-stat">
+                <strong>48hrs</strong>
+                <span>Admission Letter</span>
+            </div>
+            <div class="hero-stat">
+                <strong>Free</strong>
+                <span>Application</span>
+            </div>
+        </div>
     </section>
 
-    <!-- How to Apply -->
-    <div class="section-container">
-        <h2>How to Apply</h2>
+    <!-- ── Apply Online CTA Banner ───────────────────────────── -->
+    <div class="apply-cta-banner">
+        <h2>Ready to Start? Apply Online in Minutes</h2>
+        <p>Our 4-step online application is free, fast and secure. Fill in your details, choose your course, and submit — all from your phone or computer.</p>
+        <a href="apply.html" class="btn-apply" style="font-size:1.05rem; padding:15px 36px;">
+            ✏️ Start Your Application Now
+        </a>
+    </div>
+
+    <!-- ── How to Apply ───────────────────────────────────────── -->
+    <div id="how-to-apply" class="section-container">
+        <div class="reveal">
+            <span class="section-label">Admission Process</span>
+            <h2>How to <span>Apply</span></h2>
+            <p class="section-desc">Choose the application route that works best for you. All routes lead to the same quality education.</p>
+        </div>
         <div class="steps-grid">
-            <div class="step-card">
-                <h3>🏫 Walk-in Application</h3>
+            <div class="step-card reveal delay-1">
+                <div class="step-card-icon">💻</div>
+                <h3>Online Application</h3>
                 <ol>
-                    <li>Visit the college admissions office with your KCSE results slip/certificate and national
-                        ID/birth certificate.</li>
-                    <li>Fill in the application form (available at the office or download from our website).</li>
-                    <li>Submit the completed form with copies of your certificates.</li>
-                    <li>Pay the registration fee of <strong>Ksh 1,000</strong> at any KCB Bank branch.<br>
-                        <small>Account: 1234567890, Kigumo TVC</small>
-                    </li>
-                    <li>Receive your admission letter within <strong>48 hours</strong>.</li>
-                    <li>Report to the college on the specified reporting date with all original documents.</li>
+                    <li>Click <strong>"Apply Online"</strong> on this page — it's free.</li>
+                    <li>Fill in your personal details, KCSE results, and choose your course.</li>
+                    <li>Upload scanned copies of your certificates and ID/Birth Cert.</li>
+                    <li>Submit and receive a reference number instantly.</li>
+                    <li>Receive your admission letter via email/SMS within <strong>48 hours</strong>.</li>
+                    <li>Report on the specified date with your original documents.</li>
                 </ol>
             </div>
-            <div class="step-card">
-                <h3>🎓 KUCCPS Placement</h3>
+            <div class="step-card reveal delay-2">
+                <div class="step-card-icon">🏫</div>
+                <h3>Walk-in Application</h3>
+                <ol>
+                    <li>Visit the college admissions office with your KCSE results slip/certificate and national ID/birth certificate.</li>
+                    <li>Fill in the application form (available at the office or download below).</li>
+                    <li>Submit completed form with copies of your certificates.</li>
+                    <li>Pay the registration fee of <strong>Ksh 1,000</strong> at any KCB Bank branch.<br>
+                        <small>Account: 1234567890 — Kigumo TVC</small>
+                    </li>
+                    <li>Receive your admission letter within <strong>48 hours</strong>.</li>
+                    <li>Report on the specified date with all original documents.</li>
+                </ol>
+            </div>
+            <div class="step-card reveal delay-3">
+                <div class="step-card-icon">🎓</div>
+                <h3>KUCCPS Placement</h3>
                 <ol>
                     <li>Apply through the <strong>KUCCPS student portal</strong> during the application window.</li>
-                    <li>Select Kigumo Technical and Vocational College as your preferred institution.</li>
+                    <li>Select <em>Kigumo Technical and Vocational College</em> as your preferred institution.</li>
                     <li>Choose your desired course based on your KCSE cluster subjects.</li>
                     <li>Wait for placement results from KUCCPS.</li>
                     <li>Download your placement letter from the KUCCPS portal.</li>
                     <li>Report to the college with the placement letter and original documents.</li>
                 </ol>
             </div>
+            <div class="step-card reveal delay-4">
+                <div class="step-card-icon">📞</div>
+                <h3>Contact Admissions</h3>
+                <ol>
+                    <li>Call us on <strong>0700 000 000</strong> (Mon–Fri, 8am–5pm).</li>
+                    <li>Email <strong>admissions@kigumotvc.ac.ke</strong> with your query.</li>
+                    <li>Our admissions team will guide you through the process step by step.</li>
+                    <li>We can also schedule a campus tour so you can see the facilities before applying.</li>
+                </ol>
+            </div>
         </div>
     </div>
 
-    <!-- KUCCPS Guidance -->
-    <div style="background:#f8f9fa;">
+    <!-- ── KUCCPS Guidance ─────────────────────────────────────── -->
+    <div class="info-section">
         <div class="section-container">
-            <h2>KUCCPS Guidance</h2>
-            <p style="color:#555;line-height:1.8;max-width:800px;">
-                The Kenya Universities and Colleges Central Placement Service (KUCCPS) places students in TVET
-                institutions based on KCSE performance and cluster subject requirements.
-                For technical courses, relevant cluster subjects include Mathematics, Physics, Chemistry, Biology,
-                English, and Geography.
-                Visit the <a href="https://kuccps.net" target="_blank" rel="noopener"
-                    style="color:#1a7a1a;font-weight:600;">KUCCPS website</a> for application deadlines and cluster
-                point requirements.
-            </p>
+            <div class="reveal">
+                <span class="section-label">Government Placement</span>
+                <h2>KUCCPS <span>Guidance</span></h2>
+                <p class="section-desc">Everything you need to know about government-sponsored placement.</p>
+            </div>
+            <div class="kuccps-box reveal delay-1">
+                <p>
+                    The Kenya Universities and Colleges Central Placement Service (<strong>KUCCPS</strong>) places students in TVET institutions based on KCSE performance and cluster subject requirements.
+                    For technical courses, relevant cluster subjects include <strong>Mathematics, Physics, Chemistry, Biology, English</strong> and <strong>Geography</strong>.
+                </p>
+                <p style="margin-top:1rem;">
+                    Visit the <a href="https://kuccps.net" target="_blank" rel="noopener">KUCCPS website →</a> for application deadlines and cluster point requirements. Government-sponsored students pay heavily subsidised fees under the TVET Fund.
+                </p>
+            </div>
         </div>
     </div>
 
-    <!-- Intake Dates -->
+    <!-- ── Intake Dates ───────────────────────────────────────── -->
     <div class="section-container">
-        <h2>Intake Dates (2026)</h2>
-        <div style="overflow-x:auto;">
+        <div class="reveal">
+            <span class="section-label">Academic Calendar</span>
+            <h2>Intake Dates <span>(2026)</span></h2>
+            <p class="section-desc">We run three intakes per year. Apply before the deadline to secure your place.</p>
+        </div>
+        <div style="overflow-x:auto;" class="reveal delay-1">
             <table class="intake-table">
                 <thead>
                     <tr>
@@ -243,6 +706,7 @@
                         <th>Application Deadline</th>
                         <th>Reporting Date</th>
                         <th>Programs Available</th>
+                        <th>Status</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -250,84 +714,138 @@
                         <td><strong>January 2026</strong></td>
                         <td>31st December 2025</td>
                         <td>12th January 2026</td>
-                        <td>All Diploma & Certificate programs</td>
+                        <td>All Diploma &amp; Certificate</td>
+                        <td><span class="intake-badge badge-open">Open</span></td>
                     </tr>
                     <tr>
                         <td><strong>May 2026</strong></td>
                         <td>30th April 2026</td>
                         <td>4th May 2026</td>
-                        <td>Selected Certificate & Artisan programs</td>
+                        <td>Certificate &amp; Artisan</td>
+                        <td><span class="intake-badge badge-upcoming">Upcoming</span></td>
                     </tr>
                     <tr>
                         <td><strong>September 2026</strong></td>
                         <td>31st August 2026</td>
                         <td>7th September 2026</td>
-                        <td>All Diploma & Certificate programs</td>
+                        <td>All Diploma &amp; Certificate</td>
+                        <td><span class="intake-badge badge-upcoming">Upcoming</span></td>
                     </tr>
                 </tbody>
             </table>
         </div>
+        <div style="margin-top:2rem; text-align:center;" class="reveal delay-2">
+            <a href="apply.html" class="btn-apply" style="display:inline-flex;">
+                ✏️ Apply for January 2026 Intake
+            </a>
+        </div>
     </div>
 
-    <!-- Entry Requirements -->
-    <div style="background:#f8f9fa;">
+    <!-- ── Entry Requirements ─────────────────────────────────── -->
+    <div class="info-section">
         <div class="section-container">
-            <h2>Entry Requirements</h2>
+            <div class="reveal">
+                <span class="section-label">Academic Requirements</span>
+                <h2>Entry <span>Requirements</span></h2>
+                <p class="section-desc">Minimum qualifications for each programme level. Contact us if you have questions about your eligibility.</p>
+            </div>
             <div class="requirements-grid">
-                <div class="req-card">
+                <div class="req-card reveal delay-1">
+                    <div class="req-icon">🎓</div>
                     <h3>Diploma Programs</h3>
-                    <p>KCSE Mean Grade <strong>C- (Minus)</strong> and above with relevant cluster subjects. Specific
-                        requirements vary by course.</p>
+                    <div class="req-grade">C- (Minus)</div>
+                    <p>KCSE Mean Grade C- and above with relevant cluster subjects. Specific requirements vary by course.</p>
                 </div>
-                <div class="req-card">
+                <div class="req-card reveal delay-2">
+                    <div class="req-icon">📜</div>
                     <h3>Certificate Programs</h3>
-                    <p>KCSE Mean Grade <strong>D+ (Plus)</strong> and above. Some programs may accept D (Plain) with
-                        relevant subjects.</p>
+                    <div class="req-grade">D+ (Plus)</div>
+                    <p>KCSE Mean Grade D+ and above. Some programs accept D (Plain) with relevant subjects.</p>
                 </div>
-                <div class="req-card">
+                <div class="req-card reveal delay-3">
+                    <div class="req-icon">🔧</div>
                     <h3>Artisan Programs</h3>
+                    <div class="req-grade">KCPE</div>
                     <p>KCPE Certificate or its equivalent. Open to all with basic literacy and numeracy skills.</p>
                 </div>
-                <div class="req-card">
+                <div class="req-card reveal delay-4">
+                    <div class="req-icon">💻</div>
                     <h3>Computer Packages</h3>
-                    <p>Open to all applicants. No minimum academic requirements. Suitable for beginners and
-                        professionals upgrading skills.</p>
+                    <div class="req-grade">Open</div>
+                    <p>No minimum academic requirements. Suitable for beginners and professionals upgrading skills.</p>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Downloads -->
+    <!-- ── Download Forms ─────────────────────────────────────── -->
     <div class="section-container">
-        <h2>Download Forms</h2>
+        <div class="reveal">
+            <span class="section-label">Resources</span>
+            <h2>Download <span>Forms</span></h2>
+            <p class="section-desc">Get the forms you need before visiting the admissions office.</p>
+        </div>
         <div class="download-links">
-            <div class="download-card">
-                <a href="downloads.html#admission">📄 Application Form (PDF) →</a>
-                <p style="color:#888;font-size:0.85rem;margin-top:0.3rem;">Download and fill before visiting admissions
-                    office</p>
+            <div class="download-card reveal delay-1">
+                <div class="dl-icon">📄</div>
+                <div class="dl-info">
+                    <a href="downloads.html#admission">Application Form (PDF)</a>
+                    <p>Download and fill before visiting admissions office</p>
+                </div>
             </div>
-            <div class="download-card">
-                <a href="downloads.html#admission">🏥 Medical Examination Form (PDF) →</a>
-                <p style="color:#888;font-size:0.85rem;margin-top:0.3rem;">Required for all new students</p>
+            <div class="download-card reveal delay-2">
+                <div class="dl-icon">🏥</div>
+                <div class="dl-info">
+                    <a href="downloads.html#admission">Medical Examination Form (PDF)</a>
+                    <p>Required for all new students upon reporting</p>
+                </div>
             </div>
-            <div class="download-card">
-                <a href="downloads.html#academic">📅 Academic Calendar 2026 (PDF) →</a>
-                <p style="color:#888;font-size:0.85rem;margin-top:0.3rem;">Important dates and semester schedule</p>
+            <div class="download-card reveal delay-3">
+                <div class="dl-icon">📅</div>
+                <div class="dl-info">
+                    <a href="downloads.html#academic">Academic Calendar 2026 (PDF)</a>
+                    <p>Important dates, semester schedule &amp; holidays</p>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- International Students -->
-    <div style="background:#f8f9fa;">
+    <!-- ── International Students ─────────────────────────────── -->
+    <div class="intl-section">
         <div class="section-container">
-            <h2>International Students</h2>
-            <p style="color:#555;line-height:1.8;max-width:800px;">
-                Kigumo TVC welcomes students from across East Africa and beyond. International applicants must have
-                their academic certificates equated by the Kenya National Qualifications Authority (KNQA).
-                Student passes can be processed through the Department of Immigration. Contact our admissions office at
-                <strong>admissions@kigumotvc.ac.ke</strong> for guidance on the international student application
-                process.
-            </p>
+            <div class="reveal-left">
+                <span class="section-label" style="background:rgba(245,197,24,0.15);color:#f5c518;">International Students</span>
+                <h2>Studying from<br><span style="color:#f5c518;">East Africa &amp; Beyond</span></h2>
+                <p>
+                    Kigumo TVC welcomes students from across East Africa and the world. We are committed to providing a
+                    diverse and inclusive learning environment.
+                </p>
+                <p>
+                    International applicants must have their academic certificates equated by the <strong>Kenya National Qualifications Authority (KNQA)</strong>.
+                    Student passes can be processed through the Department of Immigration.
+                </p>
+                <p>
+                    Contact our admissions office at <strong>admissions@kigumotvc.ac.ke</strong> for a personalised guide on the international student application process.
+                </p>
+            </div>
+            <div class="intl-cards reveal-right">
+                <div class="intl-card">
+                    <h4>📋 Certificate Equating</h4>
+                    <p>Contact KNQA to have your foreign certificates recognised before applying.</p>
+                </div>
+                <div class="intl-card">
+                    <h4>🛂 Student Pass</h4>
+                    <p>We assist with the student pass process through the Department of Immigration.</p>
+                </div>
+                <div class="intl-card">
+                    <h4>🏠 Accommodation</h4>
+                    <p>On-campus and off-campus housing options are available for international students.</p>
+                </div>
+                <div class="intl-card">
+                    <h4>✉️ Dedicated Support</h4>
+                    <p>A dedicated admissions officer guides you through every step of the process.</p>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -349,6 +867,28 @@
     <script src="assets/js/navbar.js"></script>
     <script>
         buildNavbar('PAGE_IDENTIFIER');
+    </script>
+
+    <!-- Scroll-reveal observer -->
+    <script>
+        (function () {
+            const revealClasses = ['reveal', 'reveal-left', 'reveal-right'];
+            const all = document.querySelectorAll('.reveal, .reveal-left, .reveal-right');
+            if (!all.length) return;
+
+            const observer = new IntersectionObserver(function (entries) {
+                entries.forEach(function (entry) {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('revealed');
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+
+            all.forEach(function (el) {
+                observer.observe(el);
+            });
+        })();
     </script>
 </body>
 
