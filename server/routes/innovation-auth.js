@@ -59,13 +59,16 @@ router.post('/login', [
 });
 
 // POST /api/v1/innovation/auth/logout
+// Only delete the innovation user from the session — do NOT call session.destroy()
+// because that would also log the user out of the main school portal if both
+// sessions are active simultaneously.
 router.post('/logout', (req, res) => {
-  req.session.destroy(err => {
+  delete req.session.innovationUser;
+  req.session.save(err => {
     if (err) {
       logger.error('Innovation logout error', { error: err.message });
       return res.status(500).json({ error: 'Failed to logout' });
     }
-    res.clearCookie('connect.sid');
     res.json({ success: true });
   });
 });

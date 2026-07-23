@@ -67,26 +67,11 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, "../public")));
 app.use("/public", express.static(path.join(__dirname, "../public")));
 
-// Serve portal files (login, dashboards) - CRITICAL ADDITION
-// Portal HTML files need to be accessible from /portal/ path
+// Serve portal files (login, dashboards)
 app.use("/portal", express.static(path.join(__dirname, "../portal")));
 
-// Serve uploaded files (materials, images, documents)
-app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
-
-
-
-// ... existing static middleware ...
-app.use(express.static(path.join(__dirname, '../public')));
-app.use(express.static(path.join(__dirname, '../portal')));
-
-// ADD THIS NEW ONE (use the existing path variable)
+// Serve innovation portal static assets
 app.use('/innovation', express.static(path.join(__dirname, '../public/innovation')));
-
-// And the route for /innovation
-app.get('/innovation', (req, res) => {
-  res.sendFile(path.join(__dirname, '../public/innovation/index.html'));
-});
 
 // ── Session secret ─────────────────────────────────────────
 // Crash loudly at startup if SESSION_SECRET is missing in production.
@@ -254,11 +239,6 @@ app.get("/api/ping", (req, res) => {
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV || "development",
   });
-});
-
-// Right after the static middleware, before your API routes
-app.get('/innovation', (req, res) => {
-  res.sendFile(path.join(__dirname, '../public/innovation/index.html'));
 });
 
 // ── 404 handler ─────────────────────────────────────────────

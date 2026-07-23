@@ -11,6 +11,7 @@ CREATE TABLE `materials` (
   `uploaded_by` int NOT NULL,
   `uploaded_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `public_id` varchar(255) COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT 'Cloudinary public_id for file management and deletion',
+  `resource_type` varchar(20) COLLATE utf8mb4_general_ci DEFAULT 'raw' COMMENT 'Cloudinary resource_type: image or raw',
   PRIMARY KEY (`id`) /*T![clustered_index] CLUSTERED */,
   KEY `uploaded_by` (`uploaded_by`),
   KEY `idx_materials_course` (`course_id`),

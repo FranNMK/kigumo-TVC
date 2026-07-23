@@ -10,24 +10,37 @@ const { uploadFile, deleteFile } = require("../utils/cloudinary");
 router.use(isAuthenticated);
 router.use(hasRole("admin"));
 
-// Allowed extensions → their accepted MIME types.
-// Both the extension AND the MIME type must match; extension-only checks
-// can be bypassed by renaming a file.
-const ALLOWED_TYPES = {
-  jpg:  'image/jpeg',
-  jpeg: 'image/jpeg',
-  png:  'image/png',
-  gif:  'image/gif',
-  webp: 'image/webp',
-  pdf:  'application/pdf',
-  doc:  'application/msword',
-  docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-  xls:  'application/vnd.ms-excel',
-  xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-  ppt:  'application/vnd.ms-powerpoint',
-  pptx: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-  zip:  'application/zip',
-  rar:  'application/x-rar-compressed',
+// ── File type validation ────────────────────────────────────
+// Strategy: check the extension is in the allowed set AND the MIME type
+// belongs to the same category (image/document/archive).
+//
+// We intentionally do NOT require exact extension→MIME matching because
+// browsers and operating systems report inconsistent MIME types for the
+// same file:
+//   - Windows Chrome may send image/jpg instead of image/jpeg
+//   - Some Android browsers send image/pjpeg for JPEG files
+//   - iOS occasionally omits MIME type entirely (empty string)
+// Requiring an exact match causes legitimate uploads to fail silently.
+//
+// Instead: allow any file whose extension is in the allowed set AND whose
+// MIME type starts with the expected category prefix (or is empty/octet-stream,
+// which we pass through and let Cloudinary validate server-side).
+
+const ALLOWED_EXTENSIONS = new Set([
+  'jpg', 'jpeg', 'png', 'gif', 'webp',          // images
+  'pdf',                                           // documents
+  'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx',  // office
+  'zip', 'rar',                                   // archives
+]);
+
+// Extension → MIME category prefix (used for loose validation)
+const EXT_CATEGORY = {
+  jpg: 'image/', jpeg: 'image/', png: 'image/', gif: 'image/', webp: 'image/',
+  pdf: 'application/pdf',
+  doc: 'application/', docx: 'application/',
+  xls: 'application/', xlsx: 'application/',
+  ppt: 'application/', pptx: 'application/',
+  zip: 'application/', rar: 'application/',
 };
 
 const upload = multer({
@@ -35,11 +48,24 @@ const upload = multer({
   limits: { fileSize: 50 * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
     const ext = path.extname(file.originalname).toLowerCase().replace('.', '');
-    const expectedMime = ALLOWED_TYPES[ext];
-    if (expectedMime && file.mimetype === expectedMime) {
-      return cb(null, true);
+
+    if (!ALLOWED_EXTENSIONS.has(ext)) {
+      return cb(new Error(`File type not allowed: .${ext}`));
     }
-    cb(new Error(`File type not allowed: .${ext} / ${file.mimetype}`));
+
+    const mime = file.mimetype || '';
+    const category = EXT_CATEGORY[ext] || '';
+
+    // Accept if: MIME starts with expected category, OR MIME is empty/octet-stream
+    // (some browsers/OS combos omit MIME or send application/octet-stream)
+    const mimeOk =
+      mime === '' ||
+      mime === 'application/octet-stream' ||
+      mime.startsWith(category);
+
+    if (mimeOk) return cb(null, true);
+
+    cb(new Error(`File type not allowed: .${ext} (${mime})`));
   },
 });
 
@@ -48,8 +74,14 @@ async function uploadToCloudinary(file, folder) {
   if (!file) return null;
   const fileBase64 = file.buffer.toString("base64");
   const dataURI = `data:${file.mimetype};base64,${fileBase64}`;
-  const result = await uploadFile(dataURI, { folder });
-  return result.secure_url;
+  try {
+    const result = await uploadFile(dataURI, { folder });
+    return result.secure_url;
+  } catch (err) {
+    // Re-throw with a clearer message so route catch blocks log something useful
+    const detail = err.message || err.toString() || 'unknown Cloudinary error';
+    throw new Error(`Cloudinary upload failed: ${detail}`);
+  }
 }
 
 // ── Helper: Sync HOD assignment for a user ──
@@ -76,7 +108,7 @@ router.get('/portals', async (req, res) => {
     );
     res.json({ success: true, data: rows });
   } catch (err) {
-    logger.error('Admin portals fetch error', { error: err.message });
+    logger.error('Admin portals fetch error', { error: err.message || err.toString() });
     res.status(500).json({ success: false, message: 'Server error' });
   }
 });
@@ -93,7 +125,7 @@ router.post('/portals', async (req, res) => {
     );
     res.json({ success: true, message: 'Portal added', id: result.insertId });
   } catch (err) {
-    logger.error('Portal create error', { error: err.message });
+    logger.error('Portal create error', { error: err.message || err.toString() });
     res.status(500).json({ success: false, message: 'Server error' });
   }
 });
@@ -107,7 +139,7 @@ router.put('/portals/:id', async (req, res) => {
     );
     res.json({ success: true, message: 'Portal updated' });
   } catch (err) {
-    logger.error('Portal update error', { error: err.message });
+    logger.error('Portal update error', { error: err.message || err.toString() });
     res.status(500).json({ success: false, message: 'Server error' });
   }
 });
@@ -117,7 +149,7 @@ router.delete('/portals/:id', async (req, res) => {
     await db.execute('DELETE FROM portals WHERE id = ?', [req.params.id]);
     res.json({ success: true, message: 'Portal deleted' });
   } catch (err) {
-    logger.error('Portal delete error', { error: err.message });
+    logger.error('Portal delete error', { error: err.message || err.toString() });
     res.status(500).json({ success: false, message: 'Server error' });
   }
 });
@@ -150,7 +182,7 @@ router.get("/departments", async (req, res) => {
 
     res.json({ success: true, data: rows });
   } catch (err) {
-    logger.error("Departments fetch error", { error: err.message });
+    logger.error("Departments fetch error", { error: err.message || err.toString() });
     res.status(500).json({ success: false, message: "Server error" });
   }
 });
@@ -194,7 +226,7 @@ router.post("/slides", upload.single("image"), async (req, res) => {
     );
     res.json({ success: true, message: "Slide added" });
   } catch (err) {
-    logger.error("Slide upload error", { error: err.message });
+    logger.error("Slide upload error", { error: err.message || err.toString() });
     res
       .status(500)
       .json({ success: false, message: "Upload failed: " + err.message });
@@ -202,11 +234,16 @@ router.post("/slides", upload.single("image"), async (req, res) => {
 });
 
 router.patch("/slides/:id/toggle", async (req, res) => {
-  await db.execute(
-    "UPDATE slider_slides SET is_active = NOT is_active WHERE id = ?",
-    [req.params.id],
-  );
-  res.json({ success: true });
+  try {
+    await db.execute(
+      "UPDATE slider_slides SET is_active = NOT is_active WHERE id = ?",
+      [req.params.id],
+    );
+    res.json({ success: true });
+  } catch (err) {
+    logger.error("Slide toggle error", { error: err.message || err.toString() });
+    res.status(500).json({ success: false, message: "Server error" });
+  }
 });
 
 router.delete("/slides/:id", async (req, res) => {
@@ -260,7 +297,7 @@ router.put("/principal-message", upload.single("photo"), async (req, res) => {
     );
     res.json({ success: true, message: "Principal message updated" });
   } catch (err) {
-    logger.error("Principal message update error", { error: err.message });
+    logger.error("Principal message update error", { error: err.message || err.toString() });
     res
       .status(500)
       .json({ success: false, message: "Update failed: " + err.message });
@@ -384,7 +421,7 @@ router.post("/users", upload.single("photo"), async (req, res) => {
           message: "Email or registration number already exists",
         });
     }
-    logger.error("Admin user create error", { error: err.message });
+    logger.error("Admin user create error", { error: err.message || err.toString() });
     res.status(500).json({ success: false, message: "Server error" });
   }
 });
@@ -423,7 +460,7 @@ router.get("/users", async (req, res) => {
     const [rows] = await db.execute(sql, params);
     res.json({ success: true, data: rows });
   } catch (err) {
-    logger.error("Admin users fetch error", { error: err.message });
+    logger.error("Admin users fetch error", { error: err.message || err.toString() });
     res.status(500).json({ success: false, message: "Server error" });
   }
 });
@@ -431,28 +468,22 @@ router.get("/users", async (req, res) => {
 // GET single user
 router.get("/users/:id", async (req, res) => {
   try {
-    const [rows] = await db.execute(
-      `SELECT id, full_name, email, reg_number, role, primary_department_id,
-              year_of_study, photo_path, bio, is_active, created_at, updated_at
-       FROM users WHERE id = ?`,
+    const [[user]] = await db.execute(
+      `SELECT u.id, u.full_name, u.email, u.reg_number, u.role,
+              u.primary_department_id, u.year_of_study, u.photo_path,
+              u.bio, u.is_active, u.created_at, u.updated_at,
+              d.name AS department_name
+       FROM users u
+       LEFT JOIN departments d ON d.id = u.primary_department_id
+       WHERE u.id = ?`,
       [req.params.id]
     );
-    if (rows.length === 0) {
+    if (!user) {
       return res.status(404).json({ success: false, message: "User not found" });
-    }
-    const user = rows[0];
-    if (user.primary_department_id) {
-      const [[dept]] = await db.execute(
-        "SELECT name FROM departments WHERE id = ?",
-        [user.primary_department_id]
-      );
-      user.department_name = dept ? dept.name : null;
-    } else {
-      user.department_name = null;
     }
     res.json({ success: true, data: user });
   } catch (err) {
-    logger.error("Admin user fetch error", { error: err.message });
+    logger.error("Admin user fetch error", { error: err.message || err.toString() });
     res.status(500).json({ success: false, message: "Server error" });
   }
 });
@@ -574,7 +605,7 @@ router.put("/users/:id", upload.single("photo"), async (req, res) => {
           message: "Email or registration number already exists",
         });
     }
-    logger.error("Admin user update error", { error: err.message });
+    logger.error("Admin user update error", { error: err.message || err.toString() });
     res.status(500).json({ success: false, message: "Server error" });
   }
 });
@@ -592,7 +623,7 @@ router.delete("/users/:id", async (req, res) => {
     }
     row = found;
   } catch (err) {
-    logger.error("Admin user delete error (fetch)", { error: err.message });
+    logger.error("Admin user delete error (fetch)", { error: err.message || err.toString() });
     return res.status(500).json({ success: false, message: "Server error" });
   }
 
@@ -615,7 +646,7 @@ router.delete("/users/:id", async (req, res) => {
 
     res.json({ success: true, message: "User permanently deleted and archived" });
   } catch (err) {
-    logger.error("Admin user delete error", { error: err.message });
+    logger.error("Admin user delete error", { error: err.message || err.toString() });
     res.status(500).json({ success: false, message: "Server error" });
   } finally {
     // Always restore FK checks and release the connection, even if step 3 threw.
@@ -642,24 +673,34 @@ router.patch("/users/:id/password", async (req, res) => {
     ]);
     res.json({ success: true, message: "Password reset successfully" });
   } catch (err) {
-    logger.error("Admin user password reset error", { error: err.message });
+    logger.error("Admin user password reset error", { error: err.message || err.toString() });
     res.status(500).json({ success: false, message: "Server error" });
   }
 });
 
 // ── ENQUIRIES ──
 router.get("/enquiries", async (req, res) => {
-  const [rows] = await db.execute(
-    "SELECT * FROM contact_enquiries ORDER BY submitted_at DESC",
-  );
-  res.json({ success: true, data: rows });
+  try {
+    const [rows] = await db.execute(
+      "SELECT * FROM contact_enquiries ORDER BY submitted_at DESC",
+    );
+    res.json({ success: true, data: rows });
+  } catch (err) {
+    logger.error("Enquiries fetch error", { error: err.message || err.toString() });
+    res.status(500).json({ success: false, message: "Server error" });
+  }
 });
 
 router.patch("/enquiries/:id/read", async (req, res) => {
-  await db.execute("UPDATE contact_enquiries SET is_read = TRUE WHERE id = ?", [
-    req.params.id,
-  ]);
-  res.json({ success: true });
+  try {
+    await db.execute("UPDATE contact_enquiries SET is_read = TRUE WHERE id = ?", [
+      req.params.id,
+    ]);
+    res.json({ success: true });
+  } catch (err) {
+    logger.error("Enquiry mark-read error", { error: err.message || err.toString() });
+    res.status(500).json({ success: false, message: "Server error" });
+  }
 });
 
 // ── RECYCLE BIN ──
@@ -670,28 +711,49 @@ router.get("/recycle-bin", async (req, res) => {
   res.json({ success: true, data: rows });
 });
 
+// Tables that are eligible for restore — prevents SQL injection via original_table.
+const RESTORABLE_TABLES = new Set([
+  'slider_slides', 'principal_message', 'page_content', 'news_articles',
+  'bom_members', 'users', 'downloads', 'departments', 'partners',
+  'gallery_albums', 'gallery_photos',
+]);
+
 router.post("/recycle-bin/:id/restore", async (req, res) => {
-  const [[row]] = await db.execute("SELECT * FROM recycle_bin WHERE id = ?", [
-    req.params.id,
-  ]);
-  if (!row) return res.status(404).json({ success: false });
-  const data = JSON.parse(row.data_snapshot);
-  const columns = Object.keys(data).join(",");
-  const placeholders = Object.keys(data)
-    .map(() => "?")
-    .join(",");
-  const values = Object.values(data);
-  await db.execute(
-    `INSERT INTO ${row.original_table} (${columns}) VALUES (${placeholders})`,
-    values,
-  );
-  await db.execute("DELETE FROM recycle_bin WHERE id = ?", [req.params.id]);
-  res.json({ success: true, message: "Restored" });
+  try {
+    const [[row]] = await db.execute("SELECT * FROM recycle_bin WHERE id = ?", [
+      req.params.id,
+    ]);
+    if (!row) return res.status(404).json({ success: false, message: "Not found" });
+
+    if (!RESTORABLE_TABLES.has(row.original_table)) {
+      logger.warn("Recycle bin restore blocked: unknown table", { table: row.original_table });
+      return res.status(400).json({ success: false, message: "Cannot restore from this table" });
+    }
+
+    const data = JSON.parse(row.data_snapshot);
+    const columns = Object.keys(data).join(",");
+    const placeholders = Object.keys(data).map(() => "?").join(",");
+    const values = Object.values(data);
+    await db.execute(
+      `INSERT INTO ${row.original_table} (${columns}) VALUES (${placeholders})`,
+      values,
+    );
+    await db.execute("DELETE FROM recycle_bin WHERE id = ?", [req.params.id]);
+    res.json({ success: true, message: "Restored" });
+  } catch (err) {
+    logger.error("Recycle bin restore error", { error: err.message || err.toString() });
+    res.status(500).json({ success: false, message: "Server error" });
+  }
 });
 
 router.delete("/recycle-bin/:id", async (req, res) => {
-  await db.execute("DELETE FROM recycle_bin WHERE id = ?", [req.params.id]);
-  res.json({ success: true, message: "Permanently deleted" });
+  try {
+    await db.execute("DELETE FROM recycle_bin WHERE id = ?", [req.params.id]);
+    res.json({ success: true, message: "Permanently deleted" });
+  } catch (err) {
+    logger.error("Recycle bin delete error", { error: err.message || err.toString() });
+    res.status(500).json({ success: false, message: "Server error" });
+  }
 });
 
 // ── TIMETABLE (admin view all) ──
@@ -711,7 +773,7 @@ router.get("/news", async (req, res) => {
     );
     res.json({ success: true, data: rows });
   } catch (err) {
-    logger.error("Admin news fetch error", { error: err.message });
+    logger.error("Admin news fetch error", { error: err.message || err.toString() });
     res.status(500).json({ success: false, message: "Server error" });
   }
 });
@@ -729,7 +791,7 @@ router.get("/news/:id", async (req, res) => {
         .json({ success: false, message: "Article not found" });
     res.json({ success: true, data: row });
   } catch (err) {
-    logger.error("Admin news fetch error", { error: err.message });
+    logger.error("Admin news fetch error", { error: err.message || err.toString() });
     res.status(500).json({ success: false, message: "Server error" });
   }
 });
@@ -758,7 +820,7 @@ router.post("/news", upload.single("image"), async (req, res) => {
       id: result.insertId,
     });
   } catch (err) {
-    logger.error("News create error", { error: err.message });
+    logger.error("News create error", { error: err.message || err.toString() });
     res
       .status(500)
       .json({ success: false, message: "Create failed: " + err.message });
@@ -816,7 +878,7 @@ router.put("/news/:id", upload.single("image"), async (req, res) => {
 
     res.json({ success: true, message: "Article updated" });
   } catch (err) {
-    logger.error("News update error", { error: err.message });
+    logger.error("News update error", { error: err.message || err.toString() });
     res
       .status(500)
       .json({ success: false, message: "Update failed: " + err.message });
@@ -843,7 +905,7 @@ router.delete("/news/:id", async (req, res) => {
 
     res.json({ success: true, message: "Article moved to recycle bin" });
   } catch (err) {
-    logger.error("News delete error", { error: err.message });
+    logger.error("News delete error", { error: err.message || err.toString() });
     res.status(500).json({ success: false, message: "Delete failed" });
   }
 });
@@ -857,7 +919,7 @@ router.patch("/news/:id/toggle", async (req, res) => {
     );
     res.json({ success: true, message: "Status toggled" });
   } catch (err) {
-    logger.error("News toggle error", { error: err.message });
+    logger.error("News toggle error", { error: err.message || err.toString() });
     res.status(500).json({ success: false, message: "Toggle failed" });
   }
 });
@@ -870,7 +932,7 @@ router.get("/partners", async (req, res) => {
     );
     res.json({ success: true, data: rows });
   } catch (err) {
-    logger.error("Partners fetch error", { error: err.message });
+    logger.error("Partners fetch error", { error: err.message || err.toString() });
     res.status(500).json({ success: false, message: "Server error" });
   }
 });
@@ -889,7 +951,7 @@ router.post("/partners", upload.single("logo"), async (req, res) => {
     );
     res.json({ success: true, message: "Partner added" });
   } catch (err) {
-    logger.error("Partner create error", { error: err.message });
+    logger.error("Partner create error", { error: err.message || err.toString() });
     res.status(500).json({ success: false, message: "Failed: " + err.message });
   }
 });
@@ -920,7 +982,7 @@ router.put("/partners/:id", upload.single("logo"), async (req, res) => {
     );
     res.json({ success: true, message: "Partner updated" });
   } catch (err) {
-    logger.error("Partner update error", { error: err.message });
+    logger.error("Partner update error", { error: err.message || err.toString() });
     res.status(500).json({ success: false, message: "Update failed" });
   }
 });
@@ -931,11 +993,16 @@ router.delete("/partners/:id", async (req, res) => {
 });
 
 router.patch("/partners/:id/toggle", async (req, res) => {
-  await db.execute(
-    "UPDATE partners SET is_active = NOT is_active WHERE id = ?",
-    [req.params.id],
-  );
-  res.json({ success: true });
+  try {
+    await db.execute(
+      "UPDATE partners SET is_active = NOT is_active WHERE id = ?",
+      [req.params.id],
+    );
+    res.json({ success: true });
+  } catch (err) {
+    logger.error("Partner toggle error", { error: err.message || err.toString() });
+    res.status(500).json({ success: false, message: "Server error" });
+  }
 });
 
 // ── BOM (Board of Management) CRUD ──
@@ -946,7 +1013,7 @@ router.get("/bom", async (req, res) => {
     );
     res.json({ success: true, data: rows });
   } catch (err) {
-    logger.error("Admin BOM fetch error", { error: err.message });
+    logger.error("Admin BOM fetch error", { error: err.message || err.toString() });
     res.status(500).json({ success: false, message: "Server error" });
   }
 });
@@ -964,7 +1031,7 @@ router.post("/bom", upload.single("photo"), async (req, res) => {
     );
     res.json({ success: true, message: "BOM member added" });
   } catch (err) {
-    logger.error("BOM create error", { error: err.message });
+    logger.error("BOM create error", { error: err.message || err.toString() });
     res.status(500).json({ success: false, message: "Failed: " + err.message });
   }
 });
@@ -988,7 +1055,7 @@ router.put("/bom/:id", upload.single("photo"), async (req, res) => {
     );
     res.json({ success: true, message: "BOM member updated" });
   } catch (err) {
-    logger.error("BOM update error", { error: err.message });
+    logger.error("BOM update error", { error: err.message || err.toString() });
     res.status(500).json({ success: false, message: "Update failed" });
   }
 });
@@ -1009,7 +1076,7 @@ router.delete("/bom/:id", async (req, res) => {
     await db.execute("DELETE FROM bom_members WHERE id = ?", [req.params.id]);
     res.json({ success: true, message: "BOM member moved to recycle bin" });
   } catch (err) {
-    logger.error("BOM delete error", { error: err.message });
+    logger.error("BOM delete error", { error: err.message || err.toString() });
     res.status(500).json({ success: false, message: "Server error" });
   }
 });
@@ -1022,7 +1089,7 @@ router.patch("/bom/:id/toggle", async (req, res) => {
     );
     res.json({ success: true, message: "Status toggled" });
   } catch (err) {
-    logger.error("BOM toggle error", { error: err.message });
+    logger.error("BOM toggle error", { error: err.message || err.toString() });
     res.status(500).json({ success: false, message: "Server error" });
   }
 });
@@ -1036,7 +1103,7 @@ router.get("/downloads", async (req, res) => {
     );
     res.json({ success: true, data: rows });
   } catch (err) {
-    logger.error("Admin downloads fetch error", { error: err.message });
+    logger.error("Admin downloads fetch error", { error: err.message || err.toString() });
     res.status(500).json({ success: false, message: "Server error" });
   }
 });
@@ -1071,7 +1138,7 @@ router.post("/downloads", upload.single("file"), async (req, res) => {
 
     res.json({ success: true, message: "Download added" });
   } catch (err) {
-    logger.error("Download create error", { error: err.message });
+    logger.error("Download create error", { error: err.message || err.toString() });
     res
       .status(500)
       .json({ success: false, message: "Upload failed: " + err.message });
@@ -1119,7 +1186,7 @@ router.put("/downloads/:id", upload.single("file"), async (req, res) => {
 
     res.json({ success: true, message: "Download updated" });
   } catch (err) {
-    logger.error("Download update error", { error: err.message });
+    logger.error("Download update error", { error: err.message || err.toString() });
     res.status(500).json({ success: false, message: "Update failed" });
   }
 });
@@ -1143,7 +1210,7 @@ router.delete("/downloads/:id", async (req, res) => {
 
     res.json({ success: true, message: "Download moved to recycle bin" });
   } catch (err) {
-    logger.error("Download delete error", { error: err.message });
+    logger.error("Download delete error", { error: err.message || err.toString() });
     res.status(500).json({ success: false, message: "Delete failed" });
   }
 });
@@ -1185,7 +1252,7 @@ router.post("/download-categories", async (req, res) => {
       return res
         .status(400)
         .json({ success: false, message: "Category already exists" });
-    logger.error("Category create error", { error: err.message });
+    logger.error("Category create error", { error: err.message || err.toString() });
     res.status(500).json({ success: false, message: "Server error" });
   }
 });
@@ -1199,7 +1266,7 @@ router.put("/download-categories/:name", async (req, res) => {
     );
     res.json({ success: true, message: "Category updated" });
   } catch (err) {
-    logger.error("Category update error", { error: err.message });
+    logger.error("Category update error", { error: err.message || err.toString() });
     res.status(500).json({ success: false, message: "Server error" });
   }
 });
@@ -1211,7 +1278,7 @@ router.delete("/download-categories/:name", async (req, res) => {
     ]);
     res.json({ success: true, message: "Category deleted" });
   } catch (err) {
-    logger.error("Category delete error", { error: err.message });
+    logger.error("Category delete error", { error: err.message || err.toString() });
     res.status(500).json({ success: false, message: "Server error" });
   }
 });
@@ -1238,7 +1305,7 @@ router.get("/cohorts", async (req, res) => {
     const [rows] = await db.execute(sql, params);
     res.json({ success: true, data: rows });
   } catch (err) {
-    logger.error("Cohorts fetch error", { error: err.message });
+    logger.error("Cohorts fetch error", { error: err.message || err.toString() });
     res.status(500).json({ success: false, message: "Server error" });
   }
 });
@@ -1259,7 +1326,7 @@ router.post("/cohorts", upload.none(), async (req, res) => {
     );
     res.json({ success: true, message: "Cohort added" });
   } catch (err) {
-    logger.error("Cohort create error", { error: err.message });
+    logger.error("Cohort create error", { error: err.message || err.toString() });
     res.status(500).json({ success: false, message: "Server error" });
   }
 });
@@ -1272,7 +1339,7 @@ router.patch("/cohorts/:id/toggle", async (req, res) => {
     );
     res.json({ success: true, message: "Cohort status updated" });
   } catch (err) {
-    logger.error("Cohort toggle error", { error: err.message });
+    logger.error("Cohort toggle error", { error: err.message || err.toString() });
     res.status(500).json({ success: false, message: "Server error" });
   }
 });
@@ -1296,7 +1363,7 @@ router.post("/departments", upload.single("image"), async (req, res) => {
     );
     res.json({ success: true, message: "Department added" });
   } catch (err) {
-    logger.error("Dept create error", { error: err.message });
+    logger.error("Dept create error", { error: err.message || err.toString() });
     res.status(500).json({ success: false, message: "Server error: " + err.message });
   }
 });
@@ -1322,7 +1389,7 @@ router.put("/departments/:id", upload.single("image"), async (req, res) => {
     );
     res.json({ success: true, message: "Department updated" });
   } catch (err) {
-    logger.error("Dept update error", { error: err.message });
+    logger.error("Dept update error", { error: err.message || err.toString() });
     res.status(500).json({ success: false, message: "Server error: " + err.message });
   }
 });
@@ -1343,7 +1410,7 @@ router.delete("/departments/:id", async (req, res) => {
     await db.execute("DELETE FROM departments WHERE id = ?", [req.params.id]);
     res.json({ success: true, message: "Department moved to recycle bin" });
   } catch (err) {
-    logger.error("Dept delete error", { error: err.message });
+    logger.error("Dept delete error", { error: err.message || err.toString() });
     res.status(500).json({ success: false, message: "Server error" });
   }
 });
@@ -1421,7 +1488,7 @@ router.put("/departments/:id/hod", async (req, res) => {
 
     res.json({ success: true, message: "HOD assigned successfully" });
   } catch (err) {
-    logger.error("HOD assignment error", { error: err.message });
+    logger.error("HOD assignment error", { error: err.message || err.toString() });
     res.status(500).json({ success: false, message: "Server error" });
   }
 });
@@ -1494,7 +1561,7 @@ router.post("/courses", async (req, res) => {
 
     res.json({ success: true, message: "Course added", id: result.insertId });
   } catch (err) {
-    logger.error("Course create error", { error: err.message });
+    logger.error("Course create error", { error: err.message || err.toString() });
     res.status(500).json({ success: false, message: "Server error" });
   }
 });
@@ -1565,7 +1632,7 @@ router.put("/courses/:id", async (req, res) => {
 
     res.json({ success: true, message: "Course updated" });
   } catch (err) {
-    logger.error("Course update error", { error: err.message });
+    logger.error("Course update error", { error: err.message || err.toString() });
     res.status(500).json({ success: false, message: "Server error" });
   }
 });
@@ -1594,7 +1661,7 @@ router.delete("/courses/:id", async (req, res) => {
     await db.execute("DELETE FROM courses WHERE id = ?", [req.params.id]);
     res.json({ success: true, message: "Course moved to recycle bin" });
   } catch (err) {
-    logger.error("Course delete error", { error: err.message });
+    logger.error("Course delete error", { error: err.message || err.toString() });
     res.status(500).json({ success: false, message: "Server error" });
   }
 });
@@ -1623,7 +1690,7 @@ router.get("/applications", async (req, res) => {
     const [rows] = await db.execute(sql, params);
     res.json({ success: true, data: rows });
   } catch (err) {
-    logger.error('Applications fetch error', { error: err.message });
+    logger.error('Applications fetch error', { error: err.message || err.toString() });
     res.status(500).json({ success: false, message: 'Server error' });
   }
 });

@@ -19,21 +19,24 @@ const IMAGE_MIMETYPES = new Set([
   "image/svg+xml", "image/bmp", "image/tiff"
 ]);
 
-// Allowed extensions → their accepted MIME types.
-// Both must match so a renamed file is rejected before it reaches Cloudinary.
-const ALLOWED_TYPES = {
-  jpg:  'image/jpeg',
-  jpeg: 'image/jpeg',
-  png:  'image/png',
-  gif:  'image/gif',
-  webp: 'image/webp',
-  pdf:  'application/pdf',
-  doc:  'application/msword',
-  docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-  ppt:  'application/vnd.ms-powerpoint',
-  pptx: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-  mp4:  'video/mp4',
-  txt:  'text/plain',
+// ── File type validation ────────────────────────────────────
+// Same loose strategy as admin.js: check extension is in the allowed set
+// and MIME belongs to the right category — not an exact match — because
+// browsers report inconsistent MIME types (image/jpg vs image/jpeg, etc.)
+
+const ALLOWED_EXTENSIONS = new Set([
+  'jpg', 'jpeg', 'png', 'gif', 'webp',
+  'pdf', 'doc', 'docx', 'ppt', 'pptx',
+  'mp4', 'txt',
+]);
+
+const EXT_CATEGORY = {
+  jpg: 'image/', jpeg: 'image/', png: 'image/', gif: 'image/', webp: 'image/',
+  pdf: 'application/pdf',
+  doc: 'application/', docx: 'application/',
+  ppt: 'application/', pptx: 'application/',
+  mp4: 'video/',
+  txt: 'text/',
 };
 
 const upload = multer({
@@ -41,11 +44,22 @@ const upload = multer({
   limits: { fileSize: 50 * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
     const ext = path.extname(file.originalname).toLowerCase().replace('.', '');
-    const expectedMime = ALLOWED_TYPES[ext];
-    if (expectedMime && file.mimetype === expectedMime) {
-      return cb(null, true);
+
+    if (!ALLOWED_EXTENSIONS.has(ext)) {
+      return cb(new Error(`File type not allowed: .${ext}`));
     }
-    cb(new Error(`File type not allowed: .${ext} / ${file.mimetype}`));
+
+    const mime = file.mimetype || '';
+    const category = EXT_CATEGORY[ext] || '';
+
+    const mimeOk =
+      mime === '' ||
+      mime === 'application/octet-stream' ||
+      mime.startsWith(category);
+
+    if (mimeOk) return cb(null, true);
+
+    cb(new Error(`File type not allowed: .${ext} (${mime})`));
   },
 });
 
@@ -83,7 +97,8 @@ router.get("/my", isAuthenticated, async (req, res) => {
         return res.json({ success: true, data: [] });
       }
       sql = `
-        SELECT DISTINCT m.id, m.title, m.description, m.file_path, m.file_size, m.original_filename, m.uploaded_at,
+        SELECT DISTINCT m.id, m.title, m.description, m.file_path, m.file_size,
+            m.original_filename, m.public_id, m.resource_type, m.uploaded_at,
             c.name AS course_name
         FROM materials m
         JOIN material_cohorts mc ON m.id = mc.material_id
@@ -111,10 +126,10 @@ router.get("/my", isAuthenticated, async (req, res) => {
 
     let [rows] = await db.execute(sql, params);
 
-    // Enhance with download URL using original filename
+    // Enhance with download URL using original filename and correct resource_type
     rows = rows.map((row) => ({
       ...row,
-      download_url: getDownloadUrl(row.public_id, row.original_filename),
+      download_url: getDownloadUrl(row.public_id, row.original_filename, row.resource_type),
     }));
 
     res.json({ success: true, data: rows });
@@ -173,20 +188,22 @@ router.post(
         resource_type: isImage ? "image" : "raw",
       });
 
-      // Insert material
-      const originalFilename = req.file.originalname; // <-- grab the original name
+      // Insert material — store resource_type so download URLs can be built correctly later
+      const resourceType = isImage ? "image" : "raw";
+      const originalFilename = req.file.originalname;
       const [result] = await db.execute(
-        `INSERT INTO materials (title, description, file_path, file_size, original_filename, course_id, uploaded_by, public_id)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        `INSERT INTO materials (title, description, file_path, file_size, original_filename, course_id, uploaded_by, public_id, resource_type)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           title,
           description || "",
           cloudinaryResult.secure_url,
           req.file.size || cloudinaryResult.bytes,
-          originalFilename, // <-- new field
+          originalFilename,
           course_id,
           req.session.user.id,
           cloudinaryResult.public_id,
+          resourceType,
         ],
       );
 
@@ -319,9 +336,11 @@ router.get(
   },
 );
 
-const https = require('https');
-
 // ── GET /download/:id – download with original filename ──────
+// Auth check is performed server-side. Once authorised, the browser is
+// redirected to a Cloudinary fl_attachment URL so it downloads directly
+// from the CDN — no server proxying required (avoids cPanel outbound HTTPS
+// firewall restrictions that cause ETIMEDOUT).
 router.get('/download/:id', isAuthenticated, async (req, res) => {
   try {
     const user = req.session.user;
@@ -356,26 +375,32 @@ router.get('/download/:id', isAuthenticated, async (req, res) => {
     const { file_path, original_filename } = rows[0];
     if (!file_path) return res.status(404).json({ success: false, message: 'File not available' });
 
-    // Stream the file from Cloudinary to the client
+    // Build a fl_attachment URL so the browser saves with the correct filename,
+    // then redirect — browser fetches directly from Cloudinary CDN.
     const filename = original_filename || 'download';
-    res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(filename)}"`);
-    res.setHeader('Content-Type', 'application/octet-stream');
-
-    https.get(file_path, (cloudRes) => {
-      if (cloudRes.statusCode !== 200) {
-        res.status(cloudRes.statusCode).json({ success: false, message: 'File not found on Cloudinary' });
-        return;
-      }
-      cloudRes.pipe(res);
-    }).on('error', (err) => {
-      logger.error('Download proxy error', { error: err.message });
-      res.status(500).json({ success: false, message: 'Download failed' });
-    });
+    const downloadUrl = buildCloudinaryAttachmentUrl(file_path, filename);
+    res.redirect(302, downloadUrl);
 
   } catch (err) {
-    logger.error('Download route error', { error: err.message });
+    logger.error('Download route error', { error: err.message || err.toString() });
     res.status(500).json({ success: false, message: 'Server error' });
   }
 });
+
+/**
+ * Append fl_attachment transformation to a Cloudinary URL.
+ * Works for /raw/upload/, /image/upload/, and /video/upload/ URLs.
+ */
+function buildCloudinaryAttachmentUrl(fileUrl, filename) {
+  try {
+    const encoded = encodeURIComponent(filename);
+    return fileUrl.replace(
+      /\/(raw|image|video)\/upload\//,
+      `/$1/upload/fl_attachment:${encoded}/`
+    );
+  } catch {
+    return fileUrl;
+  }
+}
 
 module.exports = router;

@@ -143,18 +143,10 @@ const isInnovationCoordinator = (req, res, next) => {
 };
 
 module.exports = {
-    // ... existing exports
-    isInnovationAuthenticated,
-    isInnovationAdmin,
-    isInnovationCoordinator
-};
-
-module.exports = {
     isAuthenticated,
     hasRole,
     withDepartment,
     isHodOfDepartment,
-    // ADD THESE NEW ONES:
     isInnovationAuthenticated,
     isInnovationAdmin,
     isInnovationCoordinator

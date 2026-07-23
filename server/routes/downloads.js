@@ -6,7 +6,6 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../db');
-const https = require('https');
 const logger = require('../utils/logger');
 
 /**
@@ -20,14 +19,20 @@ router.get('/', async (req, res) => {
     );
     res.json({ success: true, data: rows });
   } catch (err) {
-    logger.error('Error fetching downloads', { error: err.message });
+    logger.error('Error fetching downloads', { error: err.message || err.toString() });
     res.status(500).json({ success: false, message: 'Failed to fetch downloads' });
   }
 });
 
 /**
  * GET /api/v1/downloads/download/:id
- * Streams a file from Cloudinary with the original filename
+ * Redirects the browser directly to the Cloudinary URL with fl_attachment so
+ * the browser downloads the file with the correct filename.
+ *
+ * Why redirect instead of proxy: the cPanel server has outbound HTTPS firewall
+ * restrictions that cause ETIMEDOUT when connecting to Cloudinary's CDN.
+ * A redirect lets the browser fetch directly from Cloudinary — no server
+ * bandwidth consumed, no firewall issue.
  */
 router.get('/download/:id', async (req, res) => {
   try {
@@ -36,25 +41,41 @@ router.get('/download/:id', async (req, res) => {
       [req.params.id]
     );
     if (!row) return res.status(404).json({ success: false, message: 'Download not found' });
+    if (!row.file_path) return res.status(404).json({ success: false, message: 'File not available' });
 
+    // Build a Cloudinary fl_attachment URL so the browser saves the file
+    // with the original filename rather than the hashed Cloudinary public_id.
     const filename = row.original_filename || 'download';
-    res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(filename)}"`);
-    res.setHeader('Content-Type', 'application/octet-stream');
+    const downloadUrl = buildCloudinaryAttachmentUrl(row.file_path, filename);
 
-    https.get(row.file_path, (cloudRes) => {
-      if (cloudRes.statusCode !== 200) {
-        return res.status(404).json({ success: false, message: 'File not found' });
-      }
-      cloudRes.pipe(res);
-    }).on('error', (err) => {
-      logger.error('Download proxy error', { error: err.message });
-      res.status(500).json({ success: false, message: 'Download failed' });
-    });
+    // 302 redirect — browser fetches directly from Cloudinary CDN
+    res.redirect(302, downloadUrl);
 
   } catch (err) {
-    logger.error('Download route error', { error: err.message });
+    logger.error('Download route error', { error: err.message || err.toString() });
     res.status(500).json({ success: false, message: 'Server error' });
   }
 });
+
+/**
+ * Append fl_attachment to a Cloudinary URL so the browser triggers a download
+ * with the given filename.
+ *
+ * Input:  https://res.cloudinary.com/<cloud>/raw/upload/v1/<public_id>.pdf
+ * Output: https://res.cloudinary.com/<cloud>/raw/upload/fl_attachment:<name>/v1/<public_id>.pdf
+ */
+function buildCloudinaryAttachmentUrl(fileUrl, filename) {
+  try {
+    // Insert the fl_attachment transformation after the upload type segment
+    // Works for both /raw/upload/ and /image/upload/ URLs
+    const encoded = encodeURIComponent(filename);
+    return fileUrl.replace(
+      /\/(raw|image|video)\/upload\//,
+      `/$1/upload/fl_attachment:${encoded}/`
+    );
+  } catch {
+    return fileUrl; // fall back to plain URL if anything is unexpected
+  }
+}
 
 module.exports = router;
