@@ -695,11 +695,11 @@
     <div class="section-container">
         <div class="reveal">
             <span class="section-label">Academic Calendar</span>
-            <h2>Intake Dates <span>(2026)</span></h2>
+            <h2>Intake Dates <span id="intakeYearLabel"></span></h2>
             <p class="section-desc">We run three intakes per year. Apply before the deadline to secure your place.</p>
         </div>
         <div style="overflow-x:auto;" class="reveal delay-1">
-            <table class="intake-table">
+            <table class="intake-table" id="intakeDatesTable">
                 <thead>
                     <tr>
                         <th>Intake</th>
@@ -709,34 +709,14 @@
                         <th>Status</th>
                     </tr>
                 </thead>
-                <tbody>
-                    <tr>
-                        <td><strong>January 2026</strong></td>
-                        <td>31st December 2025</td>
-                        <td>12th January 2026</td>
-                        <td>All Diploma &amp; Certificate</td>
-                        <td><span class="intake-badge badge-open">Open</span></td>
-                    </tr>
-                    <tr>
-                        <td><strong>May 2026</strong></td>
-                        <td>30th April 2026</td>
-                        <td>4th May 2026</td>
-                        <td>Certificate &amp; Artisan</td>
-                        <td><span class="intake-badge badge-upcoming">Upcoming</span></td>
-                    </tr>
-                    <tr>
-                        <td><strong>September 2026</strong></td>
-                        <td>31st August 2026</td>
-                        <td>7th September 2026</td>
-                        <td>All Diploma &amp; Certificate</td>
-                        <td><span class="intake-badge badge-upcoming">Upcoming</span></td>
-                    </tr>
+                <tbody id="intakeDatesBody">
+                    <tr><td colspan="5" style="text-align:center;padding:1.5rem;color:#888;">Loading intake dates…</td></tr>
                 </tbody>
             </table>
         </div>
         <div style="margin-top:2rem; text-align:center;" class="reveal delay-2">
             <a href="apply.html" class="btn-apply" style="display:inline-flex;">
-                ✏️ Apply for January 2026 Intake
+                ✏️ Apply Now — It's Free
             </a>
         </div>
     </div>
@@ -867,6 +847,76 @@
     <script src="assets/js/navbar.js"></script>
     <script>
         buildNavbar('PAGE_IDENTIFIER');
+    </script>
+
+    <!-- Fetch intake dates from backend -->
+    <script>
+        (function () {
+            const tbody = document.getElementById('intakeDatesBody');
+            const yearLabel = document.getElementById('intakeYearLabel');
+
+            function fmtDate(v) {
+                if (!v) return '—';
+                return new Date(v).toLocaleDateString('en-KE', { day: 'numeric', month: 'long', year: 'numeric' });
+            }
+
+            function statusBadge(status) {
+                const map = {
+                    open:     '<span class="intake-badge badge-open">Open</span>',
+                    upcoming: '<span class="intake-badge badge-upcoming">Upcoming</span>',
+                    closed:   '<span style="display:inline-block;padding:3px 10px;border-radius:100px;font-size:.75rem;font-weight:600;background:#f8d7da;color:#721c24;">Closed</span>',
+                };
+                return map[status] || status;
+            }
+
+            fetch('/api/v1/admin/intake-dates/public')
+                .then(r => r.json())
+                .then(data => {
+                    if (!data.success || !data.data || data.data.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:1.5rem;color:#888;">No upcoming intakes at this time. Please check back soon.</td></tr>';
+                        return;
+                    }
+                    // Derive year label from first upcoming record
+                    const firstYear = new Date(data.data[0].intake_date).getFullYear();
+                    if (yearLabel) yearLabel.textContent = '(' + firstYear + ')';
+
+                    tbody.innerHTML = data.data.map(row => `
+                        <tr>
+                            <td><strong>${row.label}</strong></td>
+                            <td>${fmtDate(row.application_deadline)}</td>
+                            <td>${fmtDate(row.intake_date)}</td>
+                            <td>${row.programs_available || '—'}</td>
+                            <td>${statusBadge(row.status)}</td>
+                        </tr>
+                    `).join('');
+                })
+                .catch(() => {
+                    // Graceful fallback — keep static content visible
+                    tbody.innerHTML = `
+                        <tr>
+                            <td><strong>January 2026</strong></td>
+                            <td>31st December 2025</td>
+                            <td>12th January 2026</td>
+                            <td>All Diploma &amp; Certificate</td>
+                            <td><span class="intake-badge badge-open">Open</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>May 2026</strong></td>
+                            <td>30th April 2026</td>
+                            <td>4th May 2026</td>
+                            <td>Certificate &amp; Artisan</td>
+                            <td><span class="intake-badge badge-upcoming">Upcoming</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>September 2026</strong></td>
+                            <td>31st August 2026</td>
+                            <td>7th September 2026</td>
+                            <td>All Diploma &amp; Certificate</td>
+                            <td><span class="intake-badge badge-upcoming">Upcoming</span></td>
+                        </tr>`;
+                    if (yearLabel) yearLabel.textContent = '(2026)';
+                });
+        })();
     </script>
 
     <!-- Scroll-reveal observer -->
