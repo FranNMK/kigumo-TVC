@@ -350,7 +350,7 @@
 
     // ── Dashboard summary ──────────────────────────────────────
     async function loadDashboard() {
-      const res = await fetch('/api/v1/materials/my');
+      const res = await fetch('/api/v1/materials/my?t=' + Date.now());
       const data = await res.json();
       const count = data.success ? data.data.length : 0;
       document.getElementById('summaryCards').innerHTML = `
@@ -378,7 +378,7 @@
 
     // ── Materials list ─────────────────────────────────────────
     async function loadMaterials() {
-      const res = await fetch('/api/v1/materials/my');
+      const res = await fetch('/api/v1/materials/my?t=' + Date.now());
       const data = await res.json();
       let html = '';
       if (data.success && data.data.length) {

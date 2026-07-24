@@ -122,7 +122,7 @@
         // Fetch files AND categories in parallel
         const [dlRes, catRes] = await Promise.all([
           fetch('/api/v1/downloads'),
-          fetch('/api/v1/download-categories')
+          fetch('/api/v1/downloads/download-categories')
         ]);
 
         const dlData = await dlRes.json();
