@@ -141,6 +141,24 @@ app.use("/api/v1/contact", require("./routes/contact"));
 app.use("/api/v1/downloads", require("./routes/downloads"));
 app.use("/api/v1/announcements", require("./routes/announcements"));
 app.use("/api/v1/management", require("./routes/management"));
+
+// Public intake-dates endpoint must be registered BEFORE the admin router
+// because admin.js applies router.use(isAuthenticated) which blocks all routes
+// inside it — including the one explicitly marked public.
+app.get("/api/v1/admin/intake-dates/public", async (req, res) => {
+  try {
+    const [rows] = await dbPool.execute(
+      `SELECT id, label, intake_date, application_deadline, programs_available, status
+       FROM intake_dates_global
+       WHERE YEAR(intake_date) >= YEAR(CURDATE())
+       ORDER BY intake_date ASC`
+    );
+    res.json({ success: true, data: rows });
+  } catch (err) {
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+});
+
 app.use("/api/v1/admin", require("./routes/admin"));
 app.use("/api/v1/stats", require("./routes/stats"));
 app.use("/api/v1/slides", require("./routes/slides"));

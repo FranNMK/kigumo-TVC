@@ -9,6 +9,27 @@ const db = require('../db');
 const logger = require('../utils/logger');
 
 /**
+ * GET /api/v1/download-categories
+ * Public endpoint — returns category names and display names so the
+ * downloads page can show human-readable section headings.
+ * (Admin CRUD for categories lives in /api/v1/admin/download-categories)
+ */
+router.get('/download-categories', async (req, res) => {
+  try {
+    const [rows] = await db.execute(
+      `SELECT dc.name, dc.display_name
+       FROM download_categories dc
+       ORDER BY dc.name`
+    );
+    res.json({ success: true, data: rows });
+  } catch (err) {
+    // Table may not exist on first deploy — return empty list so page still renders
+    logger.warn('Download categories fetch failed', { error: err.message });
+    res.json({ success: true, data: [] });
+  }
+});
+
+/**
  * GET /api/v1/downloads
  * Returns all downloads grouped by category
  */
