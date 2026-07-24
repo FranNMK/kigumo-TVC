@@ -54,22 +54,6 @@
     .skeleton-card { height: 70px; margin-bottom: 0.8rem; }
     @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
 
-    /* Download progress overlay */
-    .progress-overlay {
-      display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(0,0,0,0.5); z-index: 9999; justify-content: center; align-items: center;
-    }
-    .progress-overlay.active { display: flex; }
-    .progress-card {
-      background: #fff; border-radius: 16px; padding: 2rem; text-align: center;
-      min-width: 320px; max-width: 90vw; box-shadow: 0 15px 40px rgba(0,0,0,0.3);
-    }
-    .progress-card h3 { color: #1a7a1a; margin-bottom: 1.5rem; }
-    .progress-bar-bg { background: #e0e0e0; border-radius: 12px; height: 8px; overflow: hidden; margin-bottom: 0.8rem; }
-    .progress-bar-fill { background: linear-gradient(90deg, #1a7a1a, #f5c518); height: 100%; width: 0%; border-radius: 12px; transition: width 0.3s; }
-    .progress-percent { font-size: 0.9rem; color: #666; margin-bottom: 0.3rem; }
-    .progress-status { font-size: 0.8rem; color: #999; }
-
     @media (max-width: 600px) {
       .download-item { flex-direction: column; align-items: flex-start; gap: 0.8rem; }
       .download-btn { width: 100%; text-align: center; }
@@ -91,18 +75,6 @@
     <div class="skeleton skeleton-card"></div>
   </div>
 
-  <!-- Download Progress Overlay -->
-  <div class="progress-overlay" id="progressOverlay">
-    <div class="progress-card">
-      <h3 id="progressTitle">Downloading...</h3>
-      <div id="progressFilename" style="color:#888;font-size:0.85rem;margin-bottom:1rem;"></div>
-      <div class="progress-bar-bg"><div class="progress-bar-fill" id="progressBar"></div></div>
-      <div class="progress-percent" id="progressPercent">0%</div>
-      <div class="progress-status" id="progressStatus">Starting download...</div>
-      <button class="download-btn" style="margin-top:1rem;background:#c00;" onclick="cancelDownload()">Cancel</button>
-    </div>
-  </div>
-
   <footer id="mainFooter"></footer>
 
   <script src="assets/js/navbar.js"></script>
@@ -114,8 +86,6 @@
       const footer = doc.querySelector('footer');
       if (footer) document.getElementById('mainFooter').innerHTML = footer.outerHTML;
     }).catch(() => {});
-
-    let downloadAbortController = null;
 
     async function loadDownloads() {
       try {
@@ -180,92 +150,22 @@
       }
     }
 
-    async function startDownload(id, title) {
-      const overlay = document.getElementById('progressOverlay');
-      const bar = document.getElementById('progressBar');
-      const percent = document.getElementById('progressPercent');
-      const status = document.getElementById('progressStatus');
-      const filename = document.getElementById('progressFilename');
-
-      overlay.classList.add('active');
-      document.getElementById('progressTitle').textContent = 'Preparing Download...';
-      filename.textContent = title;
-      bar.style.width = '0%';
-      percent.textContent = '0%';
-      status.textContent = 'Connecting...';
-
-      downloadAbortController = new AbortController();
-
-      try {
-        const infoRes = await fetch(`/api/v1/downloads`);
-        const infoData = await infoRes.json();
-        const file = infoData.data?.find(d => d.id == id);
-        if (!file) throw new Error('File not found');
-
-        const downloadUrl = file.file_path.startsWith('http') ? file.file_path : `/uploads/${file.file_path}`;
-
-        status.textContent = 'Downloading...';
-        document.getElementById('progressTitle').textContent = 'Downloading';
-
-        const response = await fetch(`/api/v1/downloads/download/${id}`, {
-          signal: downloadAbortController.signal
-        });
-
-        if (!response.ok) throw new Error('Download failed');
-
-        const contentLength = response.headers.get('content-length');
-        const total = parseInt(contentLength, 10);
-        let loaded = 0;
-
-        const reader = response.body.getReader();
-        const chunks = [];
-
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-          chunks.push(value);
-          loaded += value.length;
-          if (total) {
-            const pct = Math.round((loaded / total) * 100);
-            bar.style.width = pct + '%';
-            percent.textContent = pct + '%';
-            status.textContent = formatSize(loaded) + ' / ' + formatSize(total);
-          }
-        }
-
-        bar.style.width = '100%';
-        percent.textContent = '100%';
-        status.textContent = '✅ Download complete!';
-        document.getElementById('progressTitle').textContent = 'Done! 🎉';
-
-        const blob = new Blob(chunks);
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = file.original_filename || title;
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-        window.URL.revokeObjectURL(url);
-
-        setTimeout(() => overlay.classList.remove('active'), 1500);
-
-      } catch (err) {
-        if (err.name === 'AbortError') {
-          status.textContent = 'Download cancelled';
-        } else {
-          status.textContent = '❌ Download failed';
-          document.getElementById('progressTitle').textContent = 'Error';
-        }
-        setTimeout(() => overlay.classList.remove('active'), 2000);
-      }
+    function startDownload(id, title) {
+      // The server returns a 302 redirect to a Cloudinary fl_attachment URL.
+      // Streaming a cross-origin redirect via fetch() is blocked by CORS.
+      // Simply navigating to the redirect URL lets the browser follow it
+      // directly to Cloudinary and trigger a native file-save dialog —
+      // no server proxying, no CORS issue, no streaming needed.
+      const a = document.createElement('a');
+      a.href = `/api/v1/downloads/download/${id}`;
+      a.download = '';          // hint browser to download rather than navigate
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
     }
 
     function cancelDownload() {
-      if (downloadAbortController) {
-        downloadAbortController.abort();
-        downloadAbortController = null;
-      }
+      // No-op: native browser downloads can be cancelled via the browser's own UI
     }
 
     function formatSize(bytes) {

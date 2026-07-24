@@ -467,7 +467,9 @@
       if (result.success) {
         document.getElementById('materialUploadForm').reset();
         document.getElementById('uploadForm').style.display = 'none';
-        loadMaterials();
+        // Brief delay to allow TiDB Cloud to propagate the committed row
+        // before we re-query (remote DB can have ~1-2s replication lag).
+        setTimeout(loadMaterials, 2000);
       }
       closeConfirmModal();
     });
