@@ -87,10 +87,25 @@ router.get('/download/:id', async (req, res) => {
  */
 function buildCloudinaryAttachmentUrl(fileUrl, filename) {
   try {
-    // Insert the fl_attachment transformation after the upload type segment
-    // Works for both /raw/upload/ and /image/upload/ URLs
+    // Cloudinary raw uploads strip the file extension from the public_id.
+    // If the stored URL has no extension, derive it from the original filename
+    // and append it — this covers records uploaded before the upload-time fix
+    // and any environment (staging, other domains) where old data may exist.
+    const ext = filename && filename.includes('.')
+      ? filename.split('.').pop().toLowerCase()
+      : null;
+    let url = fileUrl;
+    if (ext && ext.length <= 10) {
+      const base = url.split('?')[0];
+      if (!base.endsWith('.' + ext)) {
+        url = url + '.' + ext;
+      }
+    }
+
+    // Insert the fl_attachment transformation after the upload type segment.
+    // Works for /raw/upload/, /image/upload/, and /video/upload/ URLs.
     const encoded = encodeURIComponent(filename);
-    return fileUrl.replace(
+    return url.replace(
       /\/(raw|image|video)\/upload\//,
       `/$1/upload/fl_attachment:${encoded}/`
     );

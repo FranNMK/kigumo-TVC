@@ -84,6 +84,24 @@ async function uploadToCloudinary(file, folder) {
   }
 }
 
+/**
+ * Cloudinary raw uploads strip the file extension from the public_id, so the
+ * returned secure_url has no extension (e.g. ends in .../mfiyhc2dd1k8lloxabl0).
+ * Without the extension the CDN returns 400 when fl_attachment is used.
+ * This helper re-appends the extension derived from the original filename so
+ * the stored URL is always deliverable across every environment / domain.
+ */
+function appendExtensionToRawUrl(url, originalFilename) {
+  if (!url || !originalFilename) return url;
+  const parts = originalFilename.split('.');
+  if (parts.length < 2) return url; // no extension to add
+  const ext = parts.pop().toLowerCase();
+  if (!ext || ext.length > 10) return url; // sanity-check
+  const base = url.split('?')[0]; // strip any existing query string
+  if (base.endsWith('.' + ext)) return url; // already has the right extension
+  return url + '.' + ext;
+}
+
 // ── Helper: Sync HOD assignment for a user ──
 async function syncHodAssignment(userId, departmentId, isHod) {
   if (isHod && departmentId) {
@@ -1124,12 +1142,16 @@ router.post("/downloads", upload.single("file"), async (req, res) => {
       { folder: "kigumo-tvc/downloads", resource_type: "raw" },
     );
 
+    // Cloudinary raw uploads strip the file extension from the public_id.
+    // Re-append it so the stored URL is deliverable with fl_attachment on any domain.
+    const fileUrl = appendExtensionToRawUrl(cloudinaryResult.secure_url, req.file.originalname);
+
     await db.execute(
       "INSERT INTO downloads (title, category, file_path, file_size, original_filename, uploaded_by) VALUES (?,?,?,?,?,?)",
       [
         title,
         category,
-        cloudinaryResult.secure_url,
+        fileUrl,
         req.file.size,
         req.file.originalname,
         req.session.user.id,
@@ -1167,7 +1189,8 @@ router.put("/downloads/:id", upload.single("file"), async (req, res) => {
         `data:${req.file.mimetype};base64,${req.file.buffer.toString("base64")}`,
         { folder: "kigumo-tvc/downloads", resource_type: "raw" },
       );
-      file_path = cloudinaryResult.secure_url;
+      // Same extension fix as in CREATE — raw public_ids have no extension
+      file_path = appendExtensionToRawUrl(cloudinaryResult.secure_url, req.file.originalname);
       file_size = req.file.size;
       original_filename = req.file.originalname;
     }
