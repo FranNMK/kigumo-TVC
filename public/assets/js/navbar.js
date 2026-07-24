@@ -167,6 +167,11 @@
         .querySelectorAll(".dropdown-menu.open, .sub-dropdown-menu.open")
         .forEach((el) => el.classList.remove("open"));
 
+      // Reset all arrow indicators back to pointing down
+      navLinks
+        .querySelectorAll(".dropdown-toggle.open-arrow")
+        .forEach((el) => el.classList.remove("open-arrow"));
+
       // Also reset scroll position so it doesn't reopen mid-scroll
       navLinks.scrollTop = 0;
     }
@@ -230,16 +235,21 @@
         if (window.innerWidth <= 992) {
           e.preventDefault();
 
-          // 1. Find ALL other open dropdown menus and close them
+          // 1. Close all other open dropdown menus and reset their arrows
           const allOpenMenus = document.querySelectorAll('.nav-links .dropdown-menu.open');
           allOpenMenus.forEach(openMenu => {
             if (openMenu !== menu) {
               openMenu.classList.remove('open');
+              // reset arrow on the sibling toggle
+              const siblingToggle = openMenu.closest('.nav-dropdown')
+                && openMenu.closest('.nav-dropdown').querySelector(':scope > .dropdown-toggle');
+              if (siblingToggle) siblingToggle.classList.remove('open-arrow');
             }
           });
 
-          // 2. Toggle the clicked one
-          menu.classList.toggle("open");
+          // 2. Toggle the clicked one and its arrow
+          const isNowOpen = menu.classList.toggle("open");
+          toggle.classList.toggle("open-arrow", isNowOpen);
         }
       });
     });
@@ -305,37 +315,58 @@
    * Fetch departments from API and populate the dropdown links.
    */
   async function loadDepartmentLinks() {
+    // Shared helper: close the mobile drawer from dynamically injected links.
+    // initMobileMenu() runs before the async fetch resolves, so those new <a>
+    // elements are never covered by the static querySelectorAll listener there.
+    function closeMobileNav() {
+      const navLinks = document.getElementById("nav-links");
+      const overlay  = document.getElementById("nav-overlay");
+      const hamburger = document.getElementById("hamburger");
+      if (navLinks) {
+        navLinks.classList.remove("open");
+        navLinks.querySelectorAll(".dropdown-menu.open, .sub-dropdown-menu.open")
+          .forEach((el) => el.classList.remove("open"));
+        navLinks.querySelectorAll(".dropdown-toggle.open-arrow")
+          .forEach((el) => el.classList.remove("open-arrow"));
+        navLinks.scrollTop = 0;
+      }
+      if (overlay)   overlay.classList.remove("open");
+      if (hamburger) hamburger.classList.remove("open");
+      document.body.style.overflow = "";
+    }
+
+    // Wire closeNav onto every <a> inside a container after innerHTML is set
+    function bindClose(container) {
+      container.querySelectorAll("a").forEach((a) => {
+        a.addEventListener("click", closeMobileNav);
+      });
+    }
+
     try {
       const res = await fetch("/api/v1/departments");
       if (!res.ok) throw new Error("Failed to fetch departments");
       const data = await res.json();
       if (!data.success || !data.data) return;
 
-      const academic = data.data.filter((d) => d.type === "academic");
+      const academic    = data.data.filter((d) => d.type === "academic");
       const nonAcademic = data.data.filter((d) => d.type === "non_academic");
 
-      const academicContainer = document.getElementById("academicDeptLinks");
-      const nonAcademicContainer = document.getElementById(
-        "nonAcademicDeptLinks",
-      );
+      const academicContainer    = document.getElementById("academicDeptLinks");
+      const nonAcademicContainer = document.getElementById("nonAcademicDeptLinks");
 
       if (academicContainer) {
         academicContainer.innerHTML =
           academic
-            .map(
-              (d) =>
-                `<li><a href="/departments.html#dept-${d.id}">${escapeHtml(d.name)}</a></li>`,
-            )
+            .map((d) => `<li><a href="/departments.html#dept-${d.id}">${escapeHtml(d.name)}</a></li>`)
             .join("") || "<li>No academic departments</li>";
+        bindClose(academicContainer);
       }
       if (nonAcademicContainer) {
         nonAcademicContainer.innerHTML =
           nonAcademic
-            .map(
-              (d) =>
-                `<li><a href="/departments.html#dept-${d.id}">${escapeHtml(d.name)}</a></li>`,
-            )
+            .map((d) => `<li><a href="/departments.html#dept-${d.id}">${escapeHtml(d.name)}</a></li>`)
             .join("") || "<li>No non-academic departments</li>";
+        bindClose(nonAcademicContainer);
       }
     } catch (e) {
       console.log("Could not load department links for navbar");

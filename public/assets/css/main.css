@@ -1077,15 +1077,20 @@ ul {
   }
 
   /* Mobile Navbar Setup */
-   .nav-links {
+  .nav-links {
     display: flex !important;
     flex-direction: column !important;
+    justify-content: flex-start !important; /* desktop has flex-end — must override or items stack at bottom */
+    align-items: stretch !important;        /* desktop has center — must override for full-width rows */
+    flex: none !important;                  /* desktop has flex:1 1 auto — drawer must not grow/shrink */
+    flex-wrap: nowrap !important;           /* desktop wraps — drawer must never wrap */
     position: fixed;
     top: 116px !important;
     right: -100%;
     width: 100% !important;
     max-width: 280px !important;
     height: auto !important;
+    max-height: calc(100vh - 120px) !important;
     background: var(--white) !important;
     padding: 0 !important;
     margin: 0 !important;
@@ -1097,15 +1102,31 @@ ul {
     gap: 0;
     z-index: 999;
     transition: right 0.35s cubic-bezier(0.4, 0, 0.2, 1);
-    overflow-x: hidden !important; /* 🟢 Fix: Removes horizontal scrollbar */
+    overflow: hidden !important;
     box-sizing: border-box !important;
   }
 
+  /* When the drawer slides open, unlock vertical scrolling */
   .nav-links.open {
     right: 0 !important;
-    max-height: calc(100vh - 135px) !important; /* 🟢 Fix: Adds breathing room for bottom buttons */
+    overflow-x: hidden !important;
     overflow-y: auto !important;
     padding-bottom: 20px !important;
+    /* Thin yellow scrollbar — visible signal that the list is scrollable */
+    scrollbar-width: thin;
+    scrollbar-color: var(--yellow) transparent;
+  }
+
+  /* Webkit scrollbar for Chrome / Safari / mobile WebKit */
+  .nav-links.open::-webkit-scrollbar {
+    width: 4px;
+  }
+  .nav-links.open::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .nav-links.open::-webkit-scrollbar-thumb {
+    background: var(--yellow);
+    border-radius: 4px;
   }
 
    /* 🟢 Fix: Resets all top-level list items to block width 100% */
@@ -1439,6 +1460,12 @@ ul {
 .nav-links .dropdown-toggle .arrow {
   font-size: 0.7rem;
   margin-left: 4px;
+  display: inline-block;
+  transition: transform 0.25s ease;
+}
+/* Rotate arrow when dropdown is open (mobile tap) */
+.nav-links .nav-dropdown > .dropdown-toggle.open-arrow .arrow {
+  transform: rotate(180deg);
 }
 .nav-links .dropdown-menu {
   display: none;
