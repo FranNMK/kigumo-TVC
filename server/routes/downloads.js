@@ -80,17 +80,24 @@ router.get('/download/:id', async (req, res) => {
 
 /**
  * Append fl_attachment to a Cloudinary URL so the browser triggers a download
- * with the given filename.
+ * with the correct filename.
  *
- * Input:  https://res.cloudinary.com/<cloud>/raw/upload/v1/<public_id>.pdf
+ * Input:  https://res.cloudinary.com/<cloud>/raw/upload/v1/<public_id>
  * Output: https://res.cloudinary.com/<cloud>/raw/upload/fl_attachment:<name>/v1/<public_id>.pdf
+ *
+ * Two things must be true for Cloudinary to accept the URL:
+ * 1. The public_id in the URL must end with the file extension (.pdf etc.)
+ *    — Cloudinary raw uploads strip it, so we re-append from original_filename.
+ * 2. The fl_attachment value lives inside a URL path segment so standard
+ *    percent-encoding (%20 for spaces) is decoded and then re-parsed by
+ *    Cloudinary's transformation engine, causing a 400.
+ *    Cloudinary's own SDK encodes attachment filenames by replacing spaces
+ *    with underscores and stripping characters that break the transformation
+ *    parser (commas, slashes).
  */
 function buildCloudinaryAttachmentUrl(fileUrl, filename) {
   try {
-    // Cloudinary raw uploads strip the file extension from the public_id.
-    // If the stored URL has no extension, derive it from the original filename
-    // and append it — this covers records uploaded before the upload-time fix
-    // and any environment (staging, other domains) where old data may exist.
+    // 1. Ensure the stored URL has the file extension on the public_id.
     const ext = filename && filename.includes('.')
       ? filename.split('.').pop().toLowerCase()
       : null;
@@ -102,15 +109,21 @@ function buildCloudinaryAttachmentUrl(fileUrl, filename) {
       }
     }
 
-    // Insert the fl_attachment transformation after the upload type segment.
-    // Works for /raw/upload/, /image/upload/, and /video/upload/ URLs.
-    const encoded = encodeURIComponent(filename);
+    // 2. Encode the attachment filename for a Cloudinary transformation segment:
+    //    - Replace spaces with underscores (Cloudinary convention)
+    //    - Remove characters that break the transformation parser (/ , \)
+    const safeFilename = filename
+      .replace(/\s+/g, '_')
+      .replace(/[/\\,]/g, '');
+
+    // 3. Insert fl_attachment after the upload type segment.
+    //    Works for /raw/upload/, /image/upload/, and /video/upload/ URLs.
     return url.replace(
       /\/(raw|image|video)\/upload\//,
-      `/$1/upload/fl_attachment:${encoded}/`
+      `/$1/upload/fl_attachment:${safeFilename}/`
     );
   } catch {
-    return fileUrl; // fall back to plain URL if anything is unexpected
+    return fileUrl; // fall back to plain URL if anything unexpected happens
   }
 }
 

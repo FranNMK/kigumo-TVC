@@ -390,13 +390,21 @@ router.get('/download/:id', isAuthenticated, async (req, res) => {
 /**
  * Append fl_attachment transformation to a Cloudinary URL.
  * Works for /raw/upload/, /image/upload/, and /video/upload/ URLs.
+ *
+ * The fl_attachment value lives inside a URL path segment — standard
+ * percent-encoding (%20) is decoded by Cloudinary's transformation engine
+ * and causes a 400. Spaces must be replaced with underscores instead.
  */
 function buildCloudinaryAttachmentUrl(fileUrl, filename) {
   try {
-    const encoded = encodeURIComponent(filename);
+    // Encode for Cloudinary transformation segment: spaces → underscores,
+    // strip characters that break the transformation parser (/ , \).
+    const safeFilename = filename
+      .replace(/\s+/g, '_')
+      .replace(/[/\\,]/g, '');
     return fileUrl.replace(
       /\/(raw|image|video)\/upload\//,
-      `/$1/upload/fl_attachment:${encoded}/`
+      `/$1/upload/fl_attachment:${safeFilename}/`
     );
   } catch {
     return fileUrl;
