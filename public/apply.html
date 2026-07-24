@@ -305,6 +305,120 @@
       color: #383d41;
     }
 
+    /* Step transition spinner */
+    .step-spinner-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(255,255,255,0.7);
+      backdrop-filter: blur(2px);
+      z-index: 8000;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .step-spinner-overlay.active {
+      display: flex;
+    }
+    .step-spinner-overlay .spinner-ring {
+      width: 52px;
+      height: 52px;
+      border: 5px solid #e2e8e6;
+      border-top-color: #1a7a1a;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+    .step-spinner-overlay .spinner-label {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: #1a7a1a;
+    }
+
+    /* Submit spinner overlay */
+    .submit-spinner-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.45);
+      backdrop-filter: blur(3px);
+      z-index: 9000;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 18px;
+    }
+    .submit-spinner-overlay.active {
+      display: flex;
+    }
+    .submit-spinner-overlay .spinner-ring {
+      width: 64px;
+      height: 64px;
+      border: 6px solid rgba(255,255,255,0.3);
+      border-top-color: #f5c518;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    .submit-spinner-overlay .spinner-label {
+      font-size: 1rem;
+      font-weight: 700;
+      color: #ffffff;
+      letter-spacing: 0.02em;
+    }
+    .submit-spinner-overlay .spinner-sublabel {
+      font-size: 0.8rem;
+      color: rgba(255,255,255,0.75);
+    }
+
+    /* Course loading spinner inside select */
+    .course-spinner-wrap {
+      position: relative;
+    }
+    .course-spinner-wrap .course-loading {
+      display: none;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 16px;
+      color: #6b7a8c;
+      font-size: 0.85rem;
+    }
+    .course-spinner-wrap .course-loading.active {
+      display: flex;
+    }
+    .course-spinner-wrap .course-loading .mini-spin {
+      width: 18px;
+      height: 18px;
+      border: 2.5px solid #d0d8d0;
+      border-top-color: #1a7a1a;
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+      flex-shrink: 0;
+    }
+
+    /* Intake loading */
+    .intake-loading {
+      display: none;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 0;
+      color: #6b7a8c;
+      font-size: 0.85rem;
+    }
+    .intake-loading.active { display: flex; }
+    .intake-loading .mini-spin {
+      width: 18px;
+      height: 18px;
+      border: 2.5px solid #d0d8d0;
+      border-top-color: #1a7a1a;
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+      flex-shrink: 0;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
     /* Success Modal */
     .modal-overlay {
       display: none;
@@ -330,6 +444,50 @@
       text-align: center;
       box-shadow: 0 20px 60px rgba(0,0,0,0.15);
       animation: fadeIn 0.3s ease;
+      position: relative;
+    }
+    .modal-close-btn {
+      position: absolute;
+      top: 16px;
+      right: 20px;
+      background: #f0f2f0;
+      border: none;
+      border-radius: 50%;
+      width: 36px;
+      height: 36px;
+      font-size: 1.1rem;
+      cursor: pointer;
+      color: #4a5b6e;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s, color 0.2s;
+      line-height: 1;
+    }
+    .modal-close-btn:hover {
+      background: #e2e8e6;
+      color: #1a2c3e;
+    }
+    .modal-countdown-bar {
+      width: 100%;
+      height: 4px;
+      background: #e8f0e8;
+      border-radius: 4px;
+      overflow: hidden;
+      margin-top: 20px;
+    }
+    .modal-countdown-fill {
+      height: 100%;
+      background: #1a7a1a;
+      border-radius: 4px;
+      width: 100%;
+      transition: width linear;
+    }
+    .modal-countdown-label {
+      font-size: 0.75rem;
+      color: #6b7a8c;
+      margin-top: 6px;
+      text-align: center;
     }
     .modal-card h2 {
       font-size: 2rem;
@@ -370,6 +528,19 @@
 </head>
 
 <body>
+  <!-- Step transition spinner -->
+  <div class="step-spinner-overlay" id="stepSpinner">
+    <div class="spinner-ring"></div>
+    <div class="spinner-label" id="stepSpinnerLabel">Loading next step…</div>
+  </div>
+
+  <!-- Submit spinner overlay -->
+  <div class="submit-spinner-overlay" id="submitSpinner">
+    <div class="spinner-ring"></div>
+    <div class="spinner-label">Submitting Application…</div>
+    <div class="spinner-sublabel">Please wait, do not close this page</div>
+  </div>
+
   <div id="google_translate_element" style="position:fixed;top:10px;right:10px;z-index:9999;background:white;padding:5px;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,0.1);"></div>
   <header id="mainNavbar"></header>
 
@@ -493,15 +664,24 @@
             </div>
             <div class="input-group">
               <label>Course Programme <span class="required-star">*</span></label>
-              <select id="courseSelect" required>
-                <option value="">-- Select Course --</option>
-                <!-- Populated dynamically -->
-              </select>
+              <div class="course-spinner-wrap">
+                <select id="courseSelect" required>
+                  <option value="">-- Select Course --</option>
+                </select>
+                <div class="course-loading" id="courseLoading">
+                  <div class="mini-spin"></div>
+                  Loading courses…
+                </div>
+              </div>
             </div>
             <div class="input-group">
               <label>Preferred Intake <span class="required-star">*</span></label>
+              <div class="intake-loading" id="intakeLoading">
+                <div class="mini-spin"></div>
+                Loading intake dates…
+              </div>
               <div id="intakeOptions">
-                <!-- Populated from auto-generated global intakes -->
+                <!-- Populated from API intake dates -->
               </div>
             </div>
             <div class="input-group">
@@ -564,6 +744,9 @@
   <!-- Success Modal -->
   <div class="modal-overlay" id="successModal">
     <div class="modal-card">
+      <!-- × close button -->
+      <button class="modal-close-btn" id="modalCloseX" aria-label="Close">&#x2715;</button>
+
       <div style="font-size:3rem;">🎉</div>
       <h2>Application Submitted!</h2>
       <p class="text-muted" style="margin-bottom:12px;">Your application has been received successfully.</p>
@@ -574,7 +757,17 @@
         <div class="detail-row"><strong>Status:</strong> <span style="color:#1a7a1a; font-weight:700;">Pending Review</span></div>
       </div>
       <p class="text-muted">We will contact you via SMS/email within 5 working days.</p>
-      <button class="btn btn-primary" style="margin-top:20px; width:100%;" onclick="location.reload()">Submit Another Application</button>
+
+      <!-- Auto-close countdown bar -->
+      <div class="modal-countdown-bar">
+        <div class="modal-countdown-fill" id="countdownFill"></div>
+      </div>
+      <div class="modal-countdown-label" id="countdownLabel">Closing in 10s…</div>
+
+      <div style="display:flex; gap:12px; margin-top:16px;">
+        <button class="btn btn-secondary" id="modalCancelBtn" style="flex:1;">✕ Close</button>
+        <button class="btn btn-primary" style="flex:1;" onclick="location.reload()">Submit Another</button>
+      </div>
     </div>
   </div>
 
@@ -624,6 +817,8 @@
       currentStepDisplay.textContent = currentStep + 1;
     }
 
+    const stepLabels = ['Personal Info', 'Academic Details', 'Course & Intake', 'Documents & Submit'];
+
     function goToStep(step) {
       if (step < 0 || step >= totalSteps) return;
       // Validate current step before moving forward
@@ -632,12 +827,24 @@
         if (currentStep === 1 && !validateStep1()) return;
         if (currentStep === 2 && !validateStep2()) return;
       }
-      formSteps.forEach((el, idx) => {
-        el.classList.toggle('active-step', idx === step);
-      });
-      currentStep = step;
-      updateProgress();
-      window.scrollTo({ top: 300, behavior: 'smooth' });
+
+      // Show step-transition spinner briefly
+      const spinner = document.getElementById('stepSpinner');
+      const spinnerLabel = document.getElementById('stepSpinnerLabel');
+      spinnerLabel.textContent = step > currentStep
+        ? 'Loading ' + stepLabels[step] + '…'
+        : 'Going back…';
+      spinner.classList.add('active');
+
+      setTimeout(() => {
+        formSteps.forEach((el, idx) => {
+          el.classList.toggle('active-step', idx === step);
+        });
+        currentStep = step;
+        updateProgress();
+        spinner.classList.remove('active');
+        window.scrollTo({ top: 300, behavior: 'smooth' });
+      }, 350);
     }
 
     // Expose to global
@@ -727,11 +934,15 @@
     }
 
     async function loadCoursesForDepartment(deptId) {
+      const select = document.getElementById('courseSelect');
+      const loadingEl = document.getElementById('courseLoading');
+      // Show spinner, hide select while loading
+      select.style.display = 'none';
+      loadingEl.classList.add('active');
+      select.innerHTML = '<option value="">-- Select Course --</option>';
       try {
         const res = await fetch('/api/v1/courses?department_id=' + deptId);
         const data = await res.json();
-        const select = document.getElementById('courseSelect');
-        select.innerHTML = '<option value="">-- Select Course --</option>';
         if (data.success && data.data) {
           data.data.forEach(course => {
             const opt = document.createElement('option');
@@ -744,6 +955,9 @@
         }
       } catch (err) {
         console.error('Failed to load courses:', err);
+      } finally {
+        loadingEl.classList.remove('active');
+        select.style.display = '';
       }
     }
 
@@ -764,14 +978,21 @@
     document.getElementById('departmentSelect').addEventListener('change', function() {
       const deptId = this.value;
       if (deptId) loadCoursesForDepartment(deptId);
-      else document.getElementById('courseSelect').innerHTML = '<option value="">-- Select Course --</option>';
+      else {
+        document.getElementById('courseSelect').innerHTML = '<option value="">-- Select Course --</option>';
+        document.getElementById('courseLoading').classList.remove('active');
+        document.getElementById('courseSelect').style.display = '';
+      }
     });
 
-    // ── Populate intake options (global) ──
-    function populateIntakes() {
+    // ── Render intake radio options from a list ──
+    function renderIntakeOptions(intakes) {
       const container = document.getElementById('intakeOptions');
-      const intakes = getDefaultIntakes(new Date().getFullYear());
       container.innerHTML = '';
+      if (!intakes || intakes.length === 0) {
+        container.innerHTML = '<p style="color:#888;font-size:0.85rem;">No intake dates available at this time.</p>';
+        return;
+      }
       intakes.forEach(intake => {
         const div = document.createElement('div');
         div.className = 'intake-option';
@@ -779,10 +1000,12 @@
         radio.type = 'radio';
         radio.name = 'intake';
         radio.value = intake.label;
-        radio.id = 'intake-' + intake.label.replace(/\s/g, '');
+        radio.id = 'intake-' + intake.label.replace(/\s+/g, '');
+        if (intake.status === 'closed') radio.disabled = true;
         const label = document.createElement('label');
         label.htmlFor = radio.id;
         label.textContent = intake.display;
+        if (intake.status === 'closed') label.style.opacity = '0.5';
         const badge = document.createElement('span');
         badge.className = 'intake-badge ' + intake.status;
         badge.textContent = intake.badge + ' ' + intake.statusText;
@@ -793,7 +1016,7 @@
       });
     }
 
-    // ── Auto-generate intakes (same logic as backend) ──
+    // ── Fallback: auto-generate intakes if API fails ──
     function getDefaultIntakes(year) {
       const currentYear = year || new Date().getFullYear();
       const currentMonth = new Date().getMonth() + 1;
@@ -826,6 +1049,42 @@
       return intakes;
     }
 
+    // ── Load intake dates from admin API (same source as admissions page) ──
+    async function loadIntakeDates() {
+      const loadingEl = document.getElementById('intakeLoading');
+      loadingEl.classList.add('active');
+      try {
+        const res = await fetch('/api/v1/admin/intake-dates/public');
+        const data = await res.json();
+        loadingEl.classList.remove('active');
+        if (data.success && data.data && data.data.length > 0) {
+          // Map API rows into intake-option format
+          const statusEmoji = { open: '🟢', upcoming: '🔵', closed: '⚪' };
+          const statusText  = { open: 'Open Now', upcoming: 'Upcoming', closed: 'Closed' };
+          const intakes = data.data.map(row => {
+            const deadline = row.application_deadline
+              ? new Date(row.application_deadline).toLocaleDateString('en-KE', { day: 'numeric', month: 'long', year: 'numeric' })
+              : null;
+            return {
+              label: row.label,
+              display: row.label + (deadline ? ' — Deadline: ' + deadline : ''),
+              status: row.status || 'upcoming',
+              badge: statusEmoji[row.status] || '🔵',
+              statusText: statusText[row.status] || 'Upcoming'
+            };
+          });
+          renderIntakeOptions(intakes);
+        } else {
+          // API returned empty — fall back to generated
+          renderIntakeOptions(getDefaultIntakes(new Date().getFullYear()));
+        }
+      } catch (err) {
+        console.error('Failed to load intake dates from API, using fallback:', err);
+        document.getElementById('intakeLoading').classList.remove('active');
+        renderIntakeOptions(getDefaultIntakes(new Date().getFullYear()));
+      }
+    }
+
     // ── File input handlers ──
     document.getElementById('kcseFile').addEventListener('change', function(e) {
       const name = e.target.files[0] ? e.target.files[0].name : '';
@@ -846,7 +1105,8 @@
 
       const btn = this;
       btn.disabled = true;
-      btn.textContent = 'Submitting...';
+      // Show full-screen submit spinner
+      document.getElementById('submitSpinner').classList.add('active');
 
       const formData = new FormData();
       formData.append('full_name', document.getElementById('fullName').value.trim());
@@ -878,26 +1138,79 @@
         });
         const result = await res.json();
         if (result.success) {
+          document.getElementById('submitSpinner').classList.remove('active');
           // Show success modal
           document.getElementById('refNumberDisplay').textContent = result.data.reference_number;
           document.getElementById('confirmName').textContent = result.data.applicant_name;
           document.getElementById('confirmCourse').textContent = result.data.course_name;
           document.getElementById('successModal').classList.add('active');
-          // Clear form if needed (optional)
+          startModalCountdown();
         } else {
+          document.getElementById('submitSpinner').classList.remove('active');
           alert('❌ Submission failed: ' + (result.message || 'Unknown error'));
         }
       } catch (err) {
         console.error('Submit error:', err);
+        document.getElementById('submitSpinner').classList.remove('active');
         alert('❌ Network error. Please try again.');
       } finally {
         btn.disabled = false;
-        btn.textContent = '✅ Submit Application';
       }
     });
 
+    // ── Success modal: countdown auto-close + manual close ──
+    let _countdownTimer = null;
+    let _countdownInterval = null;
+
+    function closeSuccessModal() {
+      clearTimeout(_countdownTimer);
+      clearInterval(_countdownInterval);
+      document.getElementById('successModal').classList.remove('active');
+      // Reset bar for next use
+      const fill = document.getElementById('countdownFill');
+      fill.style.transition = 'none';
+      fill.style.width = '100%';
+      document.getElementById('countdownLabel').textContent = 'Closing in 10s…';
+    }
+
+    function startModalCountdown() {
+      const SECONDS = 10;
+      const fill = document.getElementById('countdownFill');
+      const label = document.getElementById('countdownLabel');
+      let remaining = SECONDS;
+
+      // Reset bar instantly (no transition) then kick off the drain
+      fill.style.transition = 'none';
+      fill.style.width = '100%';
+      // Force reflow so the instant reset takes effect before we add a transition
+      void fill.offsetWidth;
+      fill.style.transition = 'width ' + SECONDS + 's linear';
+      fill.style.width = '0%';
+
+      label.textContent = 'Closing in ' + remaining + 's…';
+
+      _countdownInterval = setInterval(() => {
+        remaining -= 1;
+        label.textContent = remaining > 0 ? 'Closing in ' + remaining + 's…' : 'Closing…';
+        if (remaining <= 0) clearInterval(_countdownInterval);
+      }, 1000);
+
+      _countdownTimer = setTimeout(() => {
+        closeSuccessModal();
+        location.reload();
+      }, SECONDS * 1000);
+    }
+
+    // Wire up × and Cancel buttons
+    document.getElementById('modalCloseX').addEventListener('click', closeSuccessModal);
+    document.getElementById('modalCancelBtn').addEventListener('click', closeSuccessModal);
+    // Click outside modal card also closes
+    document.getElementById('successModal').addEventListener('click', function(e) {
+      if (e.target === this) closeSuccessModal();
+    });
+
     // ── Init ──
-    populateIntakes();
+    loadIntakeDates();
     loadDepartments();
     updateProgress();
   </script>
