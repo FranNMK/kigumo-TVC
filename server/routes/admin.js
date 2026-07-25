@@ -1168,33 +1168,22 @@ router.post("/downloads", upload.single("file"), async (req, res) => {
       });
     }
 
-    const cloudinaryResult = await uploadFile(
-      `data:${req.file.mimetype};base64,${req.file.buffer.toString("base64")}`,
-      { folder: "kigumo-tvc/downloads", resource_type: "raw" },
-    );
-
-    // Cloudinary raw uploads strip the file extension from the public_id.
-    // Re-append it so the stored URL is deliverable with fl_attachment on any domain.
-    const fileUrl = appendExtensionToRawUrl(cloudinaryResult.secure_url, req.file.originalname);
+    const filename = Date.now() + "_" + req.file.originalname.replace(/\s+/g, "_");
+    const uploadDir = path.join(__dirname, "../../public/uploads");
+    const fs = require("fs");
+    if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
+    fs.writeFileSync(path.join(uploadDir, filename), req.file.buffer);
+    const fileUrl = "/uploads/" + filename;
 
     await db.execute(
       "INSERT INTO downloads (title, category, file_path, file_size, original_filename, uploaded_by) VALUES (?,?,?,?,?,?)",
-      [
-        title,
-        category,
-        fileUrl,
-        req.file.size,
-        req.file.originalname,
-        req.session.user.id,
-      ],
+      [title, category, fileUrl, req.file.size, req.file.originalname, req.session.user.id],
     );
 
     res.json({ success: true, message: "Download added" });
   } catch (err) {
     logger.error("Download create error", { error: err.message || err.toString() });
-    res
-      .status(500)
-      .json({ success: false, message: "Upload failed: " + err.message });
+    res.status(500).json({ success: false, message: "Upload failed: " + err.message });
   }
 });
 
@@ -1207,35 +1196,26 @@ router.put("/downloads/:id", upload.single("file"), async (req, res) => {
       [req.params.id],
     );
     if (!existing)
-      return res
-        .status(404)
-        .json({ success: false, message: "Download not found" });
+      return res.status(404).json({ success: false, message: "Download not found" });
 
     let file_path = existing.file_path;
     let file_size = existing.file_size;
     let original_filename = existing.original_filename;
 
     if (req.file) {
-      const cloudinaryResult = await uploadFile(
-        `data:${req.file.mimetype};base64,${req.file.buffer.toString("base64")}`,
-        { folder: "kigumo-tvc/downloads", resource_type: "raw" },
-      );
-      // Same extension fix as in CREATE — raw public_ids have no extension
-      file_path = appendExtensionToRawUrl(cloudinaryResult.secure_url, req.file.originalname);
+      const filename = Date.now() + "_" + req.file.originalname.replace(/\s+/g, "_");
+      const uploadDir = path.join(__dirname, "../../public/uploads");
+      const fs = require("fs");
+      if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
+      fs.writeFileSync(path.join(uploadDir, filename), req.file.buffer);
+      file_path = "/uploads/" + filename;
       file_size = req.file.size;
       original_filename = req.file.originalname;
     }
 
     await db.execute(
       "UPDATE downloads SET title=?, category=?, file_path=?, file_size=?, original_filename=? WHERE id=?",
-      [
-        title || existing.title,
-        category || existing.category,
-        file_path,
-        file_size,
-        original_filename,
-        req.params.id,
-      ],
+      [title || existing.title, category || existing.category, file_path, file_size, original_filename, req.params.id],
     );
 
     res.json({ success: true, message: "Download updated" });

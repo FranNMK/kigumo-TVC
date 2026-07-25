@@ -67,6 +67,9 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, "../public")));
 app.use("/public", express.static(path.join(__dirname, "../public")));
 
+// Serve locally uploaded files (admin downloads)
+app.use("/uploads", express.static(path.join(__dirname, "../public/uploads")));
+
 // Serve portal files (login, dashboards)
 app.use("/portal", express.static(path.join(__dirname, "../portal")));
 

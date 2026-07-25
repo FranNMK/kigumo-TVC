@@ -47,13 +47,8 @@ router.get('/', async (req, res) => {
 
 /**
  * GET /api/v1/downloads/download/:id
- * Redirects the browser directly to the Cloudinary URL with fl_attachment so
- * the browser downloads the file with the correct filename.
- *
- * Why redirect instead of proxy: the cPanel server has outbound HTTPS firewall
- * restrictions that cause ETIMEDOUT when connecting to Cloudinary's CDN.
- * A redirect lets the browser fetch directly from Cloudinary — no server
- * bandwidth consumed, no firewall issue.
+ * Redirects the browser to the local /uploads/ path so the browser
+ * downloads the file directly from the same origin — no CORS issues.
  */
 router.get('/download/:id', async (req, res) => {
   try {
@@ -64,67 +59,14 @@ router.get('/download/:id', async (req, res) => {
     if (!row) return res.status(404).json({ success: false, message: 'Download not found' });
     if (!row.file_path) return res.status(404).json({ success: false, message: 'File not available' });
 
-    // Build a Cloudinary fl_attachment URL so the browser saves the file
-    // with the original filename rather than the hashed Cloudinary public_id.
-    const filename = row.original_filename || 'download';
-    const downloadUrl = buildCloudinaryAttachmentUrl(row.file_path, filename);
-
-    // 302 redirect — browser fetches directly from Cloudinary CDN
-    res.redirect(302, downloadUrl);
+    // file_path is stored as /uploads/<filename> — redirect directly to it.
+    // Same-origin redirect: browser honours the download attribute and saves the file.
+    res.redirect(302, row.file_path);
 
   } catch (err) {
     logger.error('Download route error', { error: err.message || err.toString() });
     res.status(500).json({ success: false, message: 'Server error' });
   }
 });
-
-/**
- * Append fl_attachment to a Cloudinary URL so the browser triggers a download
- * with the correct filename.
- *
- * Input:  https://res.cloudinary.com/<cloud>/raw/upload/v1/<public_id>
- * Output: https://res.cloudinary.com/<cloud>/raw/upload/fl_attachment:<name>/v1/<public_id>.pdf
- *
- * Two things must be true for Cloudinary to accept the URL:
- * 1. The public_id in the URL must end with the file extension (.pdf etc.)
- *    — Cloudinary raw uploads strip it, so we re-append from original_filename.
- * 2. The fl_attachment value lives inside a URL path segment so standard
- *    percent-encoding (%20 for spaces) is decoded and then re-parsed by
- *    Cloudinary's transformation engine, causing a 400.
- *    Cloudinary's own SDK encodes attachment filenames by replacing spaces
- *    with underscores and stripping characters that break the transformation
- *    parser (commas, slashes).
- */
-function buildCloudinaryAttachmentUrl(fileUrl, filename) {
-  try {
-    // 1. Ensure the stored URL has the file extension on the public_id.
-    const ext = filename && filename.includes('.')
-      ? filename.split('.').pop().toLowerCase()
-      : null;
-    let url = fileUrl;
-    if (ext && ext.length <= 10) {
-      const base = url.split('?')[0];
-      if (!base.endsWith('.' + ext)) {
-        url = url + '.' + ext;
-      }
-    }
-
-    // 2. Encode the attachment filename for a Cloudinary transformation segment:
-    //    - Replace spaces with underscores (Cloudinary convention)
-    //    - Remove characters that break the transformation parser (/ , \)
-    const safeFilename = filename
-      .replace(/\s+/g, '_')
-      .replace(/[/\\,]/g, '');
-
-    // 3. Insert fl_attachment after the upload type segment.
-    //    Works for /raw/upload/, /image/upload/, and /video/upload/ URLs.
-    return url.replace(
-      /\/(raw|image|video)\/upload\//,
-      `/$1/upload/fl_attachment:${safeFilename}/`
-    );
-  } catch {
-    return fileUrl; // fall back to plain URL if anything unexpected happens
-  }
-}
 
 module.exports = router;
