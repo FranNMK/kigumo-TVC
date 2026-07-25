@@ -11,12 +11,12 @@ const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 5 * 1024 * 1024 }, // 5MB per file
   fileFilter: (req, file, cb) => {
-    const allowed = /jpeg|jpg|png|pdf|gif/;
-    const ext = path.extname(file.originalname).toLowerCase();
-    if (allowed.test(ext) || allowed.test(file.mimetype)) {
+    const allowed = /jpeg|jpg|png/;
+    const ext = path.extname(file.originalname).toLowerCase().replace('.', '');
+    if (allowed.test(ext) || file.mimetype.startsWith('image/')) {
       cb(null, true);
     } else {
-      cb(new Error('Unsupported file type. Only PDF, JPG, PNG, GIF allowed.'));
+      cb(new Error('Unsupported file type. Only JPG and PNG images are allowed.'));
     }
   }
 });
@@ -61,7 +61,9 @@ async function generateReference() {
 router.post('/', upload.fields([
   { name: 'kcse_cert', maxCount: 1 },
   { name: 'id_doc', maxCount: 1 },
-  { name: 'photo', maxCount: 1 }
+  { name: 'photo', maxCount: 1 },
+  { name: 'kcpe_cert', maxCount: 1 },
+  { name: 'leaving_cert', maxCount: 1 }
 ]), async (req, res) => {
   try {
     const files = req.files || {};
@@ -101,6 +103,14 @@ router.post('/', upload.fields([
     if (files.photo && files.photo.length > 0) {
       photoUrl = await uploadToCloudinary(files.photo[0], 'kigumo-tvc/applications/photos');
     }
+    let kcpeUrl = null;
+    if (files.kcpe_cert && files.kcpe_cert.length > 0) {
+      kcpeUrl = await uploadToCloudinary(files.kcpe_cert[0], 'kigumo-tvc/applications/kcpe');
+    }
+    let leavingCertUrl = null;
+    if (files.leaving_cert && files.leaving_cert.length > 0) {
+      leavingCertUrl = await uploadToCloudinary(files.leaving_cert[0], 'kigumo-tvc/applications/leaving-cert');
+    }
 
     // ── Generate reference ──
     const reference = await generateReference();
@@ -111,9 +121,9 @@ router.post('/', upload.fields([
         reference_number, full_name, dob, gender, id_number, phone, email, address,
         kcse_year, kcse_grade, prev_school, department_id, course_id,
         preferred_intake, study_mode,
-        kcse_cert_path, id_doc_path, photo_path,
+        kcse_cert_path, id_doc_path, photo_path, kcpe_cert_path, leaving_cert_path,
         status, submitted_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', NOW())
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', NOW())
     `, [
       reference,
       body.full_name.trim(),
@@ -132,7 +142,9 @@ router.post('/', upload.fields([
       body.study_mode,
       kcseUrl,
       idUrl,
-      photoUrl
+      photoUrl,
+      kcpeUrl,
+      leavingCertUrl
     ]);
 
     // ── Fetch course name for response ──

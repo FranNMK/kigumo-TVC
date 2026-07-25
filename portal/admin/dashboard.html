@@ -3027,24 +3027,10 @@
         } catch { finishProgress(false, "Network error"); }
       }
 
-      // Helper: View document in modal (PDFs in iframe, images as <img>)
+      // Helper: View document in modal
       function viewDocument(url) {
         if (!url) return;
-        const isPdf =
-          url.includes(".pdf") ||
-          url.includes("raw/upload") ||
-          url.includes(".pdf?");
-        if (isPdf) {
-          openModal(`
-      <h3>Document Viewer</h3>
-      <iframe src="${url}" style="width:100%; height:600px; border:none; border-radius:8px;"></iframe>
-      <div style="margin-top:12px;">
-        <a href="${url}" download class="btn btn-green" style="margin-right:8px;">⬇ Download</a>
-        <button class="btn btn-red" onclick="closeModal()">Close</button>
-      </div>
-    `);
-        } else {
-          openModal(`
+        openModal(`
       <h3>Document Viewer</h3>
       <img src="${url}" style="width:100%; max-height:80vh; object-fit:contain; border-radius:8px;">
       <div style="margin-top:12px;">
@@ -3052,7 +3038,6 @@
         <button class="btn btn-red" onclick="closeModal()">Close</button>
       </div>
     `);
-        }
       }
 
       async function viewApplication(id) {
@@ -3073,6 +3058,8 @@
           const docLinks = `
       <div style="display:flex; flex-wrap:wrap; gap:4px; margin-top:8px;">
         ${docButton(app.kcse_cert_path, "KCSE Certificate")}
+        ${app.kcpe_cert_path ? docButton(app.kcpe_cert_path, "KCPE Certificate") : ""}
+        ${app.leaving_cert_path ? docButton(app.leaving_cert_path, "Leaving Certificate") : ""}
         ${docButton(app.id_doc_path, "ID Document")}
         ${app.photo_path ? docButton(app.photo_path, "Passport Photo") : ""}
       </div>

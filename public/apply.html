@@ -703,19 +703,37 @@
             <div class="input-group">
               <label>Upload KCSE Certificate <span class="required-star">*</span></label>
               <div class="file-zone" onclick="document.getElementById('kcseFile').click()">
-                <span class="file-icon">📄</span>
-                <div>Click to upload (PDF, JPG, PNG, max 5MB)</div>
+                <span class="file-icon">📷</span>
+                <div>Click to upload a photo/scan (JPG, PNG, max 5MB)</div>
               </div>
-              <input type="file" id="kcseFile" accept=".pdf,.jpg,.png,.jpeg" style="display:none">
+              <input type="file" id="kcseFile" accept=".jpg,.png,.jpeg" style="display:none">
               <div class="file-name" id="kcseFileName"></div>
+            </div>
+            <div class="input-group">
+              <label>Upload KCPE Certificate <span style="color:#6b7a8c;">(Class 8 leavers)</span></label>
+              <div class="file-zone" onclick="document.getElementById('kcpeFile').click()">
+                <span class="file-icon">📷</span>
+                <div>Click to upload a photo/scan (JPG, PNG, max 5MB)</div>
+              </div>
+              <input type="file" id="kcpeFile" accept=".jpg,.png,.jpeg" style="display:none">
+              <div class="file-name" id="kcpeFileName"></div>
+            </div>
+            <div class="input-group">
+              <label>Upload Leaving Certificate <span style="color:#6b7a8c;">(Form 4 leavers)</span></label>
+              <div class="file-zone" onclick="document.getElementById('leavingCertFile').click()">
+                <span class="file-icon">📷</span>
+                <div>Click to upload a photo/scan (JPG, PNG, max 5MB)</div>
+              </div>
+              <input type="file" id="leavingCertFile" accept=".jpg,.png,.jpeg" style="display:none">
+              <div class="file-name" id="leavingCertFileName"></div>
             </div>
             <div class="input-group">
               <label>Upload National ID / Birth Cert <span class="required-star">*</span></label>
               <div class="file-zone" onclick="document.getElementById('idFile').click()">
-                <span class="file-icon">🆔</span>
-                <div>Click to upload (PDF, JPG, PNG, max 5MB)</div>
+                <span class="file-icon">📷</span>
+                <div>Click to upload a photo/scan (JPG, PNG, max 5MB)</div>
               </div>
-              <input type="file" id="idFile" accept=".pdf,.jpg,.png,.jpeg" style="display:none">
+              <input type="file" id="idFile" accept=".jpg,.png,.jpeg" style="display:none">
               <div class="file-name" id="idFileName"></div>
             </div>
             <div class="input-group">
@@ -901,7 +919,7 @@
     (function populateKCSEYears() {
       const select = document.getElementById('kcseYear');
       const currentYear = new Date().getFullYear();
-      for (let y = currentYear; y >= 2015; y--) {
+      for (let y = currentYear; y >= 1985; y--) {
         const opt = document.createElement('option');
         opt.value = y;
         opt.textContent = y;
@@ -1090,6 +1108,14 @@
       const name = e.target.files[0] ? e.target.files[0].name : '';
       document.getElementById('kcseFileName').textContent = name ? '✅ ' + name : '';
     });
+    document.getElementById('kcpeFile').addEventListener('change', function(e) {
+      const name = e.target.files[0] ? e.target.files[0].name : '';
+      document.getElementById('kcpeFileName').textContent = name ? '✅ ' + name : '';
+    });
+    document.getElementById('leavingCertFile').addEventListener('change', function(e) {
+      const name = e.target.files[0] ? e.target.files[0].name : '';
+      document.getElementById('leavingCertFileName').textContent = name ? '✅ ' + name : '';
+    });
     document.getElementById('idFile').addEventListener('change', function(e) {
       const name = e.target.files[0] ? e.target.files[0].name : '';
       document.getElementById('idFileName').textContent = name ? '✅ ' + name : '';
@@ -1130,6 +1156,10 @@
       if (kcseFile) formData.append('kcse_cert', kcseFile);
       if (idFile) formData.append('id_doc', idFile);
       if (photoFile) formData.append('photo', photoFile);
+      const kcpeFile = document.getElementById('kcpeFile').files[0];
+      const leavingCertFile = document.getElementById('leavingCertFile').files[0];
+      if (kcpeFile) formData.append('kcpe_cert', kcpeFile);
+      if (leavingCertFile) formData.append('leaving_cert', leavingCertFile);
 
       try {
         const res = await fetch('/api/v1/applications', {
