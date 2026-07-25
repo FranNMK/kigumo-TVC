@@ -733,7 +733,7 @@ router.get("/recycle-bin", async (req, res) => {
 const RESTORABLE_TABLES = new Set([
   'slider_slides', 'principal_message', 'page_content', 'news_articles',
   'bom_members', 'users', 'downloads', 'departments', 'partners',
-  'gallery_albums', 'gallery_photos',
+  'gallery_albums', 'gallery_photos', 'applications',
 ]);
 
 router.post("/recycle-bin/:id/restore", async (req, res) => {
@@ -770,6 +770,37 @@ router.delete("/recycle-bin/:id", async (req, res) => {
     res.json({ success: true, message: "Permanently deleted" });
   } catch (err) {
     logger.error("Recycle bin delete error", { error: err.message || err.toString() });
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+});
+
+// ── BULK permanent-delete selected recycle bin items ─────────────────────────
+router.post("/recycle-bin/bulk-delete", async (req, res) => {
+  try {
+    const { ids } = req.body;
+    if (!Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({ success: false, message: 'No IDs provided' });
+    }
+    const safeIds = ids.map(Number).filter(n => Number.isInteger(n) && n > 0);
+    if (safeIds.length === 0) {
+      return res.status(400).json({ success: false, message: 'Invalid IDs' });
+    }
+    const placeholders = safeIds.map(() => '?').join(',');
+    await db.execute(`DELETE FROM recycle_bin WHERE id IN (${placeholders})`, safeIds);
+    res.json({ success: true, deleted: safeIds.length });
+  } catch (err) {
+    logger.error("Recycle bin bulk-delete error", { error: err.message || err.toString() });
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+});
+
+// ── EMPTY entire recycle bin ──────────────────────────────────────────────────
+router.delete("/recycle-bin", async (req, res) => {
+  try {
+    const [result] = await db.execute("DELETE FROM recycle_bin");
+    res.json({ success: true, deleted: result.affectedRows });
+  } catch (err) {
+    logger.error("Recycle bin empty error", { error: err.message || err.toString() });
     res.status(500).json({ success: false, message: "Server error" });
   }
 });
@@ -1747,6 +1778,70 @@ router.patch("/applications/:id/status", async (req, res) => {
     );
     res.json({ success: true, message: 'Status updated' });
   } catch (err) {
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+// ── DELETE single application → recycle bin ──────────────────────────────────
+router.delete("/applications/:id", async (req, res) => {
+  try {
+    const [[row]] = await db.execute(
+      `SELECT a.*, c.name AS course_name FROM applications a
+       LEFT JOIN courses c ON a.course_id = c.id
+       WHERE a.id = ?`, [req.params.id]
+    );
+    if (!row) return res.status(404).json({ success: false, message: 'Not found' });
+
+    // Snapshot (exclude joined column)
+    const { course_name: _cn, ...snap } = row;
+    await db.execute(
+      `INSERT INTO recycle_bin (original_table, original_id, data_snapshot, deleted_at, restore_deadline)
+       VALUES ('applications', ?, ?, NOW(), DATE_ADD(NOW(), INTERVAL 1 DAY))`,
+      [row.id, JSON.stringify(snap)]
+    );
+    await db.execute('DELETE FROM applications WHERE id = ?', [row.id]);
+    res.json({ success: true, message: 'Application moved to recycle bin' });
+  } catch (err) {
+    logger.error('Application delete error', { error: err.message });
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+// ── BULK DELETE applications → recycle bin ───────────────────────────────────
+router.post("/applications/bulk-delete", async (req, res) => {
+  try {
+    const { ids } = req.body; // expects { ids: [1,2,3] }
+    if (!Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({ success: false, message: 'No IDs provided' });
+    }
+    // Validate all ids are integers
+    const safeIds = ids.map(Number).filter(n => Number.isInteger(n) && n > 0);
+    if (safeIds.length === 0) {
+      return res.status(400).json({ success: false, message: 'Invalid IDs' });
+    }
+
+    const placeholders = safeIds.map(() => '?').join(',');
+    const [rows] = await db.execute(
+      `SELECT a.* FROM applications a WHERE a.id IN (${placeholders})`, safeIds
+    );
+
+    if (rows.length === 0) return res.json({ success: true, deleted: 0 });
+
+    // Insert all into recycle bin
+    const insertValues = rows.map(row =>
+      [row.id, JSON.stringify(row)]
+    );
+    for (const [origId, snap] of insertValues) {
+      await db.execute(
+        `INSERT INTO recycle_bin (original_table, original_id, data_snapshot, deleted_at, restore_deadline)
+         VALUES ('applications', ?, ?, NOW(), DATE_ADD(NOW(), INTERVAL 1 DAY))`,
+        [origId, snap]
+      );
+    }
+    await db.execute(`DELETE FROM applications WHERE id IN (${placeholders})`, safeIds);
+    res.json({ success: true, deleted: rows.length });
+  } catch (err) {
+    logger.error('Bulk application delete error', { error: err.message });
     res.status(500).json({ success: false, message: 'Server error' });
   }
 });

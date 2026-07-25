@@ -2507,25 +2507,138 @@
 
       // ── RECYCLE BIN ──
       async function loadRecycle() {
-        const r = await fetch(`${API}/recycle-bin`),
-          d = await r.json();
-        let h =
-          "<table><tr><th>Table</th><th>Deleted At</th><th>Restore By</th><th>Actions</th></tr>";
-        if (d.success && d.data)
-          d.data.forEach((b) => {
-            h += `<tr><td>${b.original_table} #${b.original_id}</td><td>${new Date(b.deleted_at).toLocaleString()}</td><td>${new Date(b.restore_deadline).toLocaleDateString()}</td><td><button class="btn btn-yellow btn-sm" onclick="restoreItem(${b.id})">Restore</button> <button class="btn btn-red btn-sm" onclick="permDelete(${b.id})">Delete Forever</button></td></tr>`;
+        try {
+          const r = await fetch(`${API}/recycle-bin`);
+          const d = await r.json();
+          const items = (d.success && d.data) ? d.data : [];
+
+          if (items.length === 0) {
+            document.getElementById("recycleContent").innerHTML =
+              '<p style="color:#888; padding:1rem;">🗑️ Recycle bin is empty.</p>';
+            return;
+          }
+
+          // Toolbar
+          let h = `
+            <div style="display:flex; gap:0.5rem; align-items:center; flex-wrap:wrap; margin-bottom:0.75rem;">
+              <label style="display:flex;align-items:center;gap:6px;font-size:0.85rem;cursor:pointer;">
+                <input type="checkbox" id="recycleSelectAll" onchange="toggleSelectAllRecycle(this.checked)"> Select All
+              </label>
+              <button class="btn btn-sm" style="background:#6c757d;color:#fff;" onclick="recycleBulkDelete()">🗑️ Delete Selected</button>
+              <button class="btn btn-red btn-sm" onclick="emptyRecycleBin()" style="margin-left:auto;">🔥 Empty Trash</button>
+              <span style="font-size:0.78rem;color:#888;">(Items auto-deleted after 24 hrs)</span>
+            </div>
+            <table>
+              <thead><tr>
+                <th style="width:36px;"></th>
+                <th>Item</th>
+                <th>Deleted At</th>
+                <th>Auto-Delete In</th>
+                <th>Actions</th>
+              </tr></thead><tbody>`;
+
+          const now = Date.now();
+          items.forEach((b) => {
+            const deadline = new Date(b.restore_deadline);
+            const msLeft = deadline - now;
+            let countdownHtml;
+            if (msLeft <= 0) {
+              countdownHtml = '<span style="color:#c00;font-weight:600;">Pending cleanup</span>';
+            } else {
+              const hLeft = Math.floor(msLeft / 3600000);
+              const mLeft = Math.floor((msLeft % 3600000) / 60000);
+              const colour = hLeft < 3 ? '#c00' : hLeft < 12 ? '#e65100' : '#1a7a1a';
+              countdownHtml = `<span style="color:${colour};font-weight:600;">${hLeft}h ${mLeft}m</span>`;
+            }
+            // Human-readable table label
+            const tableLabel = {
+              applications: '📋 Application',
+              users: '👤 User',
+              news_articles: '📰 News',
+              departments: '🏫 Department',
+              bom_members: '🧑 BOM Member',
+              downloads: '📄 Download',
+              slider_slides: '🖼️ Slide',
+              partners: '🤝 Partner',
+            }[b.original_table] || b.original_table;
+
+            // Preview snippet
+            let preview = '';
+            try {
+              const snap = JSON.parse(b.data_snapshot);
+              preview = snap.full_name || snap.title || snap.name || snap.heading || ('#' + b.original_id);
+            } catch { preview = '#' + b.original_id; }
+
+            h += `<tr>
+              <td><input type="checkbox" class="recycle-chk" value="${b.id}"></td>
+              <td><strong>${tableLabel}</strong><br><span style="font-size:0.78rem;color:#666;">${escapeHtml(String(preview))}</span></td>
+              <td style="font-size:0.82rem;">${new Date(b.deleted_at).toLocaleString()}</td>
+              <td>${countdownHtml}</td>
+              <td>
+                <button class="btn btn-yellow btn-sm" onclick="restoreItem(${b.id})">↩️ Restore</button>
+                <button class="btn btn-red btn-sm" onclick="permDelete(${b.id})">🗑️ Delete Forever</button>
+              </td>
+            </tr>`;
           });
-        h += "</table>";
-        document.getElementById("recycleContent").innerHTML = h;
+          h += '</tbody></table>';
+          document.getElementById("recycleContent").innerHTML = h;
+        } catch (err) {
+          document.getElementById("recycleContent").innerHTML =
+            '<p style="color:#c00;">Error loading recycle bin.</p>';
+        }
       }
+
+      function toggleSelectAllRecycle(checked) {
+        document.querySelectorAll('.recycle-chk').forEach(c => c.checked = checked);
+      }
+
       async function restoreItem(id) {
-        await fetch(`${API}/recycle-bin/${id}/restore`, { method: "POST" });
-        loadRecycle();
+        showProgress("Restoring…");
+        try {
+          const r = await fetch(`${API}/recycle-bin/${id}/restore`, { method: "POST" });
+          const d = await r.json();
+          if (d.success) { finishProgress(true, "Restored!"); loadRecycle(); }
+          else finishProgress(false, d.message || "Restore failed");
+        } catch { finishProgress(false, "Network error"); }
       }
+
       async function permDelete(id) {
-        if (!confirm("Permanently delete? This cannot be undone.")) return;
-        await fetch(`${API}/recycle-bin/${id}`, { method: "DELETE" });
-        loadRecycle();
+        if (!confirm("Permanently delete this item? This cannot be undone.")) return;
+        showProgress("Deleting…");
+        try {
+          const r = await fetch(`${API}/recycle-bin/${id}`, { method: "DELETE" });
+          const d = await r.json();
+          if (d.success) { finishProgress(true, "Deleted!"); loadRecycle(); }
+          else finishProgress(false, d.message || "Delete failed");
+        } catch { finishProgress(false, "Network error"); }
+      }
+
+      async function recycleBulkDelete() {
+        const ids = [...document.querySelectorAll('.recycle-chk:checked')].map(c => Number(c.value));
+        if (ids.length === 0) { alert("No items selected."); return; }
+        if (!confirm(`Permanently delete ${ids.length} item(s)? This cannot be undone.`)) return;
+        showProgress(`Deleting ${ids.length} items…`);
+        try {
+          const r = await fetch(`${API}/recycle-bin/bulk-delete`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ ids })
+          });
+          const d = await r.json();
+          if (d.success) { finishProgress(true, `Deleted ${d.deleted} items.`); loadRecycle(); }
+          else finishProgress(false, d.message || "Bulk delete failed");
+        } catch { finishProgress(false, "Network error"); }
+      }
+
+      async function emptyRecycleBin() {
+        if (!confirm("⚠️ Empty the entire recycle bin? ALL items will be permanently deleted. This cannot be undone.")) return;
+        showProgress("Emptying trash…");
+        try {
+          const r = await fetch(`${API}/recycle-bin`, { method: "DELETE" });
+          const d = await r.json();
+          if (d.success) { finishProgress(true, `Trash emptied — ${d.deleted} item(s) removed.`); loadRecycle(); }
+          else finishProgress(false, d.message || "Empty failed");
+        } catch { finishProgress(false, "Network error"); }
       }
 
       // ── ENQUIRIES ──
@@ -2771,61 +2884,147 @@
       // ── APPLICATIONS ──
       async function loadApplications() {
         try {
-          const r = await fetch(API + "/applications");
+          // Read current filter values (preserved across reloads)
+          const statusEl = document.getElementById('appFilterStatus');
+          const searchEl = document.getElementById('appFilterSearch');
+          const intakeEl = document.getElementById('appFilterIntake');
+          const status  = statusEl  ? statusEl.value  : '';
+          const search  = searchEl  ? searchEl.value  : '';
+          const intake  = intakeEl  ? intakeEl.value  : '';
+
+          let url = API + "/applications?";
+          if (status) url += "status=" + encodeURIComponent(status) + "&";
+          if (search) url += "search=" + encodeURIComponent(search) + "&";
+          if (intake) url += "intake=" + encodeURIComponent(intake) + "&";
+
+          const r = await fetch(url);
           const d = await r.json();
+
+          // ── Filter bar (always re-render so state sticks) ──
           let h = `
-      <div class="filter-bar" style="display:flex; gap:1rem; margin-bottom:1rem; flex-wrap:wrap;">
-        <select id="appFilterStatus" onchange="loadApplications()">
+      <div class="filter-bar" style="display:flex; gap:0.6rem; margin-bottom:1rem; flex-wrap:wrap; align-items:center;">
+        <select id="appFilterStatus" onchange="loadApplications()" style="padding:6px 10px; border-radius:6px; border:1px solid #ccc;">
           <option value="">All Statuses</option>
-          <option value="pending">Pending</option>
-          <option value="reviewed">Reviewed</option>
-          <option value="accepted">Accepted</option>
-          <option value="rejected">Rejected</option>
+          <option value="pending"  ${status==='pending'  ? 'selected':''}>Pending</option>
+          <option value="reviewed" ${status==='reviewed' ? 'selected':''}>Reviewed</option>
+          <option value="accepted" ${status==='accepted' ? 'selected':''}>Accepted</option>
+          <option value="rejected" ${status==='rejected' ? 'selected':''}>Rejected</option>
         </select>
-        <input type="text" id="appFilterSearch" placeholder="Search by ref/name..." onkeyup="if(event.key==='Enter') loadApplications()">
+        <input type="text" id="appFilterSearch" value="${escapeHtml(search)}" placeholder="Search ref / name / email…"
+          onkeyup="if(event.key==='Enter') loadApplications()"
+          style="padding:6px 12px; border-radius:6px; border:1px solid #ccc; min-width:200px;">
+        <input type="text" id="appFilterIntake" value="${escapeHtml(intake)}" placeholder="Intake (e.g. January 2026)"
+          onkeyup="if(event.key==='Enter') loadApplications()"
+          style="padding:6px 12px; border-radius:6px; border:1px solid #ccc; min-width:170px;">
         <button class="btn btn-green btn-sm" onclick="loadApplications()">🔍 Filter</button>
-        <button class="btn btn-sm" onclick="document.getElementById('appFilterStatus').value='';document.getElementById('appFilterSearch').value='';loadApplications();">Clear</button>
+        <button class="btn btn-sm" style="background:#6c757d;color:#fff;" onclick="clearAppFilters()">✕ Clear</button>
+        <span id="appCount" style="font-size:0.8rem;color:#666;margin-left:auto;"></span>
       </div>
+
+      <div style="display:flex; gap:0.5rem; align-items:center; margin-bottom:0.6rem; flex-wrap:wrap;">
+        <label style="display:flex;align-items:center;gap:6px;font-size:0.85rem;cursor:pointer;">
+          <input type="checkbox" id="appSelectAll" onchange="toggleSelectAllApps(this.checked)"> Select All
+        </label>
+        <button class="btn btn-red btn-sm" onclick="bulkDeleteApps()">🗑️ Delete Selected</button>
+      </div>
+
       <table>
-        <thead><tr><th>Ref</th><th>Name</th><th>Course</th><th>Intake</th><th>Status</th><th>Submitted</th><th>Actions</th></tr></thead>
+        <thead><tr>
+          <th style="width:36px;"></th>
+          <th>Ref</th><th>Name</th><th>Course</th><th>Intake</th>
+          <th>Status</th><th>Submitted</th><th>Actions</th>
+        </tr></thead>
       <tbody>`;
-          if (d.success && d.data) {
-            d.data.forEach((app) => {
-              const statusBadge =
-                {
-                  pending: "badge-warning",
-                  reviewed: "badge-info",
-                  accepted: "badge-active",
-                  rejected: "badge-inactive",
-                }[app.status] || "badge";
+
+          const apps = (d.success && d.data) ? d.data : [];
+
+          // Client-side intake filter (server doesn't filter by intake yet)
+          const filtered = intake
+            ? apps.filter(a => a.preferred_intake && a.preferred_intake.toLowerCase().includes(intake.toLowerCase()))
+            : apps;
+
+          if (filtered.length === 0) {
+            h += '<tr><td colspan="8" style="text-align:center;color:#888;padding:1.5rem;">No applications found.</td></tr>';
+          } else {
+            filtered.forEach((app) => {
+              const statusBadge = {
+                pending:  "badge-warning",
+                reviewed: "badge-info",
+                accepted: "badge-active",
+                rejected: "badge-inactive",
+              }[app.status] || "badge";
               h += `<tr>
+          <td><input type="checkbox" class="app-chk" value="${app.id}"></td>
           <td><strong>${escapeHtml(app.reference_number)}</strong></td>
           <td>${escapeHtml(app.full_name)}</td>
-          <td>${escapeHtml(app.course_name || "")}</td>
-          <td>${escapeHtml(app.preferred_intake)}</td>
+          <td style="font-size:0.82rem;">${escapeHtml(app.course_name || "")}</td>
+          <td style="font-size:0.82rem;">${escapeHtml(app.preferred_intake)}</td>
           <td><span class="badge ${statusBadge}">${app.status}</span></td>
-          <td>${new Date(app.submitted_at).toLocaleDateString()}</td>
-          <td>
+          <td style="font-size:0.82rem;">${new Date(app.submitted_at).toLocaleDateString()}</td>
+          <td style="white-space:nowrap;">
             <button class="btn btn-yellow btn-sm" onclick="viewApplication(${app.id})">👁️ View</button>
-            <select onchange="updateAppStatus(${app.id}, this.value)" style="padding:4px;border-radius:4px;">
-              <option value="pending" ${app.status === "pending" ? "selected" : ""}>Pending</option>
-              <option value="reviewed" ${app.status === "reviewed" ? "selected" : ""}>Reviewed</option>
-              <option value="accepted" ${app.status === "accepted" ? "selected" : ""}>Accepted</option>
-              <option value="rejected" ${app.status === "rejected" ? "selected" : ""}>Rejected</option>
+            <select onchange="updateAppStatus(${app.id}, this.value)" style="padding:4px 6px;border-radius:4px;font-size:0.8rem;">
+              <option value="pending"  ${app.status==="pending"  ? "selected":""}>Pending</option>
+              <option value="reviewed" ${app.status==="reviewed" ? "selected":""}>Reviewed</option>
+              <option value="accepted" ${app.status==="accepted" ? "selected":""}>Accepted</option>
+              <option value="rejected" ${app.status==="rejected" ? "selected":""}>Rejected</option>
             </select>
+            <button class="btn btn-red btn-sm" onclick="deleteApplication(${app.id})" title="Move to recycle bin">🗑️</button>
           </td>
         </tr>`;
             });
-          } else {
-            h += '<tr><td colspan="7">No applications found.</td></tr>';
           }
           h += "</tbody></table>";
           document.getElementById("applicationsContent").innerHTML = h;
+          const countEl = document.getElementById('appCount');
+          if (countEl) countEl.textContent = filtered.length + ' application' + (filtered.length !== 1 ? 's' : '');
         } catch (err) {
           console.error("loadApplications error:", err);
           document.getElementById("applicationsContent").innerHTML =
             '<p style="color:#c00;">Error loading applications.</p>';
         }
+      }
+
+      function clearAppFilters() {
+        const s = document.getElementById('appFilterStatus');
+        const q = document.getElementById('appFilterSearch');
+        const i = document.getElementById('appFilterIntake');
+        if (s) s.value = '';
+        if (q) q.value = '';
+        if (i) i.value = '';
+        loadApplications();
+      }
+
+      function toggleSelectAllApps(checked) {
+        document.querySelectorAll('.app-chk').forEach(c => c.checked = checked);
+      }
+
+      async function deleteApplication(id) {
+        if (!confirm("Move this application to the recycle bin?")) return;
+        showProgress("Moving to recycle bin…");
+        try {
+          const r = await fetch(`${API}/applications/${id}`, { method: "DELETE" });
+          const d = await r.json();
+          if (d.success) { finishProgress(true, "Moved to recycle bin."); loadApplications(); }
+          else finishProgress(false, d.message || "Delete failed");
+        } catch { finishProgress(false, "Network error"); }
+      }
+
+      async function bulkDeleteApps() {
+        const ids = [...document.querySelectorAll('.app-chk:checked')].map(c => Number(c.value));
+        if (ids.length === 0) { alert("No applications selected."); return; }
+        if (!confirm(`Move ${ids.length} application(s) to the recycle bin?`)) return;
+        showProgress(`Moving ${ids.length} application(s) to recycle bin…`);
+        try {
+          const r = await fetch(`${API}/applications/bulk-delete`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ ids })
+          });
+          const d = await r.json();
+          if (d.success) { finishProgress(true, `${d.deleted} application(s) moved to recycle bin.`); loadApplications(); }
+          else finishProgress(false, d.message || "Bulk delete failed");
+        } catch { finishProgress(false, "Network error"); }
       }
 
       // Helper: View document in modal (PDFs in iframe, images as <img>)
