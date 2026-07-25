@@ -3027,6 +3027,26 @@
         } catch { finishProgress(false, "Network error"); }
       }
 
+      // Helper: force-download a cross-origin image via blob
+      async function downloadDocument(url) {
+        try {
+          const res = await fetch(url);
+          const blob = await res.blob();
+          const ext = url.split('.').pop().split('?')[0] || 'jpg';
+          const filename = 'document_' + Date.now() + '.' + ext;
+          const blobUrl = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = blobUrl;
+          a.download = filename;
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          URL.revokeObjectURL(blobUrl);
+        } catch (err) {
+          alert('Download failed. Try right-clicking the image and choosing "Save image as".');
+        }
+      }
+
       // Helper: View document in modal
       function viewDocument(url) {
         if (!url) return;
@@ -3034,7 +3054,7 @@
       <h3>Document Viewer</h3>
       <img src="${url}" style="width:100%; max-height:80vh; object-fit:contain; border-radius:8px;">
       <div style="margin-top:12px;">
-        <a href="${url}" download class="btn btn-green" style="margin-right:8px;">⬇ Download</a>
+        <button class="btn btn-green" style="margin-right:8px;" onclick="downloadDocument('${url}')">⬇ Download</button>
         <button class="btn btn-red" onclick="closeModal()">Close</button>
       </div>
     `);
