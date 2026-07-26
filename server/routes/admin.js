@@ -213,41 +213,65 @@ router.get("/slides", async (req, res) => {
   res.json({ success: true, data: rows });
 });
 
-router.post("/slides", upload.single("image"), async (req, res) => {
+// Helper: detect if an uploaded file is a video
+function isVideoFile(file) {
+  if (!file) return false;
+  const videoMimes = ['video/mp4', 'video/webm', 'video/ogg', 'video/quicktime', 'video/x-msvideo'];
+  const videoExts = ['.mp4', '.webm', '.ogg', '.mov', '.avi'];
+  const ext = require('path').extname(file.originalname).toLowerCase();
+  return videoMimes.includes(file.mimetype) || videoExts.includes(ext);
+}
+
+router.post("/slides", upload.single("media"), async (req, res) => {
   try {
-    const {
-      badge_text,
-      heading,
-      subtext,
-      btn1_text,
-      btn1_url,
-      btn2_text,
-      btn2_url,
-      sort_order,
-    } = req.body;
-    const image_path = await uploadToCloudinary(req.file, "kigumo-tvc/slider");
+    const { badge_text, heading, subtext, btn1_text, btn1_url, btn2_text, btn2_url, sort_order } = req.body;
+
+    let image_path = null;
+    let media_type = 'image';
+
+    if (req.file) {
+      if (isVideoFile(req.file)) {
+        media_type = 'video';
+        image_path = await uploadToCloudinary(req.file, "kigumo-tvc/slider");
+      } else {
+        image_path = await uploadToCloudinary(req.file, "kigumo-tvc/slider");
+      }
+    }
+
     await db.execute(
-      `INSERT INTO slider_slides (image_path, badge_text, heading, subtext, btn1_text, btn1_url, btn2_text, btn2_url, sort_order, created_by)
-       VALUES (?,?,?,?,?,?,?,?,?,?)`,
-      [
-        image_path,
-        badge_text,
-        heading,
-        subtext,
-        btn1_text,
-        btn1_url,
-        btn2_text,
-        btn2_url,
-        sort_order || 0,
-        req.session.user.id,
-      ],
+      `INSERT INTO slider_slides (image_path, media_type, badge_text, heading, subtext, btn1_text, btn1_url, btn2_text, btn2_url, sort_order, created_by)
+       VALUES (?,?,?,?,?,?,?,?,?,?,?)`,
+      [image_path, media_type, badge_text, heading, subtext, btn1_text, btn1_url, btn2_text, btn2_url, sort_order || 0, req.session.user.id],
     );
     res.json({ success: true, message: "Slide added" });
   } catch (err) {
     logger.error("Slide upload error", { error: err.message || err.toString() });
-    res
-      .status(500)
-      .json({ success: false, message: "Upload failed: " + err.message });
+    res.status(500).json({ success: false, message: "Upload failed: " + err.message });
+  }
+});
+
+router.put("/slides/:id", upload.single("media"), async (req, res) => {
+  try {
+    const { badge_text, heading, subtext, btn1_text, btn1_url, btn2_text, btn2_url, sort_order } = req.body;
+    const [[existing]] = await db.execute("SELECT * FROM slider_slides WHERE id = ?", [req.params.id]);
+    if (!existing) return res.status(404).json({ success: false, message: "Slide not found" });
+
+    let image_path = existing.image_path;
+    let media_type = existing.media_type || 'image';
+
+    if (req.file) {
+      media_type = isVideoFile(req.file) ? 'video' : 'image';
+      image_path = await uploadToCloudinary(req.file, "kigumo-tvc/slider");
+    }
+
+    await db.execute(
+      `UPDATE slider_slides SET image_path=?, media_type=?, badge_text=?, heading=?, subtext=?, btn1_text=?, btn1_url=?, btn2_text=?, btn2_url=?, sort_order=? WHERE id=?`,
+      [image_path, media_type, badge_text, heading, subtext, btn1_text, btn1_url, btn2_text, btn2_url, sort_order || existing.sort_order, req.params.id],
+    );
+    res.json({ success: true, message: "Slide updated" });
+  } catch (err) {
+    logger.error("Slide update error", { error: err.message || err.toString() });
+    res.status(500).json({ success: false, message: "Update failed: " + err.message });
   }
 });
 
@@ -265,9 +289,7 @@ router.patch("/slides/:id/toggle", async (req, res) => {
 });
 
 router.delete("/slides/:id", async (req, res) => {
-  const [[row]] = await db.execute("SELECT * FROM slider_slides WHERE id = ?", [
-    req.params.id,
-  ]);
+  const [[row]] = await db.execute("SELECT * FROM slider_slides WHERE id = ?", [req.params.id]);
   if (row) {
     await db.execute(
       "INSERT INTO recycle_bin (original_table, original_id, data_snapshot, deleted_by) VALUES (?,?,?,?)",

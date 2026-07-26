@@ -880,53 +880,96 @@
 
       // ── SLIDER ──
       async function loadSlides() {
-        const r = await fetch(`${API}/slides`),
-          d = await r.json();
-        let h =
-          '<button class="btn btn-green btn-sm" onclick="openSlideForm()">+ Add Slide</button><table><tr><th>Image</th><th>Heading</th><th>Order</th><th>Active</th><th>Actions</th></tr>';
-        if (d.success && d.data)
+        const r = await fetch(`${API}/slides`), d = await r.json();
+        let h = `<button class="btn btn-green btn-sm" onclick="openSlideForm()">+ Add Slide</button>
+          <table>
+            <tr><th>Preview</th><th>Type</th><th>Heading</th><th>Order</th><th>Active</th><th>Actions</th></tr>`;
+        if (d.success && d.data) {
           d.data.forEach((s) => {
-            h += `<tr><td>${s.image_path || "No img"}</td><td>${escapeHtml(s.heading || "")}</td><td>${s.sort_order}</td><td><span class="badge ${s.is_active ? "badge-active" : "badge-inactive"}">${s.is_active ? "Yes" : "No"}</span></td><td><button class="btn btn-yellow btn-sm" onclick="toggleSlide(${s.id})">Toggle</button> <button class="btn btn-red btn-sm" onclick="deleteSlide(${s.id})">Del</button></td></tr>`;
+            const isVideo = s.media_type === 'video';
+            const preview = s.image_path
+              ? (isVideo
+                  ? `<video src="${s.image_path}" style="width:80px;height:50px;object-fit:cover;border-radius:4px;" muted></video>`
+                  : `<img src="${s.image_path}" style="width:80px;height:50px;object-fit:cover;border-radius:4px;">`)
+              : '<span style="color:#aaa;">None</span>';
+            const typeBadge = isVideo
+              ? `<span class="badge" style="background:#6a3de8;color:#fff;">🎬 Video</span>`
+              : `<span class="badge badge-active">🖼️ Image</span>`;
+            h += `<tr>
+              <td>${preview}</td>
+              <td>${typeBadge}</td>
+              <td>${escapeHtml(s.heading || "")}</td>
+              <td>${s.sort_order}</td>
+              <td><span class="badge ${s.is_active ? "badge-active" : "badge-inactive"}">${s.is_active ? "Yes" : "No"}</span></td>
+              <td>
+                <button class="btn btn-yellow btn-sm" onclick="openEditSlideForm(${s.id})">✏️ Edit</button>
+                <button class="btn btn-sm" style="background:#3498db;color:#fff;" onclick="toggleSlide(${s.id})">${s.is_active ? "Deactivate" : "Activate"}</button>
+                <button class="btn btn-red btn-sm" onclick="deleteSlide(${s.id})">🗑️ Del</button>
+              </td>
+            </tr>`;
           });
+        }
         h += "</table>";
         document.getElementById("sliderContent").innerHTML = h;
       }
-      function openSlideForm() {
-        openModal(`<h3>Add Slide</h3><form onsubmit="addSlide(event)" enctype="multipart/form-data">
-    <div class="form-group"><label>Image</label><input type="file" name="image" required></div>
-    <div class="form-group"><label>Badge Text</label><input name="badge_text"></div>
-    <div class="form-group"><label>Heading</label><input name="heading"></div>
-    <div class="form-group"><label>Subtext</label><textarea name="subtext"></textarea></div>
-    <div class="form-group"><label>Button 1 Text</label><input name="btn1_text"></div>
-    <div class="form-group"><label>Button 1 URL</label><input name="btn1_url"></div>
-    <div class="form-group"><label>Button 2 Text</label><input name="btn2_text"></div>
-    <div class="form-group"><label>Button 2 URL</label><input name="btn2_url"></div>
-    <div class="form-group"><label>Sort Order</label><input type="number" name="sort_order" value="0"></div>
-    <button class="btn btn-green">Save</button> <button type="button" class="btn btn-red" onclick="closeModal()">Cancel</button>
-  </form>`);
+
+      function slideFormHtml(title, onsubmit, s) {
+        return `<h3>${title}</h3>
+        <form onsubmit="${onsubmit}" enctype="multipart/form-data">
+          <div class="form-group">
+            <label>Media (Image or Video — leave blank to keep existing)</label>
+            <input type="file" name="media" accept="image/*,video/mp4,video/webm,video/ogg,video/quicktime">
+            <small style="color:#888;">Accepted: JPG, PNG, GIF, MP4, WebM, MOV (max 50MB)</small>
+          </div>
+          ${s ? `<div style="margin-bottom:8px;">${s.media_type==='video'
+              ? `<video src="${s.image_path}" style="max-width:100%;max-height:140px;border-radius:6px;" controls muted></video>`
+              : `<img src="${s.image_path}" style="max-width:100%;max-height:140px;border-radius:6px;">`}</div>` : ''}
+          <div class="form-group"><label>Badge Text</label><input name="badge_text" value="${escapeHtml(s?.badge_text||'')}"></div>
+          <div class="form-group"><label>Heading</label><input name="heading" value="${escapeHtml(s?.heading||'')}"></div>
+          <div class="form-group"><label>Subtext</label><textarea name="subtext">${escapeHtml(s?.subtext||'')}</textarea></div>
+          <div class="form-group"><label>Button 1 Text</label><input name="btn1_text" value="${escapeHtml(s?.btn1_text||'')}"></div>
+          <div class="form-group"><label>Button 1 URL</label><input name="btn1_url" value="${escapeHtml(s?.btn1_url||'')}"></div>
+          <div class="form-group"><label>Button 2 Text</label><input name="btn2_text" value="${escapeHtml(s?.btn2_text||'')}"></div>
+          <div class="form-group"><label>Button 2 URL</label><input name="btn2_url" value="${escapeHtml(s?.btn2_url||'')}"></div>
+          <div class="form-group"><label>Sort Order</label><input type="number" name="sort_order" value="${s?.sort_order??0}"></div>
+          <button class="btn btn-green">💾 Save</button>
+          <button type="button" class="btn btn-red" onclick="closeModal()">Cancel</button>
+        </form>`;
       }
+
+      function openSlideForm() {
+        openModal(slideFormHtml('Add Slide', 'addSlide(event)', null));
+      }
+
+      async function openEditSlideForm(id) {
+        const r = await fetch(`${API}/slides`), d = await r.json();
+        const slide = d.data && d.data.find(s => s.id === id);
+        if (!slide) return alert('Slide not found');
+        openModal(slideFormHtml('Edit Slide', `updateSlide(event,${id})`, slide));
+      }
+
       async function addSlide(e) {
         e.preventDefault();
-        const f = new FormData(e.target);
-
         const progressInterval = startProgressAnimation();
-
         try {
-          const r = await fetch(`${API}/slides`, { method: "POST", body: f });
+          const r = await fetch(`${API}/slides`, { method: "POST", body: new FormData(e.target) });
           clearInterval(progressInterval);
-
           const result = await r.json();
-          if (result.success) {
-            finishProgress(true, "Slide added successfully!");
-            closeModal();
-            loadSlides();
-          } else {
-            finishProgress(false, result.message || "Upload failed");
-          }
-        } catch (err) {
+          if (result.success) { finishProgress(true, "Slide added!"); closeModal(); loadSlides(); }
+          else finishProgress(false, result.message || "Upload failed");
+        } catch (err) { clearInterval(progressInterval); finishProgress(false, "Network error"); }
+      }
+
+      async function updateSlide(e, id) {
+        e.preventDefault();
+        const progressInterval = startProgressAnimation();
+        try {
+          const r = await fetch(`${API}/slides/${id}`, { method: "PUT", body: new FormData(e.target) });
           clearInterval(progressInterval);
-          finishProgress(false, "Network error. Please try again.");
-        }
+          const result = await r.json();
+          if (result.success) { finishProgress(true, "Slide updated!"); closeModal(); loadSlides(); }
+          else finishProgress(false, result.message || "Update failed");
+        } catch (err) { clearInterval(progressInterval); finishProgress(false, "Network error"); }
       }
 
       async function toggleSlide(id) {

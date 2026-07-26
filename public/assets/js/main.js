@@ -143,19 +143,44 @@
     slides.forEach((slide, index) => {
       const div = document.createElement("div");
       div.className = "slide" + (index === 0 ? " active" : "");
-      div.style.backgroundImage = `url('${slide.image_path}')`;
-      div.innerHTML = `
-        <div class="slide-overlay"></div>
-        <div class="slide-content">
-          ${slide.badge_text ? `<span class="slide-badge">${escapeHtml(slide.badge_text)}</span>` : ""}
-          ${slide.heading ? `<h2>${escapeHtml(slide.heading)}</h2>` : ""}
-          ${slide.subtext ? `<p>${escapeHtml(slide.subtext)}</p>` : ""}
-          <div class="slide-buttons">
-            ${slide.btn1_text && slide.btn1_url ? `<a href="${slide.btn1_url}" class="btn btn-yellow">${escapeHtml(slide.btn1_text)}</a>` : ""}
-            ${slide.btn2_text && slide.btn2_url ? `<a href="${slide.btn2_url}" class="btn btn-outline">${escapeHtml(slide.btn2_text)}</a>` : ""}
-          </div>
-        </div>
-      `;
+
+      const isVideo = slide.media_type === "video";
+
+      if (isVideo) {
+        // Video slide — use a <video> tag as background
+        div.style.position = "relative";
+        div.style.overflow = "hidden";
+        div.innerHTML = `
+          <video class="slide-video-bg" src="${slide.image_path}"
+            autoplay muted loop playsinline
+            style="position:absolute;top:50%;left:50%;min-width:100%;min-height:100%;width:auto;height:auto;transform:translate(-50%,-50%);object-fit:cover;z-index:0;">
+          </video>
+          <div class="slide-overlay" style="z-index:1;"></div>
+          <div class="slide-content" style="position:relative;z-index:2;">
+            ${slide.badge_text ? `<span class="slide-badge">${escapeHtml(slide.badge_text)}</span>` : ""}
+            ${slide.heading ? `<h2>${escapeHtml(slide.heading)}</h2>` : ""}
+            ${slide.subtext ? `<p>${escapeHtml(slide.subtext)}</p>` : ""}
+            <div class="slide-buttons">
+              ${slide.btn1_text && slide.btn1_url ? `<a href="${slide.btn1_url}" class="btn btn-yellow">${escapeHtml(slide.btn1_text)}</a>` : ""}
+              ${slide.btn2_text && slide.btn2_url ? `<a href="${slide.btn2_url}" class="btn btn-outline">${escapeHtml(slide.btn2_text)}</a>` : ""}
+            </div>
+          </div>`;
+      } else {
+        // Image slide
+        div.style.backgroundImage = `url('${slide.image_path}')`;
+        div.innerHTML = `
+          <div class="slide-overlay"></div>
+          <div class="slide-content">
+            ${slide.badge_text ? `<span class="slide-badge">${escapeHtml(slide.badge_text)}</span>` : ""}
+            ${slide.heading ? `<h2>${escapeHtml(slide.heading)}</h2>` : ""}
+            ${slide.subtext ? `<p>${escapeHtml(slide.subtext)}</p>` : ""}
+            <div class="slide-buttons">
+              ${slide.btn1_text && slide.btn1_url ? `<a href="${slide.btn1_url}" class="btn btn-yellow">${escapeHtml(slide.btn1_text)}</a>` : ""}
+              ${slide.btn2_text && slide.btn2_url ? `<a href="${slide.btn2_url}" class="btn btn-outline">${escapeHtml(slide.btn2_text)}</a>` : ""}
+            </div>
+          </div>`;
+      }
+
       hero.insertBefore(div, hero.querySelector(".slider-arrow.prev"));
 
       // Build dot
@@ -175,11 +200,19 @@
     let timer;
 
     function goTo(n) {
+      // Pause any video in the outgoing slide
+      const outVideo = slideEls[current].querySelector("video");
+      if (outVideo) outVideo.pause();
+
       slideEls[current].classList.remove("active");
       dots[current].classList.remove("active");
       current = (n + slideEls.length) % slideEls.length;
       slideEls[current].classList.add("active");
       dots[current].classList.add("active");
+
+      // Play video in the incoming slide
+      const inVideo = slideEls[current].querySelector("video");
+      if (inVideo) inVideo.play().catch(() => {});
     }
 
     function next() {
@@ -241,7 +274,7 @@
       const statCourses = document.getElementById("statCourses");
       const statYears = document.getElementById("statYears");
 
-      if (statStudents) statStudents.dataset.target = d.totalStudents || 0;
+      // Students count is static (2500) — do not overwrite with API value
       if (statCourses) statCourses.dataset.target = d.totalCourses || 0;
       if (statYears) statYears.dataset.target = d.yearsSinceEstablishment || 3;
     }
