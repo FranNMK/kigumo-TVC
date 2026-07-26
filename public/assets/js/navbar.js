@@ -33,14 +33,6 @@
             <span>✉️ <a href="mailto:info@kigumotvc.ac.ke">kigumotvc@gmail.com</a></span>
           </div>
           <div class="top-bar-right">
-            <div class="lang-switcher">
-              <button class="lang-toggle-btn" id="langToggleBtn" aria-label="Choose language">
-                🌐 Language
-              </button>
-              <div class="lang-dropdown" id="langDropdown">
-                <div id="google_translate_element"></div>
-              </div>
-            </div>
             <span class="top-bar-hours">Mon – Fri: 8:00 AM – 5:00 PM</span>
           </div>
         </div>
@@ -129,9 +121,6 @@
 
     // Initialize dropdown hover/tap behavior
     initDropdowns();
-
-    // Initialize Google Translate toggle
-    initLanguageToggle();
 
     // Load department links dynamically
     loadDepartmentLinks();
@@ -290,25 +279,6 @@
         }
       });
     });
-  }
-
-  /**
-   * Language toggle: show/hide the Google Translate dropdown.
-   */
-  function initLanguageToggle() {
-    const toggleBtn = document.getElementById("langToggleBtn");
-    const langDropdown = document.getElementById("langDropdown");
-
-    if (toggleBtn && langDropdown) {
-      toggleBtn.addEventListener("click", (e) => {
-        e.stopPropagation();
-        langDropdown.classList.toggle("visible");
-      });
-
-      document.addEventListener("click", () => {
-        langDropdown.classList.remove("visible");
-      });
-    }
   }
 
   /**
