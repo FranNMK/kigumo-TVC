@@ -1,5 +1,6 @@
 /**
- * Materials Routes (Cloudinary Backend)
+ * Materials Routes (Local Storage)
+ * Files are saved to public/uploads/ — same approach as admin.js downloads.
  * Student: GET /my   → materials for courses in student's department
  * Lecturer: upload, edit, delete own materials
  */
@@ -10,19 +11,7 @@ const logger = require("../utils/logger");
 const { isAuthenticated, hasRole } = require("../middleware/auth");
 const multer = require("multer");
 const path = require("path");
-const { uploadFile, deleteFile } = require("../utils/cloudinary");
-const cloudinary = require("cloudinary").v2;
-
-// Image MIME types — anything else (PDF, DOCX, PPTX, …) is uploaded as raw
-const IMAGE_MIMETYPES = new Set([
-  "image/jpeg", "image/png", "image/gif", "image/webp",
-  "image/svg+xml", "image/bmp", "image/tiff"
-]);
-
-// ── File type validation ────────────────────────────────────
-// Same loose strategy as admin.js: check extension is in the allowed set
-// and MIME belongs to the right category — not an exact match — because
-// browsers report inconsistent MIME types (image/jpg vs image/jpeg, etc.)
+const fs = require("fs");
 
 const ALLOWED_EXTENSIONS = new Set([
   'jpg', 'jpeg', 'png', 'gif', 'webp',
@@ -63,26 +52,20 @@ const upload = multer({
   },
 });
 
-// ── Helper: generate download URL with original filename ──
-function getDownloadUrl(public_id, original_filename, resource_type) {
-  if (!public_id || !original_filename) return null;
-  // Use the Cloudinary SDK to build a properly-versioned URL so we never
-  // hardcode /v1/ or the cloud name.  resource_type comes from the upload result
-  // stored per-file (defaults to 'raw' for non-image materials).
-  return cloudinary.url(public_id, {
-    secure: true,
-    resource_type: resource_type || "raw",
-    type: "upload",
-    flags: `attachment:${encodeURIComponent(original_filename)}`,
-  });
-}
-
 // ── Helper: extract admission prefix from reg_number ───────
 function getStudentPrefix(regNumber) {
   if (!regNumber) return null;
-  // matches DICT/2501, CICT/2501, etc.
   const match = regNumber.match(/^([A-Z]+\/\d{4})/);
   return match ? match[1] : null;
+}
+
+// ── Helper: save buffer to public/uploads and return the URL path ──
+function saveLocalFile(buffer, originalname) {
+  const uploadDir = path.join(__dirname, "../../public/uploads");
+  if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
+  const filename = Date.now() + "_" + originalname.replace(/\s+/g, "_");
+  fs.writeFileSync(path.join(uploadDir, filename), buffer);
+  return "/uploads/" + filename;
 }
 
 // ── GET /my ────────────────────────────────────────────────
@@ -98,7 +81,7 @@ router.get("/my", isAuthenticated, async (req, res) => {
       }
       sql = `
         SELECT DISTINCT m.id, m.title, m.description, m.file_path, m.file_size,
-            m.original_filename, m.public_id, m.resource_type, m.uploaded_at,
+            m.original_filename, m.uploaded_at,
             c.name AS course_name
         FROM materials m
         JOIN material_cohorts mc ON m.id = mc.material_id
@@ -109,7 +92,7 @@ router.get("/my", isAuthenticated, async (req, res) => {
       params = [prefix];
     } else if (["lecturer", "hod"].includes(user.role)) {
       sql = `
-        SELECT m.id, m.title, m.description, m.file_path, m.file_size, m.original_filename, m.public_id, m.uploaded_at,
+        SELECT m.id, m.title, m.description, m.file_path, m.file_size, m.original_filename, m.uploaded_at,
        c.name AS course_name,
        GROUP_CONCAT(mc.admission_prefix SEPARATOR ', ') AS cohorts
         FROM materials m
@@ -124,14 +107,7 @@ router.get("/my", isAuthenticated, async (req, res) => {
       return res.status(403).json({ success: false, message: "Access denied" });
     }
 
-    let [rows] = await db.execute(sql, params);
-
-    // Enhance with download URL using original filename and correct resource_type
-    rows = rows.map((row) => ({
-      ...row,
-      download_url: getDownloadUrl(row.public_id, row.original_filename, row.resource_type),
-    }));
-
+    const [rows] = await db.execute(sql, params);
     res.json({ success: true, data: rows });
   } catch (err) {
     logger.error("Materials error", { error: err.message });
@@ -148,7 +124,7 @@ router.post(
   async (req, res) => {
     try {
       const { title, description, admission_prefixes } = req.body;
-      let course_id = parseInt(req.body.course_id) || 1; // default to 1
+      let course_id = parseInt(req.body.course_id) || 1;
 
       if (!title || !req.file) {
         return res.status(400).json({
@@ -157,8 +133,7 @@ router.post(
         });
       }
 
-      // admission_prefixes can be a JSON array string (if sent as JSON) or a comma-separated string
-      // Process admission_prefixes (can be JSON string, plain string, or already an array)
+      // admission_prefixes can be a JSON array string or a comma-separated string
       let prefixes = [];
       if (admission_prefixes) {
         if (Array.isArray(admission_prefixes)) {
@@ -176,40 +151,24 @@ router.post(
         }
       }
 
-      // Upload to Cloudinary.
-      // Non-image files (PDF, DOCX, PPTX, …) must use resource_type 'raw' so
-      // that Cloudinary stores and delivers them as their original bytes.
-      // Images keep resource_type 'image' so transformations still work.
-      const isImage = IMAGE_MIMETYPES.has(req.file.mimetype);
-      const fileBase64 = req.file.buffer.toString("base64");
-      const dataURI = `data:${req.file.mimetype};base64,${fileBase64}`;
-      const cloudinaryResult = await uploadFile(dataURI, {
-        folder: "kigumo-tvc/materials",
-        resource_type: isImage ? "image" : "raw",
-      });
-
-      // Insert material — store resource_type so download URLs can be built correctly later
-      const resourceType = isImage ? "image" : "raw";
+      // Save file locally to public/uploads/
+      const fileUrl = saveLocalFile(req.file.buffer, req.file.originalname);
       const originalFilename = req.file.originalname;
+
       const [result] = await db.execute(
-        `INSERT INTO materials (title, description, file_path, file_size, original_filename, course_id, uploaded_by, public_id, resource_type)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        `INSERT INTO materials (title, description, file_path, file_size, original_filename, course_id, uploaded_by)
+        VALUES (?, ?, ?, ?, ?, ?, ?)`,
         [
           title,
           description || "",
-          cloudinaryResult.secure_url,
-          req.file.size || cloudinaryResult.bytes,
+          fileUrl,
+          req.file.size,
           originalFilename,
           course_id,
           req.session.user.id,
-          cloudinaryResult.public_id,
-          resourceType,
         ],
       );
 
-      // Insert cohort associations — one row per prefix using db.execute()
-      // (db.query is not exported; mysql2's execute() doesn't support the
-      //  bulk-values shorthand, so we insert rows individually in a loop)
       for (const prefix of prefixes) {
         await db.execute(
           `INSERT INTO material_cohorts (material_id, admission_prefix) VALUES (?, ?)`,
@@ -217,10 +176,10 @@ router.post(
         );
       }
 
-      logger.info("Material uploaded", {
+      logger.info("Material uploaded locally", {
         material_id: result.insertId,
         prefixes,
-        public_id: cloudinaryResult.public_id,
+        file_path: fileUrl,
       });
 
       res.json({
@@ -280,7 +239,7 @@ router.delete(
   async (req, res) => {
     try {
       const [materials] = await db.execute(
-        "SELECT id, public_id FROM materials WHERE id = ? AND uploaded_by = ?",
+        "SELECT id, file_path FROM materials WHERE id = ? AND uploaded_by = ?",
         [req.params.id, req.session.user.id],
       );
       if (materials.length === 0) {
@@ -291,17 +250,16 @@ router.delete(
 
       const material = materials[0];
 
-      // Delete from Cloudinary if public_id exists
-      if (material.public_id) {
-        try {
-          await deleteFile(material.public_id);
-          logger.info("Cloudinary file deleted", {
-            public_id: material.public_id,
-          });
-        } catch (cloudErr) {
-          logger.warn("Cloudinary deletion failed", {
-            error: cloudErr.message,
-          });
+      // Delete local file if it exists
+      if (material.file_path && material.file_path.startsWith("/uploads/")) {
+        const localPath = path.join(
+          __dirname,
+          "../../public",
+          material.file_path,
+        );
+        if (fs.existsSync(localPath)) {
+          fs.unlinkSync(localPath);
+          logger.info("Local material file deleted", { path: localPath });
         }
       }
 
@@ -336,16 +294,12 @@ router.get(
   },
 );
 
-// ── GET /download/:id – download with original filename ──────
-// Auth check is performed server-side. Once authorised, the browser is
-// redirected to a Cloudinary fl_attachment URL so it downloads directly
-// from the CDN — no server proxying required (avoids cPanel outbound HTTPS
-// firewall restrictions that cause ETIMEDOUT).
+// ── GET /download/:id – serve file with original filename ──
+// Auth check is performed server-side. Redirects to the local /uploads/ path.
 router.get('/download/:id', isAuthenticated, async (req, res) => {
   try {
     const user = req.session.user;
 
-    // Different queries based on role – the user must have access to this material
     let sql, params;
     if (user.role === 'student') {
       const prefix = getStudentPrefix(user.reg_number);
@@ -372,43 +326,16 @@ router.get('/download/:id', isAuthenticated, async (req, res) => {
     const [rows] = await db.execute(sql, params);
     if (rows.length === 0) return res.status(404).json({ success: false, message: 'Material not found' });
 
-    const { file_path, original_filename } = rows[0];
+    const { file_path } = rows[0];
     if (!file_path) return res.status(404).json({ success: false, message: 'File not available' });
 
-    // Build a fl_attachment URL so the browser saves with the correct filename,
-    // then redirect — browser fetches directly from Cloudinary CDN.
-    const filename = original_filename || 'download';
-    const downloadUrl = buildCloudinaryAttachmentUrl(file_path, filename);
-    res.redirect(302, downloadUrl);
+    // file_path is stored as /uploads/<filename> — redirect directly to it.
+    res.redirect(302, file_path);
 
   } catch (err) {
     logger.error('Download route error', { error: err.message || err.toString() });
     res.status(500).json({ success: false, message: 'Server error' });
   }
 });
-
-/**
- * Append fl_attachment transformation to a Cloudinary URL.
- * Works for /raw/upload/, /image/upload/, and /video/upload/ URLs.
- *
- * The fl_attachment value lives inside a URL path segment — standard
- * percent-encoding (%20) is decoded by Cloudinary's transformation engine
- * and causes a 400. Spaces must be replaced with underscores instead.
- */
-function buildCloudinaryAttachmentUrl(fileUrl, filename) {
-  try {
-    // Encode for Cloudinary transformation segment: spaces → underscores,
-    // strip characters that break the transformation parser (/ , \).
-    const safeFilename = filename
-      .replace(/\s+/g, '_')
-      .replace(/[/\\,]/g, '');
-    return fileUrl.replace(
-      /\/(raw|image|video)\/upload\//,
-      `/$1/upload/fl_attachment:${safeFilename}/`
-    );
-  } catch {
-    return fileUrl;
-  }
-}
 
 module.exports = router;
