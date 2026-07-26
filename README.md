@@ -15,9 +15,9 @@ All file storage (images, documents, PDFs) is handled through **Cloudinary**. Th
 | Database | TiDB Cloud Serverless (MySQL 8.0 protocol) via `mysql2` |
 | File storage | Cloudinary v2 |
 | Sessions | `express-session` + `express-mysql-session` (TiDB-backed) |
-| Auth | `bcryptjs` (cost factor 12), session cookies |
+| Auth | `bcryptjs` (password compare), session cookies |
 | Upload handling | `multer` (memory storage — no disk writes) |
-| Rate limiting | `express-rate-limit` (login endpoint) |
+| Rate limiting | `express-rate-limit` (login endpoint: 5 attempts / 15 min) |
 | Logging | Custom structured logger (`server/utils/logger.js`) writing to `logs/` |
 | Input validation | `express-validator` (innovation portal routes) |
 
@@ -27,41 +27,52 @@ All file storage (images, documents, PDFs) is handled through **Cloudinary**. Th
 
 ```
 kigumo-TVC/
-├── database/               # Schema & seed SQL files (one file per table)
-├── logs/                   # Runtime log files (gitignored)
-├── portal/                 # Authenticated portal HTML pages
+├── database/               # Schema & seed SQL files (one *-schema.sql + one seed per table)
+│   └── migrations/         # Incremental ALTER/CREATE scripts; apply in order against live DB
+├── logs/                   # Runtime log files (gitignored); auto-created on startup
+├── portal/                 # Authenticated portal HTML pages (served at /portal/*)
 │   ├── login.html
 │   ├── student-dashboard.html
 │   ├── lecturer-dashboard.html
 │   ├── management-dashboard.html
 │   └── admin/
 │       └── dashboard.html
-├── public/                 # Public-facing website
+├── public/                 # Public-facing website (served as static files)
 │   ├── assets/             # Shared CSS, JS, images
+│   ├── uploads/            # Legacy local upload directory (served at /uploads — see note below)
 │   ├── innovation/         # Innovation portal front-end
 │   │   ├── admin/          # Innovation admin dashboard
-│   │   └── coordinator/    # Coordinator scoring dashboard
+│   │   │   └── dashboard.html
+│   │   ├── coordinator/    # Coordinator scoring dashboard
+│   │   │   └── dashboard.html
+│   │   ├── assets/
+│   │   ├── index.html
+│   │   ├── login.html
+│   │   ├── about.html
+│   │   └── results.html
 │   ├── index.html          # Homepage
 │   ├── about.html
-│   ├── courses.html
 │   ├── admissions.html
 │   ├── apply.html          # Online application form
-│   ├── departments.html
-│   ├── news.html / news-article.html
-│   ├── downloads.html
 │   ├── contact.html
+│   ├── course-details.html # Individual course detail page
+│   ├── courses.html
+│   ├── departments.html
+│   ├── downloads.html
+│   ├── news.html
+│   ├── news-article.html
 │   └── portals.html        # External portals listing page
 ├── server/
-│   ├── db.js               # mysql2 connection pool + SSL config + getConnection export
-│   ├── index.js            # Express entry point; mounts all routes
+│   ├── db.js               # mysql2 pool + SSL config + custom execute() + getConnection export
+│   ├── index.js            # Express entry point; mounts all routes, session config
 │   ├── middleware/
-│   │   ├── auth.js         # isAuthenticated, hasRole, innovation guards
+│   │   ├── auth.js         # isAuthenticated, hasRole, withDepartment, innovation guards
 │   │   └── requestLogger.js
 │   ├── routes/
 │   │   ├── admin.js        # Full CRUD for all content (admin role required)
 │   │   ├── announcements.js
 │   │   ├── applications.js # Public online application form + Cloudinary upload
-│   │   ├── auth.js         # Login / logout / session check
+│   │   ├── auth.js         # Login / logout / session check (/api/v1/auth/me)
 │   │   ├── bom.js          # Board of Management members (public read)
 │   │   ├── contact.js      # Contact form submissions
 │   │   ├── content.js      # Editable page sections / principal message
@@ -71,7 +82,7 @@ kigumo-TVC/
 │   │   ├── innovation-auth.js
 │   │   ├── innovation-categories.js
 │   │   ├── innovation-events.js
-│   │   ├── innovation-participants.js  # Includes bulk import with transaction
+│   │   ├── innovation-participants.js  # Includes bulk import with DB transaction
 │   │   ├── innovation-scores.js
 │   │   ├── management.js   # Read-only overview for principal/deputies
 │   │   ├── materials.js    # Course materials upload/download (lecturer/student)
@@ -89,15 +100,16 @@ kigumo-TVC/
 │       └── logger.js           # Main structured logger (file + console, with rotation)
 ├── .env.example
 ├── .gitignore
-├── package.json
-└── requirements.md         # Older requirements doc (partially outdated — see this README)
+└── package.json
 ```
+
+> **`public/uploads/`** is served statically at `/uploads`. It exists for legacy compatibility. All new uploads go through Cloudinary; nothing in the current routes writes to disk.
 
 ---
 
 ## Environment Variables
 
-Every variable the server code actually reads. Set these in `.env` (copy from `.env.example`).
+Every variable the server code actually reads. Copy `.env.example` to `.env` and fill in the required values.
 
 | Variable | Required | Description |
 |---|---|---|
@@ -119,19 +131,30 @@ Every variable the server code actually reads. Set these in `.env` (copy from `.
 | `CLOUDINARY_API_SECRET` | Yes | Cloudinary API secret |
 | `LOG_LEVEL` | No | `DEBUG` enables verbose query + request logging. Default: `INFO` in production, `DEBUG` in development |
 
-> **Variables in code but not in `.env.example`:** `LOG_LEVEL` is referenced in `logger.js` and `db.js` but not documented in `.env.example`. Add it if you want to control it from the environment.
->
-> **Variables in `package.json`/`requirements.md` but unused in server code:** `i18next` and `uuid` are listed as dependencies but are not imported anywhere in `server/`. They can be removed (see Part 2 of this document for details).
-
 ---
 
 ## Database
 
-TiDB Cloud Serverless (MySQL 8.0 compatible). Schema files are in `database/` — one `*-schema.sql` + one seed `*.sql` per table. To initialise a fresh database, run each schema file in order through the TiDB Cloud SQL console or a MySQL client.
+TiDB Cloud Serverless (MySQL 8.0 compatible). The `database/` directory contains schema files — one `*-schema.sql` and one seed `*.sql` per table. The `database/migrations/` directory contains incremental migrations that must be applied to an already-initialised database.
 
-Key tables: `users`, `departments`, `courses`, `fees`, `intake_dates`, `materials`, `material_cohorts`, `downloads`, `announcements`, `timetable`, `news_articles`, `bom_members`, `slider_slides`, `partners`, `principal_message`, `page_content`, `portals`, `recycle_bin`, `applications`, `sessions` (auto-created by `express-mysql-session` on first run).
+**Initialising from scratch:**
+1. Run `database/kigumo_tvc-schema-create.sql` to create the database.
+2. Run each `*-schema.sql` file to create tables (order within this set does not matter; no foreign-key dependencies between schema files).
+3. Run each seed `*.sql` file to insert reference data.
+4. Apply all files in `database/migrations/` in numeric order (`001_`, `002_`, …).
 
-Innovation portal tables: `innovation_users`, `innovation_events`, `innovation_participants`, `innovation_skills_categories`, `innovation_scores`.
+The `sessions` table is created automatically by `express-mysql-session` on first startup.
+
+**Key tables:**
+
+| Group | Tables |
+|---|---|
+| Users & auth | `users`, `hod_assignments` |
+| Academic | `departments`, `courses`, `fees`, `intake_dates`, `cohort_batches`, `timetable`, `materials`, `material_cohorts`, `intake_dates_global`, `intake_settings` |
+| Content | `slider_slides`, `news_articles`, `bom_members`, `page_content`, `principal_message`, `partners`, `portals`, `downloads`, `download_categories` |
+| Student data | `student_non_academic_memberships`, `gallery_albums`, `gallery_photos` |
+| Operations | `announcements`, `applications`, `contact_enquiries`, `recycle_bin`, `sessions` |
+| Innovation portal | `innovation_users`, `innovation_events`, `innovation_participants`, `innovation_skills_categories`, `innovation_scores` |
 
 ---
 
@@ -159,7 +182,7 @@ Public site: `http://localhost:3000`
 Staff portal: `http://localhost:3000/portal/login`  
 Innovation portal: `http://localhost:3000/innovation`
 
-> **Note:** There is no `nodemon` in the current `package.json`. `npm run dev` runs `node` directly. For auto-reload locally, run `npx nodemon server/index.js` instead.
+> **No auto-reload:** `npm run dev` runs `node` directly (same as `npm start`). For auto-reload locally, run `npx nodemon server/index.js` instead.
 
 ---
 
@@ -172,7 +195,7 @@ This app is deployed on **cPanel shared hosting** using:
 - **Environment variables** — set in the Node.js Selector interface or in a `.env` file in the application root (loaded by `dotenv` at startup).
 - **Application root** — the repo root. `npm install` must be re-run after any `package.json` changes (use the "Run NPM Install" button in Node.js Selector).
 
-Passenger spawns the process with `app set('trust proxy', 1)` already configured, which is required for correct IP detection behind the cPanel reverse proxy.
+`app.set('trust proxy', 1)` is configured in `server/index.js`, which is required for correct IP detection behind the cPanel reverse proxy.
 
 ---
 
@@ -181,8 +204,7 @@ Passenger spawns the process with `app set('trust proxy', 1)` already configured
 | Item | Status | Notes |
 |---|---|---|
 | TiDB SSL certificate | ⚠️ Pending | Currently using `rejectUnauthorized: false` (encrypted but unauthenticated). Set `DB_SSL_CA_PATH` or `DB_SSL_CA_BASE64` in `.env` once the CA cert is downloaded from TiDB Cloud → Connect page |
-| Railway CORS entry | ⚠️ Pending removal | `https://kigumo-tvc-production.up.railway.app` is still in the CORS allowlist. Remove `RAILWAY_PUBLIC_DOMAIN` from `.env` and delete the `railwayOrigins` block in `index.js` when Railway is fully retired |
-| Existing materials PDFs | ⚠️ Data migration needed | Files uploaded before the Tier 1 fix were stored as Cloudinary `image` type. Their `download_url` (from `GET /api/v1/materials/my`) will 404. Re-upload or run a Cloudinary resource_type migration for those files |
-| `i18next` / `uuid` dependencies | 🔧 Cleanup | Listed in `package.json` but not used anywhere in server code. Safe to remove with `npm uninstall i18next uuid` |
-| `requirements.md` | 📄 Outdated | Contains old package versions and references a non-existent `schema.sql`/`seed.sql`. This README supersedes it |
-| No automated tests | 🔧 Future | `npm test` currently exits with an error. No test suite exists |
+| Railway CORS entry | ⚠️ Pending removal | `https://kigumo-tvc-production.up.railway.app` is hardcoded in the `railwayOrigins` array in `server/index.js`. Remove `RAILWAY_PUBLIC_DOMAIN` from `.env` and delete the `railwayOrigins` block when Railway is fully retired |
+| Existing materials PDFs | ⚠️ Data migration needed | Files uploaded before migration `001` was applied were stored as Cloudinary `image` type. Their `download_url` will 404. Re-upload or run a Cloudinary `resource_type` migration for those files |
+| Gallery tables | 🔧 Incomplete feature | `gallery_albums` and `gallery_photos` schema files exist and the tables appear in the recycle-bin restore allowlist and the DB warmup list, but **no API routes exist** for them (`server/routes/` has no gallery route file). The feature is not yet implemented |
+| No automated tests | 🔧 Future | `npm test` exits with an error. No test suite exists |
