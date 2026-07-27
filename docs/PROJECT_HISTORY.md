@@ -87,6 +87,6 @@ The hosting environment hit its entry-process limit (100) during Cloudinary uplo
 | Name | Role / Contribution |
 |---|---|
 | Francis Kieni | [Lead developer |
-| Simon Mbatiany | UI/UX feedback $ testing  |
+| Simon Mbatiany | UI/UX feedback & testing  |
 
 | Webcom Kenya | Hosting provider — cPanel + Node.js Selector environment |
