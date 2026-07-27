@@ -6,8 +6,8 @@
 
 <!-- PLACEHOLDER — review and edit the draft below, then delete this comment. Do not expand or promote it; keep it factual. -->
 
-> **Draft for your review:**
-> The Kigumo TVC College Management System is a web application serving the public-facing website of Kigumo Technical and Vocational College and an authenticated staff and student portal. It manages course information, student records, course materials, timetables, announcements, online admissions, and a separate Innovation Portal for skills competitions. The system is hosted on cPanel at Webcom Kenya and uses TiDB Cloud as its database and Cloudinary for media file storage. Development was carried out by [DEVELOPER NAME — fill in]. The system has been in production use since [DATE — fill in].
+> **For  Review:**
+> The Kigumo TVC College Management System is a web application serving the public-facing website of Kigumo Technical and Vocational College and an authenticated staff and student portal. It manages course information, student records, course materials, timetables, announcements, online admissions, and a separate Innovation Portal for skills competitions. The system is hosted on cPanel at Webcom Kenya and uses TiDB Cloud as its database and Cloudinary for media file storage. Development was carried out by Simon Katampoi Mbatiany & Francis Kienji. The system has been in production use since 22/07/2026.
 
 ---
 
@@ -48,7 +48,15 @@ By signing below, the receiving party confirms that:
 
 ---
 
-**Outgoing developer / maintainer**
+**Outgoing developers / maintainer**
+
+Name: _______________________________________________
+
+Role: _______________________________________________
+
+Signature: _______________________________________________
+
+Date: _______________________________________________
 
 Name: _______________________________________________
 
@@ -60,7 +68,15 @@ Date: _______________________________________________
 
 ---
 
-**Receiving representative (management)**
+**Receiving representative(s) (management)**
+
+Name: _______________________________________________
+
+Role / Title: _______________________________________________
+
+Signature: _______________________________________________
+
+Date: _______________________________________________
 
 Name: _______________________________________________
 
