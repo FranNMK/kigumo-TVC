@@ -28,9 +28,8 @@
       <div class="top-bar">
         <div class="container">
           <div class="top-bar-left">
-            <span>📞  +254 769-394 200</span>
-            <span>✉️ <a href="mailto:info@kigumotvc.ac.ke">info@kigumotvc.ac.ke</a></span>
-            <span>✉️ <a href="mailto:info@kigumotvc.ac.ke">kigumotvc@gmail.com</a></span>
+            <span>📞 0769 394 273</span>
+            <span>✉️ <a href="mailto:kigumotvc@gmail.com">kigumotvc@gmail.com</a></span>
           </div>
           <div class="top-bar-right">
             <span class="top-bar-hours">Mon – Fri: 8:00 AM – 5:00 PM</span>
