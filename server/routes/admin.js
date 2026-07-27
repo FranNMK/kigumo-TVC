@@ -1400,6 +1400,42 @@ router.patch("/cohorts/:id/toggle", async (req, res) => {
   }
 });
 
+router.put("/cohorts/:id", upload.none(), async (req, res) => {
+  try {
+    const { batch_code, intake_date, label, department_id } = req.body;
+    if (!batch_code || !intake_date || !department_id) {
+      return res.status(400).json({ success: false, message: "Department, batch code, and intake date are required" });
+    }
+    if (batch_code.length > 4) {
+      return res.status(400).json({ success: false, message: "Batch code must be 4 characters or fewer" });
+    }
+    const [result] = await db.execute(
+      "UPDATE cohort_batches SET department_id=?, batch_code=?, intake_date=?, label=? WHERE id=?",
+      [department_id, batch_code, intake_date, label || batch_code, req.params.id],
+    );
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ success: false, message: "Cohort not found" });
+    }
+    res.json({ success: true, message: "Cohort updated" });
+  } catch (err) {
+    logger.error("Cohort update error", { error: err.message || err.toString() });
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+});
+
+router.delete("/cohorts/:id", async (req, res) => {
+  try {
+    const [result] = await db.execute("DELETE FROM cohort_batches WHERE id = ?", [req.params.id]);
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ success: false, message: "Cohort not found" });
+    }
+    res.json({ success: true, message: "Cohort deleted" });
+  } catch (err) {
+    logger.error("Cohort delete error", { error: err.message || err.toString() });
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+});
+
 
 // ── DEPARTMENTS CRUD (with vision, mission, objective) ──
 router.post("/departments", upload.single("image"), async (req, res) => {

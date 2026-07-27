@@ -2876,52 +2876,187 @@
       }
 
       // ── COHORTS ──
+      // ── cohort state ──
+      let _cohortDepts = [];   // cached department list for cohort dropdowns
+      let _cohortFilter = "";  // current department_id filter ("" = all)
+
       async function loadCohortsTab() {
-        const deptId = prompt("Enter department ID (1=ICT, 2=Business, ...):");
-        if (!deptId) return;
-        const res = await fetch(
-          `/api/v1/admin/cohorts?department_id=${deptId}`,
-        );
-        const d = await res.json();
-        let h =
-          '<button class="btn btn-green btn-sm" onclick="openCohortForm()">+ Add Cohort</button><table><tr><th>Batch Code</th><th>Label</th><th>Intake Date</th><th>Active</th><th>Actions</th></tr>';
-        if (d.success && d.data) {
-          d.data.forEach((c) => {
-            h += `<tr><td>${c.batch_code}</td><td>${escapeHtml(c.label || "")}</td><td>${c.intake_date?.substring(0, 10)}</td><td><span class="badge ${c.is_active ? "badge-active" : "badge-inactive"}">${c.is_active ? "Yes" : "No"}</span></td><td><button class="btn btn-yellow btn-sm" onclick="toggleCohort(${c.id})">Toggle</button></td></tr>`;
-          });
+        const el = document.getElementById("cohortsContent");
+        el.innerHTML = "<p>Loading...</p>";
+
+        // Fetch departments for filter dropdown (only once)
+        if (_cohortDepts.length === 0) {
+          try {
+            const dr = await fetch("/api/v1/admin/departments");
+            const dd = await dr.json();
+            if (dd.success) _cohortDepts = dd.data;
+          } catch (_) { /* ignore */ }
         }
-        h += "</table>";
-        document.getElementById("cohortsContent").innerHTML = h;
+
+        // Build filter bar
+        let deptOptions = '<option value="">All Departments</option>';
+        _cohortDepts.forEach(d => {
+          const sel = _cohortFilter == d.id ? " selected" : "";
+          deptOptions += `<option value="${d.id}"${sel}>${escapeHtml(d.name)}</option>`;
+        });
+
+        const url = _cohortFilter
+          ? `/api/v1/admin/cohorts?department_id=${_cohortFilter}`
+          : "/api/v1/admin/cohorts";
+        const res = await fetch(url);
+        const data = await res.json();
+
+        let rows = "";
+        if (data.success && data.data && data.data.length) {
+          data.data.forEach(c => {
+            rows += `<tr>
+              <td>${escapeHtml(c.department_name)}</td>
+              <td><strong>${escapeHtml(c.batch_code)}</strong></td>
+              <td>${escapeHtml(c.label || "")}</td>
+              <td>${c.intake_date ? c.intake_date.substring(0, 10) : ""}</td>
+              <td><span class="badge ${c.is_active ? "badge-active" : "badge-inactive"}">${c.is_active ? "Active" : "Inactive"}</span></td>
+              <td>
+                <button class="btn btn-yellow btn-sm" onclick="openEditCohortForm(${c.id})">Edit</button>
+                <button class="btn btn-sm" style="background:#6c757d;color:#fff;" onclick="toggleCohort(${c.id})">${c.is_active ? "Deactivate" : "Activate"}</button>
+                <button class="btn btn-red btn-sm" onclick="deleteCohort(${c.id})">Delete</button>
+              </td>
+            </tr>`;
+          });
+        } else {
+          rows = '<tr><td colspan="6" style="text-align:center;color:#888;">No cohorts found.</td></tr>';
+        }
+
+        el.innerHTML = `
+          <div style="display:flex;gap:1rem;align-items:center;margin-bottom:1rem;flex-wrap:wrap;">
+            <select id="cohortDeptFilter" style="padding:0.4rem 0.7rem;border:1px solid #ccc;border-radius:4px;min-width:200px;"
+                    onchange="_cohortFilter=this.value;loadCohortsTab()">
+              ${deptOptions}
+            </select>
+            <button class="btn btn-green btn-sm" onclick="openAddCohortForm()">+ Add Cohort</button>
+          </div>
+          <table>
+            <tr>
+              <th>Department</th>
+              <th>Batch Code</th>
+              <th>Label</th>
+              <th>Intake Date</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+            ${rows}
+          </table>`;
       }
 
-      function openCohortForm() {
+      function _buildDeptOptions(selectedId) {
+        return _cohortDepts.map(d =>
+          `<option value="${d.id}"${d.id == selectedId ? " selected" : ""}>${escapeHtml(d.name)}</option>`
+        ).join("");
+      }
+
+      function openAddCohortForm() {
         openModal(`
-    <h3>Add Cohort Batch</h3>
-    <form onsubmit="addCohort(event)">
-      <div class="form-group"><label>Department ID</label><input name="department_id" required></div>
-      <div class="form-group"><label>Batch Code (e.g., 2501)</label><input name="batch_code" required></div>
-      <div class="form-group"><label>Intake Date</label><input type="date" name="intake_date" required></div>
-      <div class="form-group"><label>Label</label><input name="label"></div>
-      <button class="btn btn-green">Save</button> <button type="button" class="btn btn-red" onclick="closeModal()">Cancel</button>
-    </form>
-  `);
+          <h3>Add Cohort Batch</h3>
+          <form onsubmit="addCohort(event)">
+            <div class="form-group">
+              <label>Department</label>
+              <select name="department_id" required style="width:100%;padding:0.5rem;border:1px solid #ccc;border-radius:4px;">
+                <option value="">— Select Department —</option>
+                ${_buildDeptOptions("")}
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Batch Code <small style="color:#888;">(max 4 chars, e.g. 2501)</small></label>
+              <input name="batch_code" maxlength="4" required placeholder="2501">
+            </div>
+            <div class="form-group">
+              <label>Intake Date</label>
+              <input type="date" name="intake_date" required>
+            </div>
+            <div class="form-group">
+              <label>Label <small style="color:#888;">(optional, e.g. January 2025 Intake)</small></label>
+              <input name="label" placeholder="January 2025 Intake">
+            </div>
+            <button class="btn btn-green">Save</button>
+            <button type="button" class="btn btn-red" onclick="closeModal()">Cancel</button>
+          </form>
+        `);
       }
 
       async function addCohort(e) {
         e.preventDefault();
         const f = new FormData(e.target);
-        const r = await fetch("/api/v1/admin/cohorts", {
-          method: "POST",
-          body: f,
-        });
-        alert((await r.json()).message);
-        closeModal();
-        loadCohortsTab();
+        const r = await fetch("/api/v1/admin/cohorts", { method: "POST", body: f });
+        const d = await r.json();
+        if (d.success) {
+          closeModal();
+          loadCohortsTab();
+        } else {
+          alert(d.message || "Error saving cohort");
+        }
+      }
+
+      async function openEditCohortForm(id) {
+        // Find cohort data from already-loaded list, or fetch
+        const res = await fetch(`/api/v1/admin/cohorts`);
+        const data = await res.json();
+        const c = data.data && data.data.find(x => x.id === id);
+        if (!c) { alert("Cohort not found"); return; }
+
+        openModal(`
+          <h3>Edit Cohort Batch</h3>
+          <form onsubmit="updateCohort(event,${id})">
+            <div class="form-group">
+              <label>Department</label>
+              <select name="department_id" required style="width:100%;padding:0.5rem;border:1px solid #ccc;border-radius:4px;">
+                <option value="">— Select Department —</option>
+                ${_buildDeptOptions(c.department_id)}
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Batch Code <small style="color:#888;">(max 4 chars)</small></label>
+              <input name="batch_code" maxlength="4" required value="${escapeHtml(c.batch_code)}">
+            </div>
+            <div class="form-group">
+              <label>Intake Date</label>
+              <input type="date" name="intake_date" required value="${c.intake_date ? c.intake_date.substring(0,10) : ""}">
+            </div>
+            <div class="form-group">
+              <label>Label</label>
+              <input name="label" value="${escapeHtml(c.label || "")}">
+            </div>
+            <button class="btn btn-green">Update</button>
+            <button type="button" class="btn btn-red" onclick="closeModal()">Cancel</button>
+          </form>
+        `);
+      }
+
+      async function updateCohort(e, id) {
+        e.preventDefault();
+        const f = new FormData(e.target);
+        const r = await fetch(`/api/v1/admin/cohorts/${id}`, { method: "PUT", body: f });
+        const d = await r.json();
+        if (d.success) {
+          closeModal();
+          loadCohortsTab();
+        } else {
+          alert(d.message || "Error updating cohort");
+        }
       }
 
       async function toggleCohort(id) {
         await fetch(`/api/v1/admin/cohorts/${id}/toggle`, { method: "PATCH" });
         loadCohortsTab();
+      }
+
+      async function deleteCohort(id) {
+        if (!confirm("Delete this cohort? This cannot be undone.")) return;
+        const r = await fetch(`/api/v1/admin/cohorts/${id}`, { method: "DELETE" });
+        const d = await r.json();
+        if (d.success) {
+          loadCohortsTab();
+        } else {
+          alert(d.message || "Error deleting cohort");
+        }
       }
 
       // ── APPLICATIONS ──
