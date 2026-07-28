@@ -664,6 +664,27 @@
     </button>
   </div>
 
+  <!-- Page-transition overlay (fires when "View Details" is clicked) -->
+  <div id="courseTransitionOverlay" style="
+    display:none;position:fixed;inset:0;z-index:99999;
+    background:#ffffff;
+    flex-direction:column;align-items:center;justify-content:center;gap:0;
+  ">
+    <div style="text-align:center;width:100%;max-width:380px;padding:0 24px;">
+      <!-- Logo -->
+      <img src="assets/images/logo.jpeg" alt="Kigumo TVC"
+           style="width:56px;height:56px;border-radius:50%;border:2px solid #1a7a1a;margin:0 auto 20px;display:block;" />
+      <!-- Course name being loaded -->
+      <p style="font-size:0.78rem;font-weight:600;color:#888;letter-spacing:1.2px;text-transform:uppercase;margin-bottom:6px;">Opening Programme</p>
+      <p id="ctoCourseName" style="font-size:1.05rem;font-weight:700;color:#1a1a2e;margin-bottom:28px;line-height:1.35;min-height:2.8em;"></p>
+      <!-- Progress bar track -->
+      <div style="width:100%;height:3px;background:#eef2f0;border-radius:3px;overflow:hidden;">
+        <div id="ctoBar" style="height:100%;width:0%;background:linear-gradient(90deg,#1a7a1a,#2c9e2c);border-radius:3px;transition:width 0.35s ease;"></div>
+      </div>
+      <p id="ctoStatus" style="font-size:0.78rem;color:#aaa;margin-top:10px;font-weight:500;">Preparing course data…</p>
+    </div>
+  </div>
+
   <script src="assets/js/navbar.js"></script>
   <script>
     buildNavbar('courses');
@@ -830,7 +851,7 @@
           <span>${modulesText}</span>
         </div>
         <div class="action-buttons">
-          <a href="course-details.html?id=${course.id}" class="btn-details">View Details →</a>
+          <a href="course-details.html?id=${course.id}" class="btn-details" data-course-name="${escapeHtml(course.name)}">View Details →</a>
           <a href="admissions.html" class="btn-apply">Apply Now</a>
         </div>
       </div>
@@ -861,6 +882,60 @@
     });
 
     document.getElementById("clearFiltersBtn").addEventListener("click", resetFilters);
+
+    // ── Course-transition overlay ────────────────────────────────
+    const ctoOverlay = document.getElementById('courseTransitionOverlay');
+    const ctoBar     = document.getElementById('ctoBar');
+    const ctoStatus  = document.getElementById('ctoStatus');
+    const ctoName    = document.getElementById('ctoCourseName');
+
+    const ctoMessages = [
+      'Preparing course data…',
+      'Loading fee structure…',
+      'Fetching intake dates…',
+      'Almost there…',
+    ];
+
+    document.getElementById('coursesGrid').addEventListener('click', function (e) {
+      const link = e.target.closest('a.btn-details');
+      if (!link) return;
+      e.preventDefault();
+
+      const href       = link.getAttribute('href');
+      const courseName = link.dataset.courseName || '';
+
+      // Show overlay
+      ctoName.textContent   = courseName;
+      ctoBar.style.width    = '0%';
+      ctoStatus.textContent = ctoMessages[0];
+      ctoOverlay.style.display = 'flex';
+
+      let pct = 0;
+      let msgIdx = 0;
+      const steps = [
+        { to: 30, delay: 80 },
+        { to: 60, delay: 220 },
+        { to: 82, delay: 400 },
+        { to: 95, delay: 300 },
+      ];
+
+      function runSteps(i) {
+        if (i >= steps.length) {
+          // Navigate — browser will start loading the next page
+          window.location.href = href;
+          return;
+        }
+        const s = steps[i];
+        setTimeout(() => {
+          pct = s.to;
+          ctoBar.style.width = pct + '%';
+          msgIdx = Math.min(i + 1, ctoMessages.length - 1);
+          ctoStatus.textContent = ctoMessages[msgIdx];
+          runSteps(i + 1);
+        }, s.delay);
+      }
+      runSteps(0);
+    });
 
     function escapeHtml(str) {
       if (!str) return '';
