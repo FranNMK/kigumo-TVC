@@ -255,11 +255,11 @@ router.get('/:id', async (req, res) => {
                 parseFloat(f.other)
         }));
 
-        // Fetch intake dates
+        // Fetch intake dates — return all dates set by admin, ordered soonest first
         const [intakes] = await db.execute(
             `SELECT intake_date, label
-            FROM intake_dates 
-            WHERE course_id = ? AND intake_date >= CURDATE()
+            FROM intake_dates
+            WHERE course_id = ?
             ORDER BY intake_date ASC`,
             [id]
         );

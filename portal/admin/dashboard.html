@@ -1770,7 +1770,7 @@
 
         if (courseFormStep === 1) {
           // Step 1: Basic Info
-          formHtml = `<h3>Add Course - Step 1/3: Basic Info</h3><form onsubmit="courseStep1(event)">
+          formHtml = `<h3>Add Course - Step 1/2: Basic Info</h3><form onsubmit="courseStep1(event)">
     <div class="form-group"><label>Course Name</label><input name="name" value="${escapeHtml(courseFormData.name || "")}" required></div>
     <div class="form-group"><label>Department</label><select name="department_id" id="courseDeptSelect" required><option value="">Loading...</option></select></div>
     <div class="form-group">
@@ -1795,7 +1795,7 @@
     </select></div>
     <div class="form-group"><label>Entry Requirements</label><textarea name="entry_requirements" rows="2">${escapeHtml(courseFormData.entry_requirements || "")}</textarea></div>
     <div class="form-group"><label>Description</label><textarea name="description" rows="3">${escapeHtml(courseFormData.description || "")}</textarea></div>
-    <button class="btn btn-green">Next: Fees →</button> <button type="button" class="btn btn-red" onclick="closeModal()">Cancel</button>
+    <button class="btn btn-green">Next: Intake Dates →</button> <button type="button" class="btn btn-red" onclick="closeModal()">Cancel</button>
   </form>`;
 
           // Load departments dropdown after modal opens
@@ -1815,43 +1815,13 @@
               });
           }, 100);
         } else if (courseFormStep === 2) {
-          const modules = parseInt(courseFormData.module_count) || 0;
-          formHtml = `<h3>Add Course - Step 2/3: Fees Structure</h3>
-    <form onsubmit="${courseFormData.id ? "editCourseStep2" : "courseStep2"}(event)">
-    <p style="color:#666;margin-bottom:1rem;">Set fees for each module (Ksh). Default: 22,396 per module.</p>`;
-
-          if (modules === 0) {
-            formHtml += `<p style="color:#888;font-style:italic;">No modules for Short/Internal courses — fees not applicable.</p>`;
-          }
-          for (let m = 1; m <= modules; m++) {
-            const fm = courseFormData.fees?.[m] || {};
-            formHtml += `
-    <div style="background:#f8f9fa;padding:0.8rem;border-radius:6px;margin-bottom:0.8rem;">
-      <strong style="color:#1a7a1a;">Module ${m}</strong>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;margin-top:0.5rem;">
-        <div class="form-group"><label>Tuition</label><input type="number" name="tuition_${m}" value="${fm.tuition || "22396"}" required></div>
-        <div class="form-group"><label>Examination</label><input type="number" name="exam_${m}" value="${fm.examination || "0"}"></div>
-        <div class="form-group"><label>Registration</label><input type="number" name="reg_${m}" value="${fm.registration || "0"}"></div>
-        <div class="form-group"><label>ID Card</label><input type="number" name="idcard_${m}" value="${fm.id_card || "0"}"></div>
-        <div class="form-group"><label>Other Fee</label><input type="number" name="other_${m}" value="${fm.other || "0"}"></div>
-        <div class="form-group"><label>Other Label</label><input name="other_label_${m}" value="${escapeHtml(fm.other_label || "")}" placeholder="e.g. Lab Fee"></div>
-      </div>
-      <div style="text-align:right;color:#1a7a1a;font-weight:600;margin-top:0.5rem;">
-        Module Total: Ksh <span id="moduleTotal_${m}">${calculateModuleTotal(fm)}</span>
-      </div>
-    </div>`;
-          }
-          formHtml += `
-    <button class="btn btn-green">Next: Intake Dates →</button> 
-    <button type="button" class="btn btn-yellow" onclick="courseFormStep=1;${courseFormData.id ? "renderCourseEditForm" : "renderCourseFormStep"}();">← Back</button>
-  </form>`;
-        } else if (courseFormStep === 3) {
-          // Step 3: Intake Dates
-          formHtml = `<h3>Add Course - Step 3/3: Intake Dates</h3><form onsubmit="courseStep3(event)">
-    <p style="color:#666;margin-bottom:1rem;">Add intake dates for this course</p>
+          // Step 2: Intake Dates (fees are auto-set at Ksh 22,396/module on the server)
+          const intakes = courseFormData.intakes || [{ date: "", label: "" }];
+          formHtml = `<h3>Add Course - Step 2/2: Intake Dates</h3><form onsubmit="courseStep2(event)">
+    <p style="color:#666;margin-bottom:0.5rem;">Add intake dates for this course.</p>
+    <p style="color:#888;font-size:0.85rem;margin-bottom:1rem;">💡 Fees are automatically set at <strong>Ksh 22,396 per module</strong> for all accredited programmes.</p>
     <div id="intakeDatesContainer">`;
 
-          const intakes = courseFormData.intakes || [{ date: "", label: "" }];
           intakes.forEach((intake, i) => {
             formHtml += `
     <div class="intake-row" style="display:flex;gap:0.5rem;align-items:end;margin-bottom:0.5rem;">
@@ -1865,7 +1835,7 @@
     </div>
     <button type="button" class="btn btn-sm" style="background:#6c757d;color:#fff;margin-bottom:1rem;" onclick="addIntakeRow()">+ Add Another Intake</button>
     <br>
-    <button class="btn btn-green">Save Course</button> <button type="button" class="btn btn-yellow" onclick="courseFormStep=2;renderCourseFormStep();">← Back</button>
+    <button class="btn btn-green">Save Course</button> <button type="button" class="btn btn-yellow" onclick="courseFormStep=1;renderCourseFormStep();">← Back</button>
   </form>`;
         }
 
@@ -1875,7 +1845,7 @@
       function addIntakeRow() {
         if (!courseFormData.intakes) courseFormData.intakes = [];
         courseFormData.intakes.push({ date: "", label: "" });
-        courseFormStep = 3;
+        courseFormStep = 2;
         renderCourseFormStep();
       }
 
@@ -1890,33 +1860,14 @@
           cbet_status: f.get("cbet_status") === "1",
           entry_requirements: f.get("entry_requirements"),
           description: f.get("description"),
-          fees: courseFormData.fees || {},
           intakes: courseFormData.intakes || [{ date: "", label: "" }],
         };
         courseFormStep = 2;
         renderCourseFormStep();
       }
 
-      function courseStep2(e) {
-        e.preventDefault();
-        const f = new FormData(e.target);
-        const modules = parseInt(courseFormData.module_count) || 0;
-        courseFormData.fees = {};
-        for (let m = 1; m <= modules; m++) {
-          courseFormData.fees[m] = {
-            tuition: f.get(`tuition_${m}`),
-            examination: f.get(`exam_${m}`),
-            registration: f.get(`reg_${m}`),
-            id_card: f.get(`idcard_${m}`),
-            other: f.get(`other_${m}`) || "0",
-            other_label: f.get(`other_label_${m}`),
-          };
-        }
-        courseFormStep = 3;
-        renderCourseFormStep();
-      }
-
-      async function courseStep3(e) {
+      // courseStep2 = intake dates + submit (fees handled server-side)
+      async function courseStep2(e) {
         e.preventDefault();
         const f = new FormData(e.target);
         courseFormData.intakes = [];
@@ -1928,7 +1879,7 @@
           i++;
         }
 
-        // Build final payload
+        // Build final payload — fees auto-generated on server at Ksh 22,396/module
         const payload = {
           name: courseFormData.name,
           department_id: parseInt(courseFormData.department_id),
@@ -1937,7 +1888,6 @@
           cbet_status: courseFormData.cbet_status,
           entry_requirements: courseFormData.entry_requirements,
           description: courseFormData.description,
-          fees: courseFormData.fees,
           intakes: courseFormData.intakes,
         };
 
@@ -1983,27 +1933,12 @@
             cbet_status: c.cbet_status,
             entry_requirements: c.entry_requirements,
             description: c.description,
-            fees: {},
             intakes:
               c.intake_dates?.map((i) => ({
                 date: i.date?.substring(0, 10),
                 label: i.label,
               })) || [],
           };
-
-          // Map existing fees
-          if (c.fees) {
-            c.fees.forEach((f) => {
-              courseFormData.fees[f.year_of_study] = {
-                tuition: f.tuition,
-                examination: f.examination,
-                registration: f.registration,
-                id_card: f.id_card,
-                other: f.other,
-                other_label: f.other_label,
-              };
-            });
-          }
 
           courseFormStep = 1;
           renderCourseEditForm();
@@ -2018,7 +1953,7 @@
         let formHtml = "";
 
         if (courseFormStep === 1) {
-          formHtml = `<h3>Edit Course - Step 1/3: Basic Info</h3><form onsubmit="editCourseStep1(event)">
+          formHtml = `<h3>Edit Course - Step 1/2: Basic Info</h3><form onsubmit="editCourseStep1(event)">
     <div class="form-group"><label>Course Name</label><input name="name" value="${escapeHtml(courseFormData.name || "")}" required></div>
     <div class="form-group"><label>Department</label><select name="department_id" id="courseDeptSelect" required><option value="">Loading...</option></select></div>
     <div class="form-group">
@@ -2043,7 +1978,7 @@
     </select></div>
     <div class="form-group"><label>Entry Requirements</label><textarea name="entry_requirements" rows="2">${escapeHtml(courseFormData.entry_requirements || "")}</textarea></div>
     <div class="form-group"><label>Description</label><textarea name="description" rows="3">${escapeHtml(courseFormData.description || "")}</textarea></div>
-    <button class="btn btn-green">Next: Fees →</button> <button type="button" class="btn btn-red" onclick="closeModal()">Cancel</button>
+    <button class="btn btn-green">Next: Intake Dates →</button> <button type="button" class="btn btn-red" onclick="closeModal()">Cancel</button>
   </form>`;
           setTimeout(() => {
             fetch("/api/v1/departments?type=academic")
@@ -2061,36 +1996,13 @@
               });
           }, 100);
         } else if (courseFormStep === 2) {
-          const modules = parseInt(courseFormData.module_count) || 0;
-          formHtml = `<h3>Edit Course - Step 2/3: Fees Structure</h3><form onsubmit="editCourseStep2(event)">
-    <p style="color:#666;margin-bottom:1rem;">Set fees for each module (Ksh). Default: 22,396 per module.</p>`;
-          if (modules === 0) {
-            formHtml += `<p style="color:#888;font-style:italic;">No modules for Short/Internal courses — fees not applicable.</p>`;
-          }
-          for (let m = 1; m <= modules; m++) {
-            const fm = courseFormData.fees?.[m] || {};
-            formHtml += `
-    <div style="background:#f8f9fa;padding:0.8rem;border-radius:6px;margin-bottom:0.8rem;">
-      <strong style="color:#1a7a1a;">Module ${m}</strong>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;margin-top:0.5rem;">
-        <div class="form-group"><label>Tuition</label><input type="number" name="tuition_${m}" value="${fm.tuition || "22396"}" required></div>
-        <div class="form-group"><label>Examination</label><input type="number" name="exam_${m}" value="${fm.examination || "0"}"></div>
-        <div class="form-group"><label>Registration</label><input type="number" name="reg_${m}" value="${fm.registration || "0"}"></div>
-        <div class="form-group"><label>ID Card</label><input type="number" name="idcard_${m}" value="${fm.id_card || "0"}"></div>
-        <div class="form-group"><label>Other Fee</label><input type="number" name="other_${m}" value="${fm.other || "0"}"></div>
-        <div class="form-group"><label>Other Label</label><input name="other_label_${m}" value="${escapeHtml(fm.other_label || "")}" placeholder="e.g. Lab Fee"></div>
-      </div>
-      <div style="text-align:right;color:#1a7a1a;font-weight:600;margin-top:0.5rem;">
-        Module Total: Ksh <span id="moduleTotal_${m}">${calculateModuleTotal(fm)}</span>
-      </div>
-    </div>`;
-          }
-          formHtml += `<button class="btn btn-green">Next: Intake Dates →</button> <button type="button" class="btn btn-yellow" onclick="courseFormStep=1;renderCourseEditForm();">← Back</button></form>`;
-        } else if (courseFormStep === 3) {
+          // Step 2: Intake Dates (fees handled server-side at Ksh 22,396/module)
           const intakes = courseFormData.intakes?.length
             ? courseFormData.intakes
             : [{ date: "", label: "" }];
-          formHtml = `<h3>Edit Course - Step 3/3: Intake Dates</h3><form onsubmit="editCourseStep3(event)">
+          formHtml = `<h3>Edit Course - Step 2/2: Intake Dates</h3><form onsubmit="editCourseStep2(event)">
+    <p style="color:#666;margin-bottom:0.5rem;">Update intake dates for this course.</p>
+    <p style="color:#888;font-size:0.85rem;margin-bottom:1rem;">💡 Fees are automatically set at <strong>Ksh 22,396 per module</strong> for all accredited programmes.</p>
     <div id="intakeDatesContainer">`;
           intakes.forEach((intake, i) => {
             formHtml += `
@@ -2103,7 +2015,7 @@
           formHtml += `</div>
     <button type="button" class="btn btn-sm" style="background:#6c757d;color:#fff;margin-bottom:1rem;" onclick="addEditIntakeRow()">+ Add Another Intake</button>
     <br>
-    <button class="btn btn-green">Update Course</button> <button type="button" class="btn btn-yellow" onclick="courseFormStep=2;renderCourseEditForm();">← Back</button></form>`;
+    <button class="btn btn-green">Update Course</button> <button type="button" class="btn btn-yellow" onclick="courseFormStep=1;renderCourseEditForm();">← Back</button></form>`;
         }
         openModal(formHtml);
       }
@@ -2111,7 +2023,7 @@
       function addEditIntakeRow() {
         if (!courseFormData.intakes) courseFormData.intakes = [];
         courseFormData.intakes.push({ date: "", label: "" });
-        courseFormStep = 3;
+        courseFormStep = 2;
         renderCourseEditForm();
       }
 
@@ -2129,26 +2041,8 @@
         renderCourseEditForm();
       }
 
-      function editCourseStep2(e) {
-        e.preventDefault();
-        const f = new FormData(e.target);
-        const modules = parseInt(courseFormData.module_count) || 0;
-        courseFormData.fees = {};
-        for (let m = 1; m <= modules; m++) {
-          courseFormData.fees[m] = {
-            tuition: f.get(`tuition_${m}`),
-            examination: f.get(`exam_${m}`),
-            registration: f.get(`reg_${m}`),
-            id_card: f.get(`idcard_${m}`),
-            other: f.get(`other_${m}`) || "0",
-            other_label: f.get(`other_label_${m}`),
-          };
-        }
-        courseFormStep = 3;
-        renderCourseEditForm();
-      }
-
-      async function editCourseStep3(e) {
+      // editCourseStep2 = intake dates + submit (fees handled server-side)
+      async function editCourseStep2(e) {
         e.preventDefault();
         const f = new FormData(e.target);
         courseFormData.intakes = [];
@@ -2160,6 +2054,7 @@
           i++;
         }
 
+        // Build payload — fees auto-generated on server at Ksh 22,396/module
         const payload = {
           name: courseFormData.name,
           department_id: parseInt(courseFormData.department_id),
@@ -2168,7 +2063,6 @@
           cbet_status: courseFormData.cbet_status,
           entry_requirements: courseFormData.entry_requirements,
           description: courseFormData.description,
-          fees: courseFormData.fees,
           intakes: courseFormData.intakes,
         };
 

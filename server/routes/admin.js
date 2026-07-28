@@ -1635,7 +1635,6 @@ router.post("/courses", async (req, res) => {
       cbet_status,
       entry_requirements,
       description,
-      fees,
       intakes,
     } = req.body;
     if (!name || !department_id || module_count === undefined || !examining_body) {
@@ -1662,21 +1661,12 @@ router.post("/courses", async (req, res) => {
       ],
     );
 
-    // Insert fees
-    if (fees) {
-      for (const [year, fee] of Object.entries(fees)) {
+    // Auto-generate fees at Ksh 22,396 per module for accredited programmes
+    if (mc > 0) {
+      for (let m = 1; m <= mc; m++) {
         await db.execute(
-          "INSERT INTO fees (course_id, year_of_study, tuition, examination, registration, id_card, other, other_label, last_updated) VALUES (?,?,?,?,?,?,?,?,CURDATE())",
-          [
-            result.insertId,
-            year,
-            fee.tuition || 0,
-            fee.examination || 0,
-            fee.registration || 0,
-            fee.id_card || 0,
-            fee.other || 0,
-            fee.other_label || "",
-          ],
+          "INSERT INTO fees (course_id, year_of_study, tuition, examination, registration, id_card, other, other_label, last_updated) VALUES (?,?,?,0,0,0,0,'',CURDATE())",
+          [result.insertId, m, 22396],
         );
       }
     }
@@ -1710,7 +1700,6 @@ router.put("/courses/:id", async (req, res) => {
       cbet_status,
       entry_requirements,
       description,
-      fees,
       intakes,
     } = req.body;
 
@@ -1733,22 +1722,13 @@ router.put("/courses/:id", async (req, res) => {
       ],
     );
 
-    // Update fees: delete old, insert new
+    // Re-generate fees at Ksh 22,396 per module (flat rate)
     await db.execute("DELETE FROM fees WHERE course_id = ?", [req.params.id]);
-    if (fees) {
-      for (const [year, fee] of Object.entries(fees)) {
+    if (mc > 0) {
+      for (let m = 1; m <= mc; m++) {
         await db.execute(
-          "INSERT INTO fees (course_id, year_of_study, tuition, examination, registration, id_card, other, other_label, last_updated) VALUES (?,?,?,?,?,?,?,?,CURDATE())",
-          [
-            req.params.id,
-            year,
-            fee.tuition || 0,
-            fee.examination || 0,
-            fee.registration || 0,
-            fee.id_card || 0,
-            fee.other || 0,
-            fee.other_label || "",
-          ],
+          "INSERT INTO fees (course_id, year_of_study, tuition, examination, registration, id_card, other, other_label, last_updated) VALUES (?,?,?,0,0,0,0,'',CURDATE())",
+          [req.params.id, m, 22396],
         );
       }
     }
