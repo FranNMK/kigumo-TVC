@@ -203,9 +203,14 @@
     }
 
     try {
-      const res = await fetch(`/api/v1/courses/${courseId}`);
-      const data = await res.json();
-      
+      // Fetch course data and global intake dates in parallel
+      const [courseRes, intakesRes] = await Promise.all([
+        fetch(`/api/v1/courses/${courseId}`),
+        fetch('/api/v1/admin/intake-dates/public')
+      ]);
+      const data        = await courseRes.json();
+      const intakesData = await intakesRes.json();
+
       if (!data.success || !data.data) {
         document.getElementById('courseContent').innerHTML = '<div class="error-state">❌ Course not found. <a href="courses.html">Return to courses</a></div>';
         return;
@@ -249,21 +254,38 @@
         `;
       }
 
-      // Intake dates from admin panel
-      let intakesHtml = '<div class="info-row"><span class="info-label" style="color:#888;">No upcoming intake dates set. Contact admissions for the latest schedule.</span></div>';
-      if (course.intake_dates && course.intake_dates.length > 0) {
-        intakesHtml = '';
-        course.intake_dates.forEach(intake => {
-          const dateStr = intake.date
-            ? new Date(intake.date).toLocaleDateString('en-KE', { year: 'numeric', month: 'long', day: 'numeric' })
+      // Intake dates — sourced from the global admin-managed intake_dates_global table
+      const globalIntakes = (intakesData.success && intakesData.data) ? intakesData.data : [];
+      let intakesHtml = '';
+
+      if (globalIntakes.length > 0) {
+        const statusBadge = s => {
+          if (s === 'open')     return '<span style="display:inline-block;padding:2px 10px;border-radius:100px;font-size:.75rem;font-weight:600;background:#d4edda;color:#155724;">Open</span>';
+          if (s === 'upcoming') return '<span style="display:inline-block;padding:2px 10px;border-radius:100px;font-size:.75rem;font-weight:600;background:#fff3cd;color:#856404;">Upcoming</span>';
+          return '<span style="display:inline-block;padding:2px 10px;border-radius:100px;font-size:.75rem;font-weight:600;background:#f8d7da;color:#721c24;">Closed</span>';
+        };
+        globalIntakes.forEach(intake => {
+          const deadlineStr = intake.application_deadline
+            ? new Date(intake.application_deadline).toLocaleDateString('en-KE', { year: 'numeric', month: 'long', day: 'numeric' })
+            : 'TBA';
+          const reportingStr = intake.intake_date
+            ? new Date(intake.intake_date).toLocaleDateString('en-KE', { year: 'numeric', month: 'long', day: 'numeric' })
             : 'TBA';
           intakesHtml += `
-            <div class="info-row">
-              <span class="info-label">${escapeHtml(intake.label || 'Intake')}</span>
-              <span class="info-value">${dateStr}</span>
+            <div class="info-row" style="flex-direction:column;align-items:flex-start;gap:6px;padding:14px 0;">
+              <div style="display:flex;justify-content:space-between;width:100%;align-items:center;">
+                <span class="info-label">${escapeHtml(intake.label)}</span>
+                ${statusBadge(intake.status)}
+              </div>
+              <div style="font-size:0.85rem;color:#5b6e8c;">
+                Applications close: <strong>${deadlineStr}</strong>
+                &nbsp;·&nbsp; Reporting: <strong>${reportingStr}</strong>
+              </div>
             </div>
           `;
         });
+      } else {
+        intakesHtml = '<div class="info-row"><span class="info-label" style="color:#888;">No upcoming intake dates set. Contact admissions for the latest schedule.</span></div>';
       }
 
       const html = `
