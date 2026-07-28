@@ -615,13 +615,174 @@
       }
     }
   </style>
+
+  <style>
+    /* ── Courses page skeleton ────────────────────────────────── */
+    @keyframes cpSkelShimmer {
+      0%   { background-position: -700px 0; }
+      100% { background-position:  700px 0; }
+    }
+    .cp-skel {
+      background: linear-gradient(90deg,#edf1ef 25%,#e0e8e3 50%,#edf1ef 75%);
+      background-size: 700px 100%;
+      animation: cpSkelShimmer 1.5s infinite linear;
+      border-radius: 8px;
+    }
+    #cpSkeleton {
+      max-width: 1440px;
+      margin: 0 auto;
+      padding: 32px 28px 64px;
+      font-family: 'Inter', sans-serif;
+    }
+    /* Header */
+    .cp-skel-hdr { margin-bottom: 32px; }
+    .cp-skel-h1  { height: 36px; width: 320px; margin-bottom: 14px; }
+    .cp-skel-sub { height: 16px; width: 520px; max-width: 90%; }
+    /* Two-col layout */
+    .cp-skel-layout {
+      display: flex;
+      gap: 32px;
+      align-items: flex-start;
+    }
+    /* Sidebar */
+    .cp-skel-sidebar {
+      width: 280px;
+      flex-shrink: 0;
+      background: #fff;
+      border-radius: 28px;
+      padding: 24px 16px 28px 20px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.05);
+      border: 1px solid #eef2f0;
+    }
+    .cp-skel-sidebar-ttl { height: 18px; width: 120px; margin-bottom: 22px; }
+    .cp-skel-chip {
+      height: 40px; border-radius: 14px; margin-bottom: 8px;
+    }
+    /* Main area */
+    .cp-skel-main { flex: 1; min-width: 0; }
+    /* Level bar */
+    .cp-skel-lvlbar {
+      background: #fff;
+      border-radius: 20px;
+      padding: 16px 20px;
+      margin-bottom: 28px;
+      border: 1px solid #eef2f0;
+    }
+    .cp-skel-lvl-lbl { height: 13px; width: 140px; margin-bottom: 14px; }
+    .cp-skel-lvl-chips { display: flex; gap: 10px; flex-wrap: wrap; }
+    .cp-skel-lvl-chip  { height: 32px; border-radius: 60px; }
+    /* Stats row */
+    .cp-skel-stats { display: flex; justify-content: space-between; margin-bottom: 28px; }
+    .cp-skel-count { height: 32px; width: 140px; border-radius: 60px; }
+    .cp-skel-reset { height: 32px; width: 110px; border-radius: 60px; }
+    /* Card grid — mirrors 3-col real grid */
+    .cp-skel-grid {
+      display: grid;
+      grid-template-columns: repeat(3,1fr);
+      gap: 28px;
+    }
+    .cp-skel-card {
+      background: #fff;
+      border-radius: 24px;
+      overflow: hidden;
+      border: 1px solid #edf2ef;
+      box-shadow: 0 5px 18px rgba(0,0,0,0.04);
+    }
+    .cp-skel-card-bar { height: 5px; background: linear-gradient(90deg,#c8ddd2,#dce8e0); }
+    .cp-skel-card-body { padding: 20px 20px 24px; }
+    .cp-skel-badge-row { display: flex; gap: 8px; margin-bottom: 14px; }
+    .cp-skel-badge     { height: 24px; border-radius: 40px; }
+    .cp-skel-name      { height: 22px; margin-bottom: 10px; }
+    .cp-skel-name-s    { height: 22px; width: 68%; margin-bottom: 18px; }
+    .cp-skel-mod       { height: 14px; width: 55%; border-top: 1px solid #ecf3ef; padding-top: 16px; margin-top: 4px; }
+    .cp-skel-btns      { display: flex; gap: 12px; margin-top: 18px; }
+    .cp-skel-btn       { height: 34px; border-radius: 40px; }
+
+    @media (max-width: 1000px) {
+      .cp-skel-grid { grid-template-columns: repeat(2,1fr); }
+    }
+    @media (max-width: 768px) {
+      .cp-skel-layout { flex-direction: column; }
+      .cp-skel-sidebar { width: 100%; }
+      .cp-skel-grid { grid-template-columns: 1fr; }
+      #cpSkeleton { padding: 20px 16px 48px; }
+      .cp-skel-h1  { width: 80%; }
+      .cp-skel-sub { width: 95%; }
+    }
+
+    /* ── Card stagger entrance ───────────────────────────────── */
+    @keyframes cpCardIn {
+      from { opacity: 0; transform: translateY(18px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .courses-wrapper .course-card.cp-animate {
+      opacity: 0;
+      animation: cpCardIn 0.38s ease forwards;
+    }
+  </style>
 </head>
 
 <body>
   <div class="courses-wrapper">
     <header id="mainNavbar"></header>
 
-    <div class="page-container">
+    <!-- ── Skeleton — shown while API loads ──────────────────── -->
+    <div id="cpSkeleton">
+      <div class="cp-skel-hdr">
+        <div class="cp-skel cp-skel-h1"></div>
+        <div class="cp-skel cp-skel-sub" style="margin-top:14px;"></div>
+      </div>
+      <div class="cp-skel-layout">
+
+        <!-- Sidebar skeleton -->
+        <div class="cp-skel-sidebar">
+          <div class="cp-skel cp-skel-sidebar-ttl"></div>
+          <div class="cp-skel cp-skel-chip"></div>
+          <div class="cp-skel cp-skel-chip" style="width:88%;"></div>
+          <div class="cp-skel cp-skel-chip" style="width:94%;"></div>
+          <div class="cp-skel cp-skel-chip" style="width:80%;"></div>
+          <div class="cp-skel cp-skel-chip" style="width:91%;"></div>
+          <div class="cp-skel cp-skel-chip" style="width:85%;"></div>
+          <div class="cp-skel cp-skel-chip" style="width:88%;"></div>
+          <div class="cp-skel cp-skel-chip" style="width:76%;"></div>
+          <div class="cp-skel cp-skel-chip" style="width:90%;"></div>
+        </div>
+
+        <!-- Main content skeleton -->
+        <div class="cp-skel-main">
+          <!-- Level filter bar -->
+          <div class="cp-skel-lvlbar">
+            <div class="cp-skel cp-skel-lvl-lbl"></div>
+            <div class="cp-skel-lvl-chips">
+              <div class="cp-skel cp-skel-lvl-chip" style="width:88px;"></div>
+              <div class="cp-skel cp-skel-lvl-chip" style="width:120px;"></div>
+              <div class="cp-skel cp-skel-lvl-chip" style="width:138px;"></div>
+              <div class="cp-skel cp-skel-lvl-chip" style="width:152px;"></div>
+              <div class="cp-skel cp-skel-lvl-chip" style="width:110px;"></div>
+              <div class="cp-skel cp-skel-lvl-chip" style="width:100px;"></div>
+            </div>
+          </div>
+          <!-- Stats row -->
+          <div class="cp-skel-stats">
+            <div class="cp-skel cp-skel-count"></div>
+            <div class="cp-skel cp-skel-reset"></div>
+          </div>
+          <!-- Card grid — 6 skeleton cards -->
+          <div class="cp-skel-grid">
+            <!-- card template repeated 6× -->
+            <div class="cp-skel-card"><div class="cp-skel-card-bar"></div><div class="cp-skel-card-body"><div class="cp-skel-badge-row"><div class="cp-skel cp-skel-badge" style="width:90px;"></div><div class="cp-skel cp-skel-badge" style="width:72px;"></div></div><div class="cp-skel cp-skel-name"></div><div class="cp-skel cp-skel-name-s"></div><div class="cp-skel cp-skel-mod"></div><div class="cp-skel-btns"><div class="cp-skel cp-skel-btn" style="width:110px;"></div><div class="cp-skel cp-skel-btn" style="width:88px;"></div></div></div></div>
+            <div class="cp-skel-card"><div class="cp-skel-card-bar"></div><div class="cp-skel-card-body"><div class="cp-skel-badge-row"><div class="cp-skel cp-skel-badge" style="width:80px;"></div><div class="cp-skel cp-skel-badge" style="width:96px;"></div></div><div class="cp-skel cp-skel-name" style="width:90%;"></div><div class="cp-skel cp-skel-name-s" style="width:60%;"></div><div class="cp-skel cp-skel-mod"></div><div class="cp-skel-btns"><div class="cp-skel cp-skel-btn" style="width:110px;"></div><div class="cp-skel cp-skel-btn" style="width:88px;"></div></div></div></div>
+            <div class="cp-skel-card"><div class="cp-skel-card-bar"></div><div class="cp-skel-card-body"><div class="cp-skel-badge-row"><div class="cp-skel cp-skel-badge" style="width:104px;"></div><div class="cp-skel cp-skel-badge" style="width:68px;"></div></div><div class="cp-skel cp-skel-name" style="width:95%;"></div><div class="cp-skel cp-skel-name-s"></div><div class="cp-skel cp-skel-mod"></div><div class="cp-skel-btns"><div class="cp-skel cp-skel-btn" style="width:110px;"></div><div class="cp-skel cp-skel-btn" style="width:88px;"></div></div></div></div>
+            <div class="cp-skel-card"><div class="cp-skel-card-bar"></div><div class="cp-skel-card-body"><div class="cp-skel-badge-row"><div class="cp-skel cp-skel-badge" style="width:76px;"></div><div class="cp-skel cp-skel-badge" style="width:88px;"></div></div><div class="cp-skel cp-skel-name"></div><div class="cp-skel cp-skel-name-s" style="width:72%;"></div><div class="cp-skel cp-skel-mod"></div><div class="cp-skel-btns"><div class="cp-skel cp-skel-btn" style="width:110px;"></div><div class="cp-skel cp-skel-btn" style="width:88px;"></div></div></div></div>
+            <div class="cp-skel-card"><div class="cp-skel-card-bar"></div><div class="cp-skel-card-body"><div class="cp-skel-badge-row"><div class="cp-skel cp-skel-badge" style="width:92px;"></div><div class="cp-skel cp-skel-badge" style="width:76px;"></div></div><div class="cp-skel cp-skel-name" style="width:88%;"></div><div class="cp-skel cp-skel-name-s" style="width:65%;"></div><div class="cp-skel cp-skel-mod"></div><div class="cp-skel-btns"><div class="cp-skel cp-skel-btn" style="width:110px;"></div><div class="cp-skel cp-skel-btn" style="width:88px;"></div></div></div></div>
+            <div class="cp-skel-card"><div class="cp-skel-card-bar"></div><div class="cp-skel-card-body"><div class="cp-skel-badge-row"><div class="cp-skel cp-skel-badge" style="width:86px;"></div><div class="cp-skel cp-skel-badge" style="width:100px;"></div></div><div class="cp-skel cp-skel-name" style="width:92%;"></div><div class="cp-skel cp-skel-name-s"></div><div class="cp-skel cp-skel-mod"></div><div class="cp-skel-btns"><div class="cp-skel cp-skel-btn" style="width:110px;"></div><div class="cp-skel cp-skel-btn" style="width:88px;"></div></div></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Real page — hidden until data ready ───────────────── -->
+    <div class="page-container" id="cpContent" style="opacity:0;transition:opacity 0.4s ease;">
       <div class="page-header">
         <h1>📚 Our Premium Programmes</h1>
         <p>Browse by department (left sidebar) and filter by level — competency-based TVET courses at Kigumo TVC</p>
@@ -732,6 +893,17 @@
     }
 
 
+    function revealPage() {
+      const skel    = document.getElementById('cpSkeleton');
+      const content = document.getElementById('cpContent');
+      skel.style.transition = 'opacity 0.28s ease';
+      skel.style.opacity    = '0';
+      setTimeout(() => {
+        skel.style.display = 'none';
+        content.style.opacity = '1';
+      }, 280);
+    }
+
     async function loadCourses() {
       try {
         const res = await fetch('/api/v1/courses');
@@ -750,6 +922,7 @@
         document.getElementById('coursesGrid').innerHTML = '<div class="empty-state">❌ Unable to load programs. Please try again later.</div>';
         document.getElementById('resultCount').innerText = 'Error loading courses';
       }
+      revealPage();
     }
 
     function getDepartmentsWithCounts() {
@@ -822,7 +995,7 @@
       }
 
       grid.innerHTML = "";
-      filtered.forEach(course => {
+      filtered.forEach((course, index) => {
         const level = getCourseLevel(course);
         let modulesText = '';
         const mc = course.module_count ?? 0;
@@ -856,6 +1029,8 @@
         </div>
       </div>
     `;
+        card.classList.add('cp-animate');
+        card.style.animationDelay = `${index * 55}ms`;
         grid.appendChild(card);
       });
       resultSpan.innerText = `${filtered.length} course${filtered.length !== 1 ? 's' : ''} found`;
