@@ -731,6 +731,20 @@ router.get("/enquiries", async (req, res) => {
   }
 });
 
+router.get("/enquiries/:id", async (req, res) => {
+  try {
+    const [rows] = await db.execute(
+      "SELECT * FROM contact_enquiries WHERE id = ?",
+      [req.params.id]
+    );
+    if (!rows.length) return res.status(404).json({ success: false, message: "Not found" });
+    res.json({ success: true, data: rows[0] });
+  } catch (err) {
+    logger.error("Enquiry fetch error", { error: err.message || err.toString() });
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+});
+
 router.patch("/enquiries/:id/read", async (req, res) => {
   try {
     await db.execute("UPDATE contact_enquiries SET is_read = TRUE WHERE id = ?", [
@@ -739,6 +753,21 @@ router.patch("/enquiries/:id/read", async (req, res) => {
     res.json({ success: true });
   } catch (err) {
     logger.error("Enquiry mark-read error", { error: err.message || err.toString() });
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+});
+
+router.delete("/enquiries/:id", async (req, res) => {
+  try {
+    const [result] = await db.execute(
+      "DELETE FROM contact_enquiries WHERE id = ?",
+      [req.params.id]
+    );
+    if (result.affectedRows === 0)
+      return res.status(404).json({ success: false, message: "Not found" });
+    res.json({ success: true });
+  } catch (err) {
+    logger.error("Enquiry delete error", { error: err.message || err.toString() });
     res.status(500).json({ success: false, message: "Server error" });
   }
 });

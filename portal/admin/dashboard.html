@@ -2688,18 +2688,87 @@
       async function loadEnquiries() {
         const r = await fetch(`${API}/enquiries`),
           d = await r.json();
-        let h =
-          "<table><tr><th>Name</th><th>Subject</th><th>Date</th><th>Status</th><th>Actions</th></tr>";
-        if (d.success && d.data)
+        let h = `
+          <table>
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Subject</th>
+                <th>Date</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>`;
+        if (d.success && d.data && d.data.length) {
           d.data.forEach((e) => {
-            h += `<tr><td>${escapeHtml(e.full_name)}</td><td>${escapeHtml(e.subject)}</td><td>${new Date(e.submitted_at).toLocaleDateString()}</td><td><span class="badge ${e.is_read ? "badge-read" : "badge-unread"}">${e.is_read ? "Read" : "Unread"}</span></td><td>${!e.is_read ? `<button class="btn btn-green btn-sm" onclick="markRead(${e.id})">Mark Read</button>` : ""}</td></tr>`;
+            const actions = `
+              <button class="btn btn-sm" style="background:#e8f0fe;color:#3b5bdb;" onclick="viewEnquiry(${e.id})" title="View full message">👁 View</button>
+              ${!e.is_read ? `<button class="btn btn-green btn-sm" onclick="markRead(${e.id})" title="Mark as read">✔ Read</button>` : ""}
+              <button class="btn btn-red btn-sm" onclick="deleteEnquiry(${e.id})" title="Delete enquiry">🗑 Delete</button>
+            `;
+            h += `<tr>
+              <td>${escapeHtml(e.full_name)}</td>
+              <td>${escapeHtml(e.email)}</td>
+              <td>${escapeHtml(e.subject)}</td>
+              <td>${new Date(e.submitted_at).toLocaleDateString()}</td>
+              <td><span class="badge ${e.is_read ? "badge-read" : "badge-unread"}">${e.is_read ? "Read" : "Unread"}</span></td>
+              <td style="white-space:nowrap;">${actions}</td>
+            </tr>`;
           });
-        h += "</table>";
+        } else {
+          h += `<tr><td colspan="6" style="text-align:center;color:#888;">No enquiries found.</td></tr>`;
+        }
+        h += `</tbody></table>`;
         document.getElementById("enquiriesContent").innerHTML = h;
       }
+
+      async function viewEnquiry(id) {
+        try {
+          const r = await fetch(`${API}/enquiries/${id}`);
+          const d = await r.json();
+          if (!d.success || !d.data) return alert("Enquiry not found.");
+          const e = d.data;
+          openModal(`
+            <h3 style="margin-top:0;">📩 Enquiry Details</h3>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
+              <div><strong>From:</strong> ${escapeHtml(e.full_name)}</div>
+              <div><strong>Email:</strong> <a href="mailto:${escapeHtml(e.email)}">${escapeHtml(e.email)}</a></div>
+              <div><strong>Subject:</strong> ${escapeHtml(e.subject)}</div>
+              <div><strong>Date:</strong> ${new Date(e.submitted_at).toLocaleString()}</div>
+              <div><strong>Status:</strong> <span class="badge ${e.is_read ? "badge-read" : "badge-unread"}">${e.is_read ? "Read" : "Unread"}</span></div>
+            </div>
+            <div style="border-top:1px solid #e5e7eb;padding-top:10px;">
+              <strong>Message:</strong>
+              <div style="margin-top:6px;background:#f7f8fa;border:1px solid #e5e7eb;border-radius:6px;padding:10px 14px;white-space:pre-wrap;line-height:1.6;">${escapeHtml(e.message)}</div>
+            </div>
+            <div style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap;">
+              ${!e.is_read ? `<button class="btn btn-green btn-sm" onclick="markRead(${e.id});closeModal();">✔ Mark as Read</button>` : ""}
+              <button class="btn btn-red btn-sm" onclick="closeModal();deleteEnquiry(${e.id});">🗑 Delete</button>
+              <button class="btn btn-sm" style="background:#e5e7eb;color:#1f2328;" onclick="closeModal()">Close</button>
+            </div>
+          `);
+        } catch (err) {
+          alert("Error loading enquiry details.");
+        }
+      }
+
       async function markRead(id) {
         await fetch(`${API}/enquiries/${id}/read`, { method: "PATCH" });
         loadEnquiries();
+      }
+
+      async function deleteEnquiry(id) {
+        if (!confirm("Delete this enquiry? This action cannot be undone.")) return;
+        try {
+          const r = await fetch(`${API}/enquiries/${id}`, { method: "DELETE" });
+          const d = await r.json();
+          if (!d.success) return alert("Failed to delete enquiry.");
+          loadEnquiries();
+        } catch (err) {
+          alert("Error deleting enquiry.");
+        }
       }
 
       // ── BOM CRUD ──
