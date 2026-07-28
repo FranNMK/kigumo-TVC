@@ -2064,6 +2064,41 @@ ul {
   padding: 3px 11px;
 }
 
+/* Section label (Departments, etc.) */
+.intake-popup-section-label {
+  display: block;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: #1a7a1a;
+  margin-bottom: 0.55rem;
+}
+
+/* Departments wrapper */
+.intake-popup-depts-wrap {
+  margin-bottom: 1rem;
+}
+
+/* Department outlined cards grid */
+.intake-popup-depts {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.4rem;
+}
+
+.intake-popup-dept-card {
+  display: block;
+  border: 1.5px solid #a5d6a7;
+  border-radius: 7px;
+  padding: 6px 10px;
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: #1e3c2c;
+  background: #fff;
+  line-height: 1.35;
+}
+
 /* How to apply */
 .intake-popup-how {
   background: #fffbf0;
@@ -2165,4 +2200,5 @@ ul {
   .intake-popup-actions { padding: 0.8rem 1.1rem 1.3rem; flex-direction: column; }
   .intake-popup-btn-primary,
   .intake-popup-btn-secondary { width: 100%; }
+  .intake-popup-depts { grid-template-columns: 1fr; }
 }

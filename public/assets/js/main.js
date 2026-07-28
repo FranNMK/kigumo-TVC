@@ -618,7 +618,7 @@
     return new Date(v).toLocaleDateString('en-KE', { day: 'numeric', month: 'long', year: 'numeric' });
   }
 
-  function showPopup(intake) {
+  function showPopup(intake, depts, levels) {
     // Populate dynamic fields
     document.getElementById('intakePopupTitle').textContent = intake.label.toUpperCase() + ' INTAKE';
     document.getElementById('intakePopupLabel').textContent = intake.label + ' Intake';
@@ -629,6 +629,18 @@
     const statusSub = intake.status === 'open' ? 'Applications are now Open' : 'Applications will Open Soon';
     const subtitleEl = overlay.querySelector('.intake-popup-subtitle');
     if (subtitleEl) subtitleEl.textContent = statusSub;
+
+    // Programme levels — dynamic from DB (module_count → level name)
+    const levelsEl = document.getElementById('intakePopupLevels');
+    if (levelsEl && levels.length > 0) {
+      levelsEl.innerHTML = levels.map(l => `<span>${l}</span>`).join('');
+    }
+
+    // Academic departments — outlined cards
+    const deptsEl = document.getElementById('intakePopupDepts');
+    if (deptsEl && depts.length > 0) {
+      deptsEl.innerHTML = depts.map(d => `<span class="intake-popup-dept-card">${d}</span>`).join('');
+    }
 
     // Show overlay
     overlay.style.display = 'flex';
@@ -687,9 +699,15 @@
   }
 
   try {
-    const res = await fetch('/api/v1/admin/intake-dates/popup');
-    if (!res.ok) return;
-    const data = await res.json();
+    // Fetch popup intake, academic departments and course levels all at once
+    const [popupRes, deptsRes, coursesRes] = await Promise.all([
+      fetch('/api/v1/admin/intake-dates/popup'),
+      fetch('/api/v1/departments?type=academic'),
+      fetch('/api/v1/courses'),
+    ]);
+
+    if (!popupRes.ok) return;
+    const data = await popupRes.json();
     if (!data.success || !data.data) return;
 
     const intake = data.data;
@@ -698,8 +716,48 @@
     const seenId = localStorage.getItem(STORAGE_KEY);
     if (seenId === String(intake.id)) return;
 
+    // Build sorted academic department name list
+    let depts = [];
+    if (deptsRes.ok) {
+      const deptsData = await deptsRes.json();
+      if (deptsData.success && Array.isArray(deptsData.data)) {
+        depts = deptsData.data
+          .filter(d => d.type === 'academic')
+          .map(d => d.name)
+          .sort();
+      }
+    }
+
+    // Derive distinct programme levels from module_count values in the DB
+    const LEVEL_MAP = {
+      1: 'Artisan (Level 3)',
+      2: 'Craft Certificate (Level 4)',
+      4: 'Certificate (Level 5)',
+      6: 'Diploma (Level 6)',
+    };
+    let levels = [];
+    if (coursesRes.ok) {
+      const coursesData = await coursesRes.json();
+      if (coursesData.success && Array.isArray(coursesData.data)) {
+        const seen = new Set();
+        coursesData.data.forEach(c => {
+          const mc = c.module_count;
+          if (mc != null && LEVEL_MAP[mc] && !seen.has(mc)) {
+            seen.add(mc);
+            levels.push({ order: mc, label: LEVEL_MAP[mc] });
+          }
+        });
+        levels.sort((a, b) => a.order - b.order);
+        levels = levels.map(l => l.label);
+      }
+    }
+    // Fall back to the four standard levels if API returned nothing useful
+    if (levels.length === 0) {
+      levels = ['Artisan (Level 3)', 'Craft Certificate (Level 4)', 'Certificate (Level 5)', 'Diploma (Level 6)'];
+    }
+
     // Show after a 1.5 s delay (lets the page finish loading nicely)
-    setTimeout(() => showPopup(intake), 1500);
+    setTimeout(() => showPopup(intake, depts, levels), 1500);
   } catch (e) {
     // Silently skip — popup is non-critical
   }
