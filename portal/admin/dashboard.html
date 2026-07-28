@@ -1714,14 +1714,45 @@
       let courseFormStep = 1;
       let courseFormData = {};
 
+      // Module-count → human label + duration string
+      function courseLevelLabel(mc) {
+        if (mc === 6) return "Diploma (Level 6)";
+        if (mc === 4) return "Certificate (Level 5)";
+        if (mc === 2) return "Craft Certificate (Level 4)";
+        if (mc === 1) return "Artisan (Level 3)";
+        return "Short Course";
+      }
+      function courseDurationLabel(mc) {
+        if (mc === 6) return "3 Years";
+        if (mc === 4) return "2 Years";
+        if (mc === 2) return "1 Year";
+        if (mc === 1) return "6 Months";
+        return "Short";
+      }
+
       async function loadCourses() {
         const r = await fetch("/api/v1/courses"),
           d = await r.json();
         let h =
-          '<button class="btn btn-green btn-sm" onclick="openCourseForm()">+ Add Course</button><table><tr><th>Name</th><th>Dept</th><th>Exam Body</th><th>Duration</th><th>CBET</th><th>Active</th><th>Actions</th></tr>';
+          '<button class="btn btn-green btn-sm" onclick="openCourseForm()">+ Add Course</button><table><tr><th>Name</th><th>Dept</th><th>Exam Body</th><th>Level</th><th>Modules</th><th>Duration</th><th>CBET</th><th>Active</th><th>Actions</th></tr>';
         if (d.success && d.data)
           d.data.forEach((c) => {
-            h += `<tr><td>${escapeHtml(c.name)}</td><td>${escapeHtml(c.department?.name || "")}</td><td>${c.examining_body}</td><td>${c.duration_years} yr(s)</td><td>${c.cbet_status ? "✅" : "❌"}</td><td>${c.is_active ? "✅" : "❌"}</td><td><button class="btn btn-yellow btn-sm" onclick="editCourse(${c.id})">Edit</button> <button class="btn btn-sm" style="background:#6c757d;color:#fff;" onclick="toggleCourse(${c.id})">Toggle</button> <button class="btn btn-red btn-sm" onclick="deleteCourse(${c.id})">Del</button></td></tr>`;
+            const mc = c.module_count ?? 0;
+            h += `<tr>
+              <td>${escapeHtml(c.name)}</td>
+              <td>${escapeHtml(c.department?.name || "")}</td>
+              <td>${c.examining_body}</td>
+              <td>${courseLevelLabel(mc)}</td>
+              <td style="text-align:center;">${mc > 0 ? mc : "–"}</td>
+              <td>${courseDurationLabel(mc)}</td>
+              <td>${c.cbet_status ? "✅" : "❌"}</td>
+              <td>${c.is_active ? "✅" : "❌"}</td>
+              <td>
+                <button class="btn btn-yellow btn-sm" onclick="editCourse(${c.id})">Edit</button>
+                <button class="btn btn-sm" style="background:#6c757d;color:#fff;" onclick="toggleCourse(${c.id})">Toggle</button>
+                <button class="btn btn-red btn-sm" onclick="deleteCourse(${c.id})">Del</button>
+              </td>
+            </tr>`;
           });
         h += "</table>";
         document.getElementById("coursesContent").innerHTML = h;
@@ -1742,16 +1773,21 @@
           formHtml = `<h3>Add Course - Step 1/3: Basic Info</h3><form onsubmit="courseStep1(event)">
     <div class="form-group"><label>Course Name</label><input name="name" value="${escapeHtml(courseFormData.name || "")}" required></div>
     <div class="form-group"><label>Department</label><select name="department_id" id="courseDeptSelect" required><option value="">Loading...</option></select></div>
-    
-<div class="form-group"><label>Course Level (Modules)</label><select name="duration_years" id="courseModules" onchange="updateModuleCount()" required>
-  <option value="2" ${courseFormData.duration_years == 2 ? "selected" : ""}>Artisan (2 Modules)</option>
-  <option value="4" ${courseFormData.duration_years == 4 ? "selected" : ""}>Certificate (4 Modules)</option>
-  <option value="6" ${courseFormData.duration_years == 6 ? "selected" : ""}>Diploma (6 Modules)</option>
-</select></div>
+    <div class="form-group">
+      <label>Course Level</label>
+      <select name="module_count" id="courseModules" onchange="updateModuleCount()" required>
+        <option value="6"  ${courseFormData.module_count == 6 ? "selected" : ""}>Diploma – Level 6 (6 Modules, 3 Years)</option>
+        <option value="4"  ${courseFormData.module_count == 4 ? "selected" : ""}>Certificate – Level 5 (4 Modules, 2 Years)</option>
+        <option value="2"  ${courseFormData.module_count == 2 ? "selected" : ""}>Craft Certificate – Level 4 (2 Modules, 1 Year)</option>
+        <option value="1"  ${courseFormData.module_count == 1 ? "selected" : ""}>Artisan – Level 3 (1 Module, 6 Months)</option>
+        <option value="0"  ${courseFormData.module_count == 0 ? "selected" : ""}>Short / Internal Course</option>
+      </select>
+    </div>
     <div class="form-group"><label>Examining Body</label><select name="examining_body" required>
       <option value="KNEC" ${courseFormData.examining_body === "KNEC" ? "selected" : ""}>KNEC</option>
       <option value="KASNEB" ${courseFormData.examining_body === "KASNEB" ? "selected" : ""}>KASNEB</option>
       <option value="CDACC" ${courseFormData.examining_body === "CDACC" ? "selected" : ""}>CDACC</option>
+      <option value="Internal" ${courseFormData.examining_body === "Internal" ? "selected" : ""}>Internal</option>
     </select></div>
     <div class="form-group"><label>CBET Status</label><select name="cbet_status">
       <option value="1" ${courseFormData.cbet_status ? "selected" : ""}>Yes - CBET Programme</option>
@@ -1779,11 +1815,14 @@
               });
           }, 100);
         } else if (courseFormStep === 2) {
-          const modules = parseInt(courseFormData.duration_years) || 6;
-          formHtml = `<h3>Add Course - Step 2/${courseFormData.id ? "3" : "3"}: Fees Structure</h3>
+          const modules = parseInt(courseFormData.module_count) || 0;
+          formHtml = `<h3>Add Course - Step 2/3: Fees Structure</h3>
     <form onsubmit="${courseFormData.id ? "editCourseStep2" : "courseStep2"}(event)">
     <p style="color:#666;margin-bottom:1rem;">Set fees for each module (Ksh). Default: 22,396 per module.</p>`;
 
+          if (modules === 0) {
+            formHtml += `<p style="color:#888;font-style:italic;">No modules for Short/Internal courses — fees not applicable.</p>`;
+          }
           for (let m = 1; m <= modules; m++) {
             const fm = courseFormData.fees?.[m] || {};
             formHtml += `
@@ -1846,7 +1885,7 @@
         courseFormData = {
           name: f.get("name"),
           department_id: f.get("department_id"),
-          duration_years: f.get("duration_years"),
+          module_count: parseInt(f.get("module_count")),
           examining_body: f.get("examining_body"),
           cbet_status: f.get("cbet_status") === "1",
           entry_requirements: f.get("entry_requirements"),
@@ -1861,7 +1900,7 @@
       function courseStep2(e) {
         e.preventDefault();
         const f = new FormData(e.target);
-        const modules = parseInt(courseFormData.duration_years) || 6;
+        const modules = parseInt(courseFormData.module_count) || 0;
         courseFormData.fees = {};
         for (let m = 1; m <= modules; m++) {
           courseFormData.fees[m] = {
@@ -1893,7 +1932,7 @@
         const payload = {
           name: courseFormData.name,
           department_id: parseInt(courseFormData.department_id),
-          duration_years: parseInt(courseFormData.duration_years),
+          module_count: courseFormData.module_count,
           examining_body: courseFormData.examining_body,
           cbet_status: courseFormData.cbet_status,
           entry_requirements: courseFormData.entry_requirements,
@@ -1939,7 +1978,7 @@
             id: c.id,
             name: c.name,
             department_id: c.department?.id,
-            duration_years: c.duration_years,
+            module_count: c.module_count ?? 6,
             examining_body: c.examining_body,
             cbet_status: c.cbet_status,
             entry_requirements: c.entry_requirements,
@@ -1982,11 +2021,21 @@
           formHtml = `<h3>Edit Course - Step 1/3: Basic Info</h3><form onsubmit="editCourseStep1(event)">
     <div class="form-group"><label>Course Name</label><input name="name" value="${escapeHtml(courseFormData.name || "")}" required></div>
     <div class="form-group"><label>Department</label><select name="department_id" id="courseDeptSelect" required><option value="">Loading...</option></select></div>
-    <div class="form-group"><label>Duration (Years)</label><input type="number" name="duration_years" value="${courseFormData.duration_years || "3"}" min="1" max="4" required></div>
+    <div class="form-group">
+      <label>Course Level</label>
+      <select name="module_count" id="courseModules" onchange="updateModuleCount()" required>
+        <option value="6"  ${courseFormData.module_count == 6 ? "selected" : ""}>Diploma – Level 6 (6 Modules, 3 Years)</option>
+        <option value="4"  ${courseFormData.module_count == 4 ? "selected" : ""}>Certificate – Level 5 (4 Modules, 2 Years)</option>
+        <option value="2"  ${courseFormData.module_count == 2 ? "selected" : ""}>Craft Certificate – Level 4 (2 Modules, 1 Year)</option>
+        <option value="1"  ${courseFormData.module_count == 1 ? "selected" : ""}>Artisan – Level 3 (1 Module, 6 Months)</option>
+        <option value="0"  ${courseFormData.module_count == 0 ? "selected" : ""}>Short / Internal Course</option>
+      </select>
+    </div>
     <div class="form-group"><label>Examining Body</label><select name="examining_body" required>
       <option value="KNEC" ${courseFormData.examining_body === "KNEC" ? "selected" : ""}>KNEC</option>
       <option value="KASNEB" ${courseFormData.examining_body === "KASNEB" ? "selected" : ""}>KASNEB</option>
       <option value="CDACC" ${courseFormData.examining_body === "CDACC" ? "selected" : ""}>CDACC</option>
+      <option value="Internal" ${courseFormData.examining_body === "Internal" ? "selected" : ""}>Internal</option>
     </select></div>
     <div class="form-group"><label>CBET Status</label><select name="cbet_status">
       <option value="1" ${courseFormData.cbet_status ? "selected" : ""}>Yes - CBET Programme</option>
@@ -2012,20 +2061,27 @@
               });
           }, 100);
         } else if (courseFormStep === 2) {
-          const years = parseInt(courseFormData.duration_years) || 3;
-          formHtml = `<h3>Edit Course - Step 2/3: Fees Structure</h3><form onsubmit="editCourseStep2(event)">`;
-          for (let y = 1; y <= years; y++) {
-            const fy = courseFormData.fees?.[y] || {};
+          const modules = parseInt(courseFormData.module_count) || 0;
+          formHtml = `<h3>Edit Course - Step 2/3: Fees Structure</h3><form onsubmit="editCourseStep2(event)">
+    <p style="color:#666;margin-bottom:1rem;">Set fees for each module (Ksh). Default: 22,396 per module.</p>`;
+          if (modules === 0) {
+            formHtml += `<p style="color:#888;font-style:italic;">No modules for Short/Internal courses — fees not applicable.</p>`;
+          }
+          for (let m = 1; m <= modules; m++) {
+            const fm = courseFormData.fees?.[m] || {};
             formHtml += `
     <div style="background:#f8f9fa;padding:0.8rem;border-radius:6px;margin-bottom:0.8rem;">
-      <strong style="color:#1a7a1a;">Year ${y}</strong>
+      <strong style="color:#1a7a1a;">Module ${m}</strong>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;margin-top:0.5rem;">
-        <div class="form-group"><label>Tuition</label><input type="number" name="tuition_${y}" value="${fy.tuition || "25000"}" required></div>
-        <div class="form-group"><label>Examination</label><input type="number" name="exam_${y}" value="${fy.examination || "5000"}" required></div>
-        <div class="form-group"><label>Registration</label><input type="number" name="reg_${y}" value="${fy.registration || "1000"}" required></div>
-        <div class="form-group"><label>ID Card</label><input type="number" name="idcard_${y}" value="${fy.id_card || "500"}"></div>
-        <div class="form-group"><label>Other Fee</label><input type="number" name="other_${y}" value="${fy.other || "0"}"></div>
-        <div class="form-group"><label>Other Label</label><input name="other_label_${y}" value="${escapeHtml(fy.other_label || "")}" placeholder="e.g. Lab Fee"></div>
+        <div class="form-group"><label>Tuition</label><input type="number" name="tuition_${m}" value="${fm.tuition || "22396"}" required></div>
+        <div class="form-group"><label>Examination</label><input type="number" name="exam_${m}" value="${fm.examination || "0"}"></div>
+        <div class="form-group"><label>Registration</label><input type="number" name="reg_${m}" value="${fm.registration || "0"}"></div>
+        <div class="form-group"><label>ID Card</label><input type="number" name="idcard_${m}" value="${fm.id_card || "0"}"></div>
+        <div class="form-group"><label>Other Fee</label><input type="number" name="other_${m}" value="${fm.other || "0"}"></div>
+        <div class="form-group"><label>Other Label</label><input name="other_label_${m}" value="${escapeHtml(fm.other_label || "")}" placeholder="e.g. Lab Fee"></div>
+      </div>
+      <div style="text-align:right;color:#1a7a1a;font-weight:600;margin-top:0.5rem;">
+        Module Total: Ksh <span id="moduleTotal_${m}">${calculateModuleTotal(fm)}</span>
       </div>
     </div>`;
           }
@@ -2064,7 +2120,7 @@
         const f = new FormData(e.target);
         courseFormData.name = f.get("name");
         courseFormData.department_id = f.get("department_id");
-        courseFormData.duration_years = f.get("duration_years");
+        courseFormData.module_count = parseInt(f.get("module_count"));
         courseFormData.examining_body = f.get("examining_body");
         courseFormData.cbet_status = f.get("cbet_status") === "1";
         courseFormData.entry_requirements = f.get("entry_requirements");
@@ -2076,7 +2132,7 @@
       function editCourseStep2(e) {
         e.preventDefault();
         const f = new FormData(e.target);
-        const modules = parseInt(courseFormData.duration_years) || 6;
+        const modules = parseInt(courseFormData.module_count) || 0;
         courseFormData.fees = {};
         for (let m = 1; m <= modules; m++) {
           courseFormData.fees[m] = {
@@ -2107,7 +2163,7 @@
         const payload = {
           name: courseFormData.name,
           department_id: parseInt(courseFormData.department_id),
-          duration_years: parseInt(courseFormData.duration_years),
+          module_count: courseFormData.module_count,
           examining_body: courseFormData.examining_body,
           cbet_status: courseFormData.cbet_status,
           entry_requirements: courseFormData.entry_requirements,
@@ -2174,7 +2230,7 @@
       function updateModuleCount() {
         const sel = document.getElementById("courseModules");
         if (sel) {
-          courseFormData.duration_years = parseInt(sel.value);
+          courseFormData.module_count = parseInt(sel.value);
           // If we're on step 2, re-render to show correct number of modules
           if (courseFormStep === 2) renderCourseFormStep();
         }

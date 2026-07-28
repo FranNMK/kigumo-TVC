@@ -1615,13 +1615,22 @@ router.put("/departments/:id/hod", async (req, res) => {
 });
 
 
+// ── MODULE-COUNT → DURATION MAPPING ──
+const LEVEL_MAP = {
+  6: { duration_years: 3 },  // Diploma (Level 6)      – 3 years
+  4: { duration_years: 2 },  // Certificate (Level 5)  – 2 years
+  2: { duration_years: 1 },  // Craft Certificate (Level 4) – 1 year
+  1: { duration_years: 0 },  // Artisan (Level 3)       – 6 months
+  0: { duration_years: 0 },  // Short/Internal courses
+};
+
 // ── COURSES CRUD ──
 router.post("/courses", async (req, res) => {
   try {
     const {
       name,
       department_id,
-      duration_years,
+      module_count,
       examining_body,
       cbet_status,
       entry_requirements,
@@ -1629,18 +1638,22 @@ router.post("/courses", async (req, res) => {
       fees,
       intakes,
     } = req.body;
-    if (!name || !department_id || !duration_years || !examining_body) {
+    if (!name || !department_id || module_count === undefined || !examining_body) {
       return res
         .status(400)
         .json({ success: false, message: "Missing required fields" });
     }
 
+    const mc = parseInt(module_count) || 0;
+    const duration_years = (LEVEL_MAP[mc] || LEVEL_MAP[0]).duration_years;
+
     // Insert course
     const [result] = await db.execute(
-      "INSERT INTO courses (name, duration_years, department_id, examining_body, cbet_status, entry_requirements, description) VALUES (?,?,?,?,?,?,?)",
+      "INSERT INTO courses (name, duration_years, module_count, department_id, examining_body, cbet_status, entry_requirements, description) VALUES (?,?,?,?,?,?,?,?)",
       [
         name,
         duration_years,
+        mc,
         department_id,
         examining_body,
         cbet_status ? 1 : 0,
@@ -1692,7 +1705,7 @@ router.put("/courses/:id", async (req, res) => {
     const {
       name,
       department_id,
-      duration_years,
+      module_count,
       examining_body,
       cbet_status,
       entry_requirements,
@@ -1701,13 +1714,17 @@ router.put("/courses/:id", async (req, res) => {
       intakes,
     } = req.body;
 
+    const mc = parseInt(module_count) || 0;
+    const duration_years = (LEVEL_MAP[mc] || LEVEL_MAP[0]).duration_years;
+
     // Update course basic info
     await db.execute(
-      "UPDATE courses SET name=?, department_id=?, duration_years=?, examining_body=?, cbet_status=?, entry_requirements=?, description=? WHERE id=?",
+      "UPDATE courses SET name=?, department_id=?, duration_years=?, module_count=?, examining_body=?, cbet_status=?, entry_requirements=?, description=? WHERE id=?",
       [
         name,
         department_id,
         duration_years,
+        mc,
         examining_body,
         cbet_status ? 1 : 0,
         entry_requirements || "",

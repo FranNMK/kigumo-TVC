@@ -967,17 +967,13 @@
       }
     }
 
-    // ── Duration helper ──
+    // ── Duration helper (module_count-based) ──
     function formatDuration(moduleCount) {
-      if (!moduleCount || moduleCount <= 0) return '0 Modules';
-      const totalMonths = moduleCount * 3;
-      const years = Math.floor(totalMonths / 12);
-      const months = totalMonths % 12;
-      let str = '';
-      if (years > 0) str += years + ' Year' + (years > 1 ? 's' : '');
-      if (months > 0) { if (str) str += ' '; str += months + ' Month' + (months > 1 ? 's' : ''); }
-      if (!str) str = '0 Months';
-      return str + ' (' + moduleCount + ' Modules)';
+      if (moduleCount === 6) return '6 Modules · 3 Years';
+      if (moduleCount === 4) return '4 Modules · 2 Years';
+      if (moduleCount === 2) return '2 Modules · 1 Year';
+      if (moduleCount === 1) return '1 Module · 6 Months';
+      return 'Short Course';
     }
 
     // ── Department change handler ──

@@ -31,7 +31,7 @@ router.get("/with-courses", async (req, res) => {
 
     // Get all courses for all departments
     const [allCourses] = await db.execute(`
-      SELECT c.id, c.name, c.duration_years, c.examining_body, c.cbet_status, 
+      SELECT c.id, c.name, c.duration_years, c.module_count, c.examining_body, c.cbet_status,
              c.entry_requirements, c.description, c.department_id
       FROM courses c
       WHERE c.is_active = TRUE

@@ -683,29 +683,32 @@
     let currentDept = "All Departments";
     let currentLevel = "All Levels";
 
-    const levelsOrder = ["All Levels", "Diploma (Level 6)", "Certificate (Level 5)", "Artisan (Level 4)", "Short Courses"];
+    const levelsOrder = [
+      "All Levels",
+      "Diploma (Level 6)",
+      "Certificate (Level 5)",
+      "Craft Certificate (Level 4)",
+      "Artisan (Level 3)",
+      "Short Courses"
+    ];
 
     function getCourseLevel(course) {
-  // 1. Try extracting Level X from the name (e.g., "Agriculture Extension Level 4")
-  const match = (course.name || '').match(/Level\s*(\d+)/i);
-  if (match) {
-    const level = parseInt(match[1]);
-    if (level === 6) return "Diploma (Level 6)";
-    if (level === 5) return "Certificate (Level 5)";
-    if (level === 4) return "Artisan (Level 4)";
-    return `Level ${level}`;
-  }
-  
-  // 2. Check for short courses (duration_years === 0)
-  if (course.duration_years === 0) return "Short Courses";
-  
-  // 3. Final fallback (barely used now)
-  if (course.duration_years === 2) return "Artisan (Level 4)";
-  if (course.duration_years === 4) return "Certificate (Level 5)";
-  if (course.duration_years === 6) return "Diploma (Level 6)";
-  
-  return "Short Courses";
-}
+      const mc = course.module_count ?? course.duration_years;
+      if (mc === 6) return "Diploma (Level 6)";
+      if (mc === 4) return "Certificate (Level 5)";
+      if (mc === 2) return "Craft Certificate (Level 4)";
+      if (mc === 1) return "Artisan (Level 3)";
+      return "Short Courses";
+    }
+
+    function getCourseDuration(course) {
+      const mc = course.module_count ?? 0;
+      if (mc === 6) return "3 Years";
+      if (mc === 4) return "2 Years";
+      if (mc === 2) return "1 Year";
+      if (mc === 1) return "6 Months";
+      return "Short Course";
+    }
 
 
     async function loadCourses() {
@@ -801,12 +804,12 @@
       filtered.forEach(course => {
         const level = getCourseLevel(course);
         let modulesText = '';
-if (course.duration_years === 0) {
-    modulesText = '3 weeks';
-} else {
-    const count = course.module_count || 0;
-    modulesText = `${count} ${count === 1 ? 'module' : 'modules'}`;
-}
+        const mc = course.module_count ?? 0;
+        if (mc === 0) {
+          modulesText = '3 weeks';
+        } else {
+          modulesText = `${mc} ${mc === 1 ? 'Module' : 'Modules'} · ${getCourseDuration(course)}`;
+        }
 
         const card = document.createElement("div");
         card.className = "course-card";

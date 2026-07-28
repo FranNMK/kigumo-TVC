@@ -218,14 +218,14 @@
       // 1. Determine level display correctly (parses "Level X" from name)
       const levelDisplay = getCourseLevelFromName(course.name);
 
-      // 2. Format duration and modules (handles short courses correctly)
+      // 2. Format duration and modules from module_count
       let durationDisplay = '';
-      if (course.duration_years === 0) {
-        durationDisplay = '3 Weeks (Internal Exam)';
-      } else {
-        const modCount = course.module_count || 0;
-        durationDisplay = `${course.duration_years} Year${course.duration_years > 1 ? 's' : ''} (${modCount} Module${modCount > 1 ? 's' : ''})`;
-      }
+      const mc = course.module_count ?? 0;
+      if (mc === 6) durationDisplay = '6 Modules · 3 Years (Diploma – Level 6)';
+      else if (mc === 4) durationDisplay = '4 Modules · 2 Years (Certificate – Level 5)';
+      else if (mc === 2) durationDisplay = '2 Modules · 1 Year (Craft Certificate – Level 4)';
+      else if (mc === 1) durationDisplay = '1 Module · 6 Months (Artisan – Level 3)';
+      else durationDisplay = '3 Weeks (Short / Internal Course)';
 
       // Format fees (will now safely fallback to "No fee structure" since table is dropped)
       let feesHtml = '<div class="info-row"><span class="info-label">No fee structure available</span></div>';
