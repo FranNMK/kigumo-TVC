@@ -603,3 +603,104 @@
     return div.innerHTML;
   }
 })();
+
+// ── Intake Announcement Popup ────────────────────────────
+(async function () {
+  const overlay = document.getElementById('intakePopupOverlay');
+  if (!overlay) return; // Only runs on pages that include the popup HTML
+
+  const STORAGE_KEY = 'intakePopupSeen';
+
+  function pad(n) { return String(n).padStart(2, '0'); }
+
+  function fmtDate(v) {
+    if (!v) return '—';
+    return new Date(v).toLocaleDateString('en-KE', { day: 'numeric', month: 'long', year: 'numeric' });
+  }
+
+  function showPopup(intake) {
+    // Populate dynamic fields
+    document.getElementById('intakePopupTitle').textContent = intake.label.toUpperCase() + ' INTAKE';
+    document.getElementById('intakePopupLabel').textContent = intake.label + ' Intake';
+    document.getElementById('intakePopupDeadline').textContent = fmtDate(intake.application_deadline);
+    document.getElementById('intakePopupDate').textContent = fmtDate(intake.intake_date);
+    document.getElementById('intakePopupPrograms').textContent = intake.programs_available || 'All Programmes';
+
+    const statusSub = intake.status === 'open' ? 'Applications are now Open' : 'Applications will Open Soon';
+    const subtitleEl = overlay.querySelector('.intake-popup-subtitle');
+    if (subtitleEl) subtitleEl.textContent = statusSub;
+
+    // Show overlay
+    overlay.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+
+    // Countdown to application_deadline
+    const deadline = new Date(intake.application_deadline);
+    deadline.setHours(23, 59, 59, 999); // end of that day
+
+    function tick() {
+      const now = new Date();
+      const diff = deadline - now;
+      if (diff <= 0) {
+        document.getElementById('cdDays').textContent  = '00';
+        document.getElementById('cdHours').textContent = '00';
+        document.getElementById('cdMins').textContent  = '00';
+        document.getElementById('cdSecs').textContent  = '00';
+        return;
+      }
+      const days  = Math.floor(diff / 86400000);
+      const hours = Math.floor((diff % 86400000) / 3600000);
+      const mins  = Math.floor((diff % 3600000)  / 60000);
+      const secs  = Math.floor((diff % 60000)    / 1000);
+      document.getElementById('cdDays').textContent  = pad(days);
+      document.getElementById('cdHours').textContent = pad(hours);
+      document.getElementById('cdMins').textContent  = pad(mins);
+      document.getElementById('cdSecs').textContent  = pad(secs);
+    }
+    tick();
+    const timer = setInterval(tick, 1000);
+
+    function dismiss() {
+      clearInterval(timer);
+      overlay.style.opacity = '0';
+      overlay.style.transition = 'opacity 0.25s ease';
+      setTimeout(() => {
+        overlay.style.display = 'none';
+        overlay.style.opacity = '';
+        overlay.style.transition = '';
+        document.body.style.overflow = '';
+      }, 250);
+      // Remember that this intake was seen
+      localStorage.setItem(STORAGE_KEY, String(intake.id));
+    }
+
+    document.getElementById('intakePopupClose').addEventListener('click', dismiss);
+    document.getElementById('intakePopupDismiss').addEventListener('click', dismiss);
+    // Click on dark backdrop dismisses too
+    overlay.addEventListener('click', function onBdClick(e) {
+      if (e.target === overlay) { dismiss(); overlay.removeEventListener('click', onBdClick); }
+    });
+    // Escape key
+    document.addEventListener('keydown', function onEsc(e) {
+      if (e.key === 'Escape') { dismiss(); document.removeEventListener('keydown', onEsc); }
+    });
+  }
+
+  try {
+    const res = await fetch('/api/v1/admin/intake-dates/popup');
+    if (!res.ok) return;
+    const data = await res.json();
+    if (!data.success || !data.data) return;
+
+    const intake = data.data;
+
+    // Only show once per unique intake id (stored in localStorage)
+    const seenId = localStorage.getItem(STORAGE_KEY);
+    if (seenId === String(intake.id)) return;
+
+    // Show after a 1.5 s delay (lets the page finish loading nicely)
+    setTimeout(() => showPopup(intake), 1500);
+  } catch (e) {
+    // Silently skip — popup is non-critical
+  }
+})();

@@ -1936,13 +1936,13 @@ router.get('/intake-dates', isAuthenticated, hasRole('admin'), async (req, res) 
   try {
     const { year } = req.query;
     let sql = `
-      SELECT id, label, intake_date, application_deadline, programs_available, status
+      SELECT id, label, intake_date, application_deadline, programs_available, status, show_popup
       FROM intake_dates_global
       ORDER BY intake_date ASC`;
     const params = [];
     if (year) {
       sql = `
-        SELECT id, label, intake_date, application_deadline, programs_available, status
+        SELECT id, label, intake_date, application_deadline, programs_available, status, show_popup
         FROM intake_dates_global
         WHERE YEAR(intake_date) = ?
         ORDER BY intake_date ASC`;
@@ -1962,14 +1962,14 @@ router.get('/intake-dates', isAuthenticated, hasRole('admin'), async (req, res) 
  */
 router.post('/intake-dates', isAuthenticated, hasRole('admin'), async (req, res) => {
   try {
-    const { label, intake_date, application_deadline, programs_available, status } = req.body;
+    const { label, intake_date, application_deadline, programs_available, status, show_popup } = req.body;
     if (!label || !intake_date || !application_deadline) {
       return res.status(400).json({ success: false, message: 'label, intake_date and application_deadline are required' });
     }
     const [result] = await db.execute(
-      `INSERT INTO intake_dates_global (label, intake_date, application_deadline, programs_available, status)
-       VALUES (?, ?, ?, ?, ?)`,
-      [label, intake_date, application_deadline, programs_available || 'All Diploma & Certificate', status || 'upcoming']
+      `INSERT INTO intake_dates_global (label, intake_date, application_deadline, programs_available, status, show_popup)
+       VALUES (?, ?, ?, ?, ?, ?)`,
+      [label, intake_date, application_deadline, programs_available || 'All Diploma & Certificate', status || 'upcoming', show_popup ? 1 : 0]
     );
     res.json({ success: true, message: 'Intake date created', id: result.insertId });
   } catch (err) {
@@ -1984,15 +1984,15 @@ router.post('/intake-dates', isAuthenticated, hasRole('admin'), async (req, res)
  */
 router.put('/intake-dates/:id', isAuthenticated, hasRole('admin'), async (req, res) => {
   try {
-    const { label, intake_date, application_deadline, programs_available, status } = req.body;
+    const { label, intake_date, application_deadline, programs_available, status, show_popup } = req.body;
     if (!label || !intake_date || !application_deadline) {
       return res.status(400).json({ success: false, message: 'label, intake_date and application_deadline are required' });
     }
     await db.execute(
       `UPDATE intake_dates_global
-       SET label = ?, intake_date = ?, application_deadline = ?, programs_available = ?, status = ?
+       SET label = ?, intake_date = ?, application_deadline = ?, programs_available = ?, status = ?, show_popup = ?
        WHERE id = ?`,
-      [label, intake_date, application_deadline, programs_available || 'All Diploma & Certificate', status || 'upcoming', req.params.id]
+      [label, intake_date, application_deadline, programs_available || 'All Diploma & Certificate', status || 'upcoming', show_popup ? 1 : 0, req.params.id]
     );
     res.json({ success: true, message: 'Intake date updated' });
   } catch (err) {

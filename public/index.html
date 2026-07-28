@@ -495,6 +495,94 @@
         </div>
     </footer>
 
+    <!-- ══════════════════════════════════════════════════════════
+     INTAKE ANNOUNCEMENT POPUP
+══════════════════════════════════════════════════════════ -->
+    <div id="intakePopupOverlay" class="intake-popup-overlay" aria-modal="true" role="dialog" aria-labelledby="intakePopupTitle" style="display:none;">
+        <div class="intake-popup">
+            <!-- Close button -->
+            <button class="intake-popup-close" id="intakePopupClose" aria-label="Close announcement">&#10005;</button>
+
+            <!-- Header badge -->
+            <div class="intake-popup-header">
+                <span class="intake-popup-badge">New Intake</span>
+                <h2 class="intake-popup-title" id="intakePopupTitle">SEPTEMBER 2026 INTAKE</h2>
+                <p class="intake-popup-subtitle">Applications are now Open</p>
+            </div>
+
+            <!-- Countdown timer -->
+            <div class="intake-popup-countdown" id="intakeCountdown">
+                <div class="countdown-unit">
+                    <span class="countdown-num" id="cdDays">00</span>
+                    <span class="countdown-lbl">Days</span>
+                </div>
+                <div class="countdown-sep">:</div>
+                <div class="countdown-unit">
+                    <span class="countdown-num" id="cdHours">00</span>
+                    <span class="countdown-lbl">Hours</span>
+                </div>
+                <div class="countdown-sep">:</div>
+                <div class="countdown-unit">
+                    <span class="countdown-num" id="cdMins">00</span>
+                    <span class="countdown-lbl">Minutes</span>
+                </div>
+                <div class="countdown-sep">:</div>
+                <div class="countdown-unit">
+                    <span class="countdown-num" id="cdSecs">00</span>
+                    <span class="countdown-lbl">Seconds</span>
+                </div>
+            </div>
+            <p class="intake-popup-deadline-label">Until Applications Close</p>
+
+            <!-- Info body -->
+            <div class="intake-popup-body">
+                <p class="intake-popup-desc">The Kigumo Technical &amp; Vocational College invites prospective candidates to apply for the <strong id="intakePopupLabel">upcoming Intake</strong>.</p>
+
+                <div class="intake-popup-details">
+                    <div class="intake-popup-detail-row">
+                        <span class="intake-popup-detail-icon">📅</span>
+                        <span>Applications Close: <strong id="intakePopupDeadline">—</strong></span>
+                    </div>
+                    <div class="intake-popup-detail-row">
+                        <span class="intake-popup-detail-icon">🎓</span>
+                        <span>Reporting Date: <strong id="intakePopupDate">—</strong></span>
+                    </div>
+                    <div class="intake-popup-detail-row">
+                        <span class="intake-popup-detail-icon">📚</span>
+                        <span>Programmes: <strong id="intakePopupPrograms">—</strong></span>
+                    </div>
+                </div>
+
+                <div class="intake-popup-levels">
+                    <span>Artisan (Level 3)</span>
+                    <span>Craft Certificate (Level 4)</span>
+                    <span>Diploma (Level 5)</span>
+                    <span>Higher Diploma (Level 6)</span>
+                </div>
+
+                <div class="intake-popup-how">
+                    <strong>How to Apply</strong>
+                    <ul>
+                        <li>Apply online through the <a href="apply.html">Online Application Portal</a>.</li>
+                        <li>KUCCPS applicants — select Kigumo TVC and your preferred programme.</li>
+                        <li>Or download and submit the manual application form to the Registrar's Office.</li>
+                    </ul>
+                </div>
+
+                <div class="intake-popup-contact">
+                    <span>📞 0769 394 273</span>
+                    <span>✉ kigumotvc@gmail.com</span>
+                </div>
+            </div>
+
+            <!-- CTA -->
+            <div class="intake-popup-actions">
+                <a href="apply.html" class="intake-popup-btn-primary">Apply Now</a>
+                <button class="intake-popup-btn-secondary" id="intakePopupDismiss">Maybe Later</button>
+            </div>
+        </div>
+    </div>
+
     <script src="assets/js/main.js"></script>
     <!-- Load shared navbar -->
     <script src="assets/js/navbar.js"></script>

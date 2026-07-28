@@ -1844,3 +1844,325 @@ ul {
   background: #145214;
   color: #ffffff;
 }
+
+
+/* ══════════════════════════════════════════════════════════
+   INTAKE ANNOUNCEMENT POPUP
+══════════════════════════════════════════════════════════ */
+
+/* Overlay backdrop */
+.intake-popup-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  z-index: 99990;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  animation: popupFadeIn 0.35s ease;
+}
+
+@keyframes popupFadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* Popup card */
+.intake-popup {
+  position: relative;
+  background: #ffffff;
+  border-radius: 16px;
+  max-width: 540px;
+  width: 100%;
+  max-height: 92vh;
+  overflow-y: auto;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.35);
+  animation: popupSlideUp 0.38s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes popupSlideUp {
+  from { transform: translateY(40px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
+/* Scrollbar styling */
+.intake-popup::-webkit-scrollbar { width: 4px; }
+.intake-popup::-webkit-scrollbar-track { background: #f1f1f1; }
+.intake-popup::-webkit-scrollbar-thumb { background: #1a7a1a; border-radius: 4px; }
+
+/* Close button */
+.intake-popup-close {
+  position: sticky;
+  top: 0.75rem;
+  float: right;
+  margin: 0.75rem 0.75rem 0 0;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.08);
+  color: #333;
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s, color 0.2s;
+  z-index: 10;
+  flex-shrink: 0;
+}
+
+.intake-popup-close:hover {
+  background: #c0392b;
+  color: #fff;
+}
+
+/* Header */
+.intake-popup-header {
+  background: linear-gradient(135deg, #1a7a1a 0%, #145c14 100%);
+  color: #fff;
+  padding: 1.8rem 2rem 1.4rem;
+  text-align: center;
+  border-radius: 16px 16px 0 0;
+  margin-top: -36px; /* overlap with close btn's sticky offset */
+  padding-top: 2.2rem;
+}
+
+.intake-popup-badge {
+  display: inline-block;
+  background: #f5c518;
+  color: #1a1a2e;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  padding: 3px 12px;
+  border-radius: 100px;
+  margin-bottom: 0.7rem;
+}
+
+.intake-popup-title {
+  font-size: 1.5rem;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  margin: 0 0 0.35rem;
+  line-height: 1.2;
+}
+
+.intake-popup-subtitle {
+  font-size: 0.9rem;
+  opacity: 0.88;
+  margin: 0;
+}
+
+/* Countdown */
+.intake-popup-countdown {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0;
+  background: #1a1a2e;
+  padding: 1.1rem 1.5rem;
+}
+
+.countdown-unit {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 62px;
+}
+
+.countdown-num {
+  font-size: 2.2rem;
+  font-weight: 800;
+  color: #f5c518;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.countdown-lbl {
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.65);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-top: 3px;
+}
+
+.countdown-sep {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: rgba(245, 197, 24, 0.5);
+  margin: 0 2px;
+  padding-bottom: 14px;
+}
+
+.intake-popup-deadline-label {
+  text-align: center;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #fff;
+  background: #145c14;
+  padding: 5px 0;
+  margin: 0;
+  letter-spacing: 0.5px;
+}
+
+/* Body */
+.intake-popup-body {
+  padding: 1.4rem 1.8rem 0.6rem;
+}
+
+.intake-popup-desc {
+  font-size: 0.92rem;
+  color: #444;
+  margin-bottom: 1rem;
+  line-height: 1.6;
+}
+
+.intake-popup-details {
+  background: #f8fdf8;
+  border: 1px solid #c8e6c9;
+  border-radius: 10px;
+  padding: 0.9rem 1.1rem;
+  margin-bottom: 1rem;
+}
+
+.intake-popup-detail-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  font-size: 0.88rem;
+  color: #333;
+  padding: 0.35rem 0;
+}
+
+.intake-popup-detail-row + .intake-popup-detail-row {
+  border-top: 1px solid #e8f5e8;
+}
+
+.intake-popup-detail-icon {
+  flex-shrink: 0;
+}
+
+/* Programme level pills */
+.intake-popup-levels {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin-bottom: 1rem;
+}
+
+.intake-popup-levels span {
+  background: #e8f5e8;
+  color: #1a7a1a;
+  border: 1px solid #a5d6a7;
+  border-radius: 100px;
+  font-size: 0.77rem;
+  font-weight: 600;
+  padding: 3px 11px;
+}
+
+/* How to apply */
+.intake-popup-how {
+  background: #fffbf0;
+  border-left: 3px solid #f5c518;
+  border-radius: 0 8px 8px 0;
+  padding: 0.8rem 1rem;
+  margin-bottom: 1rem;
+  font-size: 0.86rem;
+}
+
+.intake-popup-how strong {
+  display: block;
+  margin-bottom: 0.4rem;
+  color: #1a1a2e;
+}
+
+.intake-popup-how ul {
+  list-style: disc;
+  padding-left: 1.1rem;
+  color: #555;
+  line-height: 1.7;
+}
+
+.intake-popup-how ul li a {
+  color: #1a7a1a;
+  font-weight: 600;
+  text-decoration: underline;
+}
+
+/* Contact line */
+.intake-popup-contact {
+  display: flex;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+  font-size: 0.83rem;
+  color: #555;
+  margin-bottom: 0.4rem;
+}
+
+/* Actions */
+.intake-popup-actions {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  padding: 1rem 1.8rem 1.6rem;
+  flex-wrap: wrap;
+}
+
+.intake-popup-btn-primary {
+  flex: 1;
+  text-align: center;
+  background: #1a7a1a;
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.95rem;
+  padding: 0.7rem 1.5rem;
+  border-radius: 8px;
+  text-decoration: none;
+  transition: background 0.2s;
+  border: none;
+  cursor: pointer;
+  min-width: 120px;
+}
+
+.intake-popup-btn-primary:hover {
+  background: #145c14;
+  color: #fff;
+}
+
+.intake-popup-btn-secondary {
+  flex: 1;
+  text-align: center;
+  background: transparent;
+  color: #888;
+  font-size: 0.88rem;
+  padding: 0.7rem 1rem;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  cursor: pointer;
+  transition: border-color 0.2s, color 0.2s;
+  min-width: 100px;
+}
+
+.intake-popup-btn-secondary:hover {
+  border-color: #999;
+  color: #555;
+}
+
+/* Mobile adjustments */
+@media (max-width: 540px) {
+  .intake-popup {
+    border-radius: 12px;
+    max-height: 95vh;
+  }
+  .intake-popup-title { font-size: 1.2rem; }
+  .countdown-num { font-size: 1.7rem; }
+  .countdown-unit { min-width: 50px; }
+  .intake-popup-body { padding: 1.1rem 1.1rem 0.4rem; }
+  .intake-popup-actions { padding: 0.8rem 1.1rem 1.3rem; flex-direction: column; }
+  .intake-popup-btn-primary,
+  .intake-popup-btn-secondary { width: 100%; }
+}

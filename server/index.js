@@ -162,6 +162,24 @@ app.get("/api/v1/admin/intake-dates/public", async (req, res) => {
   }
 });
 
+// Public popup endpoint — returns the single intake that has show_popup=1 and
+// is currently open or upcoming (the most recent one set by admin).
+app.get("/api/v1/admin/intake-dates/popup", async (req, res) => {
+  try {
+    const [rows] = await dbPool.execute(
+      `SELECT id, label, intake_date, application_deadline, programs_available, status
+       FROM intake_dates_global
+       WHERE show_popup = 1
+         AND status IN ('open','upcoming')
+       ORDER BY intake_date ASC
+       LIMIT 1`
+    );
+    res.json({ success: true, data: rows[0] || null });
+  } catch (err) {
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+});
+
 app.use("/api/v1/admin", require("./routes/admin"));
 app.use("/api/v1/stats", require("./routes/stats"));
 app.use("/api/v1/slides", require("./routes/slides"));
