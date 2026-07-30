@@ -22,6 +22,7 @@ router.get("/with-courses", async (req, res) => {
     // Get all departments with HOD info
     const [departments] = await db.execute(`
   SELECT d.id, d.name, d.type, d.description, d.image_path,
+         d.vision, d.mission, d.objective,
          u.full_name AS hod_name, u.email AS hod_email, u.photo_path AS hod_photo
   FROM departments d
   LEFT JOIN hod_assignments ha ON d.id = ha.department_id

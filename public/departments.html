@@ -610,7 +610,6 @@
                     ` : ''}
                     
                     ${dept.type === 'academic' ? `
-                        ${hasCourses ? `
                         <div class="sub-tabs-wrapper">
                             <div class="sub-tabs" id="subTabs-${dept.id}">
                                 <button class="sub-tab active" data-subtab="overview-${dept.id}">Overview</button>
@@ -619,7 +618,7 @@
                                 `).join('')}
                             </div>
                         </div>
-                        
+
                         <div id="subtabContainer-${dept.id}">
                             <div class="subtab-pane active" id="overview-${dept.id}">
                                 <div class="overview-grid">
@@ -631,7 +630,7 @@
                                             </svg>
                                         </div>
                                         <h3>Vision</h3>
-                                        <p>To be a center of excellence in technical and vocational training, producing competent graduates for industry and enterprise.</p>
+                                        <p>${escapeHtml(dept.vision || 'To be a center of excellence in technical and vocational training, producing competent graduates for industry and enterprise.')}</p>
                                     </div>
                                     <div class="overview-card">
                                         <div class="icon-circle">
@@ -640,7 +639,7 @@
                                             </svg>
                                         </div>
                                         <h3>Mission</h3>
-                                        <p>To provide quality, industry-driven training that equips students with practical skills and entrepreneurial mindset.</p>
+                                        <p>${escapeHtml(dept.mission || 'To provide quality, industry-driven training that equips students with practical skills and entrepreneurial mindset.')}</p>
                                     </div>
                                     <div class="overview-card">
                                         <div class="icon-circle">
@@ -651,11 +650,11 @@
                                             </svg>
                                         </div>
                                         <h3>Key Objective</h3>
-                                        <p>To produce competent graduates who meet TVET standards and industry demands through hands-on training and innovation.</p>
+                                        <p>${escapeHtml(dept.objective || 'To produce competent graduates who meet TVET standards and industry demands through hands-on training and innovation.')}</p>
                                     </div>
                                 </div>
                             </div>
-                            ${examiningBodies.map(body => `
+                            ${hasCourses ? examiningBodies.map(body => `
                                 <div class="subtab-pane" id="${body}-${dept.id}">
                                     <div class="course-grid">
                                         ${coursesByBody[body].map(course => `
@@ -684,13 +683,8 @@
                                         `).join('')}
                                     </div>
                                 </div>
-                            `).join('')}
+                            `).join('') : ''}
                         </div>
-                        ` : `
-                            <div class="no-courses">
-                                <p>No courses are currently listed for this department. Please check back later.</p>
-                            </div>
-                        `}
                     ` : `
                         <!-- Non-academic departments show simplified view -->
                         <div style="margin: 32px 0 48px;">
@@ -704,7 +698,7 @@
             `;
             
             // Attach sub-tab click handlers for academic departments
-            if (dept.type === 'academic' && hasCourses) {
+            if (dept.type === 'academic') {
                 const subTabsContainer = document.getElementById(`subTabs-${dept.id}`);
                 if (subTabsContainer) {
                     subTabsContainer.querySelectorAll('.sub-tab').forEach(tab => {
