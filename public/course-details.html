@@ -3,9 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Course details - Kigumo Technical and Vocational College" />
+  <!-- title, description, canonical, og:* and JSON-LD are injected by JS once the course loads -->
+  <meta name="description" content="Course details — Kigumo Technical and Vocational College" />
   <meta name="theme-color" content="#2c7a4d" />
   <title>Course Details | Kigumo Technical and Vocational College</title>
+  <link rel="canonical" href="https://kigumotvc.ac.ke/courses.html" />
   <link rel="icon" type="image/jpeg" href="assets/images/logo.jpeg" />
   <link rel="stylesheet" href="assets/css/main.css" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet" />
@@ -255,7 +257,6 @@
   <footer id="mainFooter"></footer>
 
   <script src="assets/js/navbar.js"></script>
-  <script src="assets/js/navbar.js"></script>
 <script>
   buildNavbar('courses');
 
@@ -425,6 +426,62 @@
       `;
       
       document.getElementById('courseContent').innerHTML = html;
+
+      // ── SEO: inject unique title, description, canonical, OG tags, and JSON-LD ──
+      const pageTitle = `${course.name} | Kigumo TVC`;
+      const pageDesc = course.description
+        ? course.description.substring(0, 155).replace(/\s+$/, '') + (course.description.length > 155 ? '...' : '')
+        : `${course.name} — ${levelDisplay} programme offered by the ${departmentName} Department at Kigumo Technical and Vocational College.`;
+      const pageUrl = `https://kigumotvc.ac.ke/course-details.html?id=${courseId}`;
+
+      document.title = pageTitle;
+
+      // Meta description
+      let metaDesc = document.querySelector('meta[name="description"]');
+      if (metaDesc) metaDesc.setAttribute('content', pageDesc);
+
+      // Canonical
+      let canonical = document.querySelector('link[rel="canonical"]');
+      if (!canonical) { canonical = document.createElement('link'); canonical.rel = 'canonical'; document.head.appendChild(canonical); }
+      canonical.href = pageUrl;
+
+      // Open Graph
+      const ogTags = {
+        'og:title': pageTitle,
+        'og:description': pageDesc,
+        'og:url': pageUrl,
+        'og:type': 'website',
+        'og:image': 'https://kigumotvc.ac.ke/assets/images/logo.jpeg',
+        'og:site_name': 'Kigumo Technical and Vocational College'
+      };
+      Object.entries(ogTags).forEach(([prop, content]) => {
+        let el = document.querySelector(`meta[property="${prop}"]`);
+        if (!el) { el = document.createElement('meta'); el.setAttribute('property', prop); document.head.appendChild(el); }
+        el.setAttribute('content', content);
+      });
+
+      // JSON-LD: Course schema
+      const existingLd = document.getElementById('courseJsonLd');
+      if (existingLd) existingLd.remove();
+      const ld = document.createElement('script');
+      ld.id = 'courseJsonLd';
+      ld.type = 'application/ld+json';
+      ld.textContent = JSON.stringify({
+        "@context": "https://schema.org",
+        "@type": "Course",
+        "name": course.name,
+        "description": pageDesc,
+        "url": pageUrl,
+        "provider": {
+          "@type": "EducationalOrganization",
+          "name": "Kigumo Technical and Vocational College",
+          "url": "https://kigumotvc.ac.ke"
+        },
+        "educationalLevel": levelDisplay,
+        "teaches": departmentName
+      });
+      document.head.appendChild(ld);
+
       revealContent();
 
     } catch (err) {

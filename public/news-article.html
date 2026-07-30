@@ -3,9 +3,11 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="News Article - Kigumo Technical and Vocational College" />
+  <!-- title, description, canonical, og:* and JSON-LD are injected by JS once the article loads -->
+  <meta name="description" content="News article — Kigumo Technical and Vocational College" />
   <meta name="theme-color" content="#1a7a1a" />
-  <title>News Article - Kigumo Technical and Vocational College</title>
+  <title>News — Kigumo Technical and Vocational College</title>
+  <link rel="canonical" href="https://kigumotvc.ac.ke/news.html" />
 
   <link rel="icon" type="image/jpeg" href="assets/images/logo.jpeg" />
   <link rel="stylesheet" href="assets/css/main.css" />
@@ -155,8 +157,61 @@
           <a href="news.html" class="back-link">← Back to News</a>
         `;
 
-        // Update page title
-        document.title = `${article.title} - Kigumo TVC`;
+        // ── SEO: inject unique title, description, canonical, OG tags, and JSON-LD ──
+        const pageTitle = `${article.title} — Kigumo TVC`;
+        const bodyText = (() => { const d = document.createElement('div'); d.innerHTML = article.body || ''; return d.textContent || d.innerText || ''; })();
+        const pageDesc = bodyText.substring(0, 155).replace(/\s+$/, '') + (bodyText.length > 155 ? '...' : '');
+        const pageUrl = `https://kigumotvc.ac.ke/news-article.html?id=${articleId}`;
+
+        document.title = pageTitle;
+
+        let metaDesc = document.querySelector('meta[name="description"]');
+        if (metaDesc) metaDesc.setAttribute('content', pageDesc);
+
+        let canonical = document.querySelector('link[rel="canonical"]');
+        if (!canonical) { canonical = document.createElement('link'); canonical.rel = 'canonical'; document.head.appendChild(canonical); }
+        canonical.href = pageUrl;
+
+        const imgForOg = article.image_path
+          ? (article.image_path.startsWith('http') ? article.image_path : `https://kigumotvc.ac.ke/uploads/${article.image_path.replace(/^\/?(uploads\/)?/, '')}`)
+          : 'https://kigumotvc.ac.ke/assets/images/logo.jpeg';
+
+        const ogTags = {
+          'og:type': 'article',
+          'og:title': pageTitle,
+          'og:description': pageDesc,
+          'og:url': pageUrl,
+          'og:image': imgForOg,
+          'og:site_name': 'Kigumo Technical and Vocational College'
+        };
+        Object.entries(ogTags).forEach(([prop, content]) => {
+          let el = document.querySelector(`meta[property="${prop}"]`);
+          if (!el) { el = document.createElement('meta'); el.setAttribute('property', prop); document.head.appendChild(el); }
+          el.setAttribute('content', content);
+        });
+
+        // JSON-LD: NewsArticle schema
+        const existingLd = document.getElementById('articleJsonLd');
+        if (existingLd) existingLd.remove();
+        const ld = document.createElement('script');
+        ld.id = 'articleJsonLd';
+        ld.type = 'application/ld+json';
+        ld.textContent = JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "NewsArticle",
+          "headline": article.title,
+          "description": pageDesc,
+          "url": pageUrl,
+          "image": imgForOg,
+          "datePublished": article.published_at,
+          "publisher": {
+            "@type": "EducationalOrganization",
+            "name": "Kigumo Technical and Vocational College",
+            "url": "https://kigumotvc.ac.ke",
+            "logo": { "@type": "ImageObject", "url": "https://kigumotvc.ac.ke/assets/images/logo.jpeg" }
+          }
+        });
+        document.head.appendChild(ld);
 
       } catch (e) {
         container.innerHTML = '<div class="error-message"><h2>Error loading article</h2><p>Unable to load the article. Please try again later.</p><p><a href="news.html">← Back to News</a></p></div>';

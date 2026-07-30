@@ -18,6 +18,16 @@ app.set('trust proxy', 1);
 
 app.use(requestLogger);
 
+// ── Canonical domain redirect ───────────────────────────────
+// Redirect www.kigumotvc.ac.ke → kigumotvc.ac.ke (non-www is canonical)
+// Only runs in production to avoid affecting localhost dev.
+app.use((req, res, next) => {
+  if (process.env.NODE_ENV === 'production' && req.hostname === 'www.kigumotvc.ac.ke') {
+    return res.redirect(301, `https://kigumotvc.ac.ke${req.originalUrl}`);
+  }
+  next();
+});
+
 const cors = require("cors");
 
 // ── CORS configuration ─────────────────────────────────────
@@ -268,6 +278,79 @@ app.get("/contact", (req, res) => {
 
 app.get("/downloads", (req, res) => {
   res.sendFile(path.join(__dirname, "../public/downloads.html"));
+});
+
+// ── Dynamic sitemap ─────────────────────────────────────────
+// Serves /sitemap.xml with static pages + live courses, departments, and news
+// pulled from the database so it never goes stale.
+app.get("/sitemap.xml", async (req, res) => {
+  const BASE = "https://kigumotvc.ac.ke";
+  const today = new Date().toISOString().split("T")[0];
+
+  // Static pages with their change frequency and priority
+  const staticPages = [
+    { url: "/",               changefreq: "weekly",  priority: "1.0" },
+    { url: "/about.html",     changefreq: "monthly", priority: "0.8" },
+    { url: "/courses.html",   changefreq: "weekly",  priority: "0.9" },
+    { url: "/departments.html", changefreq: "monthly", priority: "0.8" },
+    { url: "/admissions.html", changefreq: "weekly",  priority: "0.9" },
+    { url: "/news.html",      changefreq: "daily",   priority: "0.8" },
+    { url: "/contact.html",   changefreq: "monthly", priority: "0.7" },
+    { url: "/downloads.html", changefreq: "monthly", priority: "0.7" },
+    { url: "/portals.html",   changefreq: "monthly", priority: "0.6" },
+    { url: "/apply.html",     changefreq: "weekly",  priority: "0.9" },
+  ];
+
+  let courseEntries = [];
+  let deptEntries = [];
+  let newsEntries = [];
+
+  try {
+    const [courses] = await dbPool.execute(
+      `SELECT id FROM courses WHERE is_active = TRUE ORDER BY id ASC`
+    );
+    courseEntries = courses.map(c => ({
+      url: `/course-details.html?id=${c.id}`,
+      changefreq: "monthly",
+      priority: "0.7"
+    }));
+  } catch (_) { /* non-fatal — static pages still included */ }
+
+  try {
+    const [depts] = await dbPool.execute(
+      `SELECT id FROM departments ORDER BY id ASC`
+    );
+    deptEntries = depts.map(d => ({
+      url: `/departments.html#dept-${d.id}`,
+      changefreq: "monthly",
+      priority: "0.6"
+    }));
+  } catch (_) { /* non-fatal */ }
+
+  try {
+    const [articles] = await dbPool.execute(
+      `SELECT id, published_at FROM news_articles WHERE is_published = TRUE ORDER BY published_at DESC`
+    );
+    newsEntries = articles.map(a => ({
+      url: `/news-article.html?id=${a.id}`,
+      lastmod: a.published_at ? new Date(a.published_at).toISOString().split("T")[0] : today,
+      changefreq: "never",
+      priority: "0.6"
+    }));
+  } catch (_) { /* non-fatal */ }
+
+  const allEntries = [...staticPages, ...courseEntries, ...deptEntries, ...newsEntries];
+
+  const urlNodes = allEntries.map(e => {
+    const lastmod = e.lastmod || today;
+    return `  <url>\n    <loc>${BASE}${e.url}</loc>\n    <lastmod>${lastmod}</lastmod>\n    <changefreq>${e.changefreq}</changefreq>\n    <priority>${e.priority}</priority>\n  </url>`;
+  }).join("\n");
+
+  const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urlNodes}\n</urlset>`;
+
+  res.setHeader("Content-Type", "application/xml; charset=utf-8");
+  res.setHeader("Cache-Control", "public, max-age=3600"); // 1-hour cache
+  res.send(xml);
 });
 
 // ── Health check ────────────────────────────────────────────

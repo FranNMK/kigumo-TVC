@@ -1,0 +1,222 @@
+
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1.0" />
+<title>Kigumo TVC — SEO Audit &amp; Implementation Report</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, "Segoe UI", system-ui, sans-serif; font-size: 14px; line-height: 1.6; background: #fff; color: #1f2328; }
+  .wrap { max-width: 760px; margin: 0 auto; padding: 32px 24px 48px; }
+  h1 { font-size: 1.45rem; font-weight: 700; margin-bottom: 4px; }
+  .subtitle { color: #57606a; font-size: 0.9rem; margin-bottom: 28px; }
+  h2 { font-size: 1.05rem; font-weight: 700; margin: 28px 0 10px; padding-bottom: 6px; border-bottom: 2px solid #e5e7eb; color: #1f2328; }
+  h3 { font-size: 0.95rem; font-weight: 600; margin: 16px 0 6px; color: #1f2328; }
+  p { margin-bottom: 10px; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.86rem; margin-bottom: 14px; }
+  th { background: #f7f8fa; text-align: left; padding: 7px 10px; font-weight: 600; border: 1px solid #e5e7eb; }
+  td { padding: 7px 10px; border: 1px solid #e5e7eb; vertical-align: top; }
+  tr:nth-child(even) td { background: #fafafa; }
+  .tag { display: inline-block; padding: 2px 7px; border-radius: 4px; font-size: 0.78rem; font-weight: 600; }
+  .ok   { background: #d4edda; color: #155724; }
+  .bad  { background: #f8d7da; color: #721c24; }
+  .warn { background: #fff3cd; color: #856404; }
+  .fixed{ background: #cce5ff; color: #004085; }
+  code { background: #f0f3f5; padding: 1px 5px; border-radius: 3px; font-size: 0.82rem; font-family: "Cascadia Code", "Consolas", monospace; }
+  ul { padding-left: 20px; margin-bottom: 10px; }
+  li { margin-bottom: 4px; }
+  .section-note { background: #f7f8fa; border-left: 3px solid #3b82d4; padding: 10px 14px; border-radius: 0 4px 4px 0; font-size: 0.88rem; margin: 10px 0 14px; }
+  .decision-box { background: #fffbea; border: 1px solid #fcd34d; border-radius: 6px; padding: 12px 16px; margin: 14px 0; font-size: 0.88rem; }
+  footer { text-align: center; font-size: 0.78rem; color: #57606a; border-top: 1px solid #e5e7eb; margin-top: 40px; padding-top: 14px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Kigumo TVC — SEO Audit &amp; Implementation Report</h1>
+  <p class="subtitle">Produced against codebase at <code>kigumo-TVC/</code> · Domain: <code>kigumotvc.ac.ke</code> · Hosting: cPanel / Passenger (Node.js)</p>
+
+  
+  <h2>STEP 1 — Audit Findings (before changes)</h2>
+
+  <h3>sitemap.xml &amp; robots.txt</h3>
+  <table>
+    <tr><th>File</th><th>Status</th><th>Detail</th></tr>
+    <tr><td><code>public/robots.txt</code></td><td><span class="tag bad">MISSING</span></td><td>No file existed. No crawl guidance, no Sitemap pointer.</td></tr>
+    <tr><td><code>public/sitemap.xml</code></td><td><span class="tag bad">MISSING</span></td><td>No static or dynamic sitemap anywhere in the codebase.</td></tr>
+  </table>
+
+  <h3>Meta tags on public HTML pages</h3>
+  <table>
+    <tr><th>Page</th><th>title</th><th>description</th><th>canonical</th><th>OG tags</th><th>viewport</th></tr>
+    <tr><td>index.html</td><td><span class="tag ok">✓</span></td><td><span class="tag warn">Weak — wrong county (Kirinyaga vs Murang'a)</span></td><td><span class="tag bad">✗</span></td><td><span class="tag bad">✗</span></td><td><span class="tag ok">✓</span></td></tr>
+    <tr><td>about.html</td><td><span class="tag ok">✓</span></td><td><span class="tag ok">✓</span></td><td><span class="tag bad">✗</span></td><td><span class="tag bad">✗</span></td><td><span class="tag ok">✓</span></td></tr>
+    <tr><td>courses.html</td><td><span class="tag ok">✓</span></td><td><span class="tag ok">✓</span></td><td><span class="tag bad">✗</span></td><td><span class="tag bad">✗</span></td><td><span class="tag ok">✓</span></td></tr>
+    <tr><td>departments.html</td><td><span class="tag ok">✓</span></td><td><span class="tag warn">Too short / generic</span></td><td><span class="tag bad">✗</span></td><td><span class="tag bad">✗</span></td><td><span class="tag ok">✓</span></td></tr>
+    <tr><td>news.html</td><td><span class="tag ok">✓</span></td><td><span class="tag ok">✓</span></td><td><span class="tag bad">✗</span></td><td><span class="tag bad">✗</span></td><td><span class="tag ok">✓</span></td></tr>
+    <tr><td>admissions.html</td><td><span class="tag ok">✓</span></td><td><span class="tag ok">✓</span></td><td><span class="tag bad">✗</span></td><td><span class="tag bad">✗</span></td><td><span class="tag ok">✓</span></td></tr>
+    <tr><td>contact.html</td><td><span class="tag ok">✓</span></td><td><span class="tag ok">✓</span></td><td><span class="tag bad">✗</span></td><td><span class="tag bad">✗</span></td><td><span class="tag ok">✓</span></td></tr>
+    <tr><td>downloads.html</td><td><span class="tag ok">✓</span></td><td><span class="tag ok">✓</span></td><td><span class="tag bad">✗</span></td><td><span class="tag bad">✗</span></td><td><span class="tag ok">✓</span></td></tr>
+    <tr><td>portals.html</td><td><span class="tag ok">✓</span></td><td><span class="tag warn">Vague — "and more"</span></td><td><span class="tag bad">✗</span></td><td><span class="tag bad">✗</span></td><td><span class="tag ok">✓</span></td></tr>
+    <tr><td>apply.html</td><td><span class="tag ok">✓</span></td><td><span class="tag ok">✓</span></td><td><span class="tag bad">✗</span></td><td><span class="tag bad">✗</span></td><td><span class="tag ok">✓</span></td></tr>
+    <tr><td>course-details.html</td><td><span class="tag bad">Generic</span></td><td><span class="tag bad">Generic "Course details"</span></td><td><span class="tag bad">✗</span></td><td><span class="tag bad">✗</span></td><td><span class="tag ok">✓</span></td></tr>
+    <tr><td>news-article.html</td><td><span class="tag bad">Generic</span></td><td><span class="tag bad">Generic "News Article"</span></td><td><span class="tag bad">✗</span></td><td><span class="tag bad">✗</span></td><td><span class="tag ok">✓</span></td></tr>
+  </table>
+
+  <h3>Dynamic pages (course-details.html, news-article.html)</h3>
+  <p>Both pages use <strong>static HTML + client-side fetch</strong> — there is no server-side rendering. The HTML file is served with a generic title/description. Google's crawler <em>does</em> execute JavaScript, but the delay before JS runs means:</p>
+  <ul>
+    <li><code>course-details.html?id=5</code> and <code>course-details.html?id=12</code> both initially present the same <code>&lt;title&gt;</code> and <code>&lt;meta description&gt;</code> to the crawler.</li>
+    <li>The same problem applied to <code>news-article.html</code> — every article shared one generic title.</li>
+    <li><code>news-article.html</code> already updated <code>document.title</code> via JS (good partial fix), but did nothing with description, canonical, OG, or JSON-LD.</li>
+    <li><code>course-details.html</code> did nothing — not even document.title.</li>
+  </ul>
+
+  <h3>Favicon</h3>
+  <p><span class="tag ok">Present</span> — <code>assets/images/logo.jpeg</code> used as <code>&lt;link rel="icon"&gt;</code> on all pages. Not an ICO or PNG but JPEG is accepted by all modern browsers.</p>
+
+  <h3>Heading structure (h1/h2)</h3>
+  <p><span class="tag ok">Correct</span> on all pages audited. Each page has exactly one visible <code>&lt;h1&gt;</code> in the body (injected via JS on dynamic pages once data loads). No skipped heading levels observed.</p>
+
+  <h3>Image alt text</h3>
+  <p><span class="tag ok">Mostly good</span> — static images in <code>index.html</code> and <code>about.html</code> have descriptive alt text (e.g. <em>"Kigumo TVC Logo"</em>, <em>"Kenya Government Coat of Arms"</em>). Dynamic images (news cards, department images, staff photos) correctly use the item's real name as alt text via <code>escapeHtml(article.title)</code>, <code>escapeHtml(dept.name)</code>, etc. No <code>alt=""</code> or missing alt attributes found on content images.</p>
+
+  <h3>HTTPS / www vs non-www</h3>
+  <p><span class="tag warn">Unresolved in code</span> — The domain is <code>kigumotvc.ac.ke</code> (non-www, from docs). HTTPS is present (cPanel + SSL). However <code>server/index.js</code> had no redirect logic: a crawler reaching <code>www.kigumotvc.ac.ke</code> would get duplicate content. HTTP→HTTPS redirect is handled by cPanel/Apache at the webserver level (not visible in Node.js code), so it is assumed correct but cannot be verified from the codebase alone.</p>
+
+  <h3>Structured data (JSON-LD)</h3>
+  <p><span class="tag bad">None</span> — No schema.org markup existed anywhere on the site.</p>
+
+  <h3>Duplicate script tag bug</h3>
+  <p><span class="tag bad">Bug</span> — <code>course-details.html</code> loaded <code>assets/js/navbar.js</code> twice, which caused <code>buildNavbar()</code> to be called twice and the navbar to be rendered twice in the DOM.</p>
+
+  
+  <h2>STEP 2 — Changes Implemented</h2>
+
+  <table>
+    <tr><th>File</th><th>What changed &amp; why</th></tr>
+    <tr>
+      <td><code>public/robots.txt</code> <span class="tag fixed">CREATED</span></td>
+      <td>New file. Allows all public pages. Disallows <code>/portal/</code>, <code>/innovation/admin/</code>, <code>/innovation/coordinator/</code>, <code>/api/</code>, <code>/uploads/</code>. Points to <code>/sitemap.xml</code>.</td>
+    </tr>
+    <tr>
+      <td><code>server/index.js</code> <span class="tag fixed">EDITED</span></td>
+      <td>
+        <strong>(1) Sitemap route</strong> — <code>GET /sitemap.xml</code> added. Queries the live database for <code>courses WHERE is_active=TRUE</code>, all <code>departments</code>, and <code>news_articles WHERE is_published=TRUE</code>. Merges with 10 static pages. Returns valid XML with <code>lastmod</code>, <code>changefreq</code>, and <code>priority</code>. Non-fatal try/catch per DB query so static pages always serve even if DB is down. 1-hour cache header.<br /><br />
+        <strong>(2) www→non-www redirect</strong> — Middleware added at the very top (before CORS). Sends <code>301</code> redirect from <code>www.kigumotvc.ac.ke</code> to <code>kigumotvc.ac.ke</code> in production only.
+      </td>
+    </tr>
+    <tr>
+      <td><code>public/index.html</code> <span class="tag fixed">EDITED</span></td>
+      <td>Fixed description (wrong county corrected to Murang'a). Added canonical, all OG tags, and <code>EducationalOrganization</code> JSON-LD schema with real address, phone, email, and Facebook URL from the site's footer.</td>
+    </tr>
+    <tr>
+      <td><code>public/about.html</code> <span class="tag fixed">EDITED</span></td>
+      <td>Improved description. Added canonical and OG tags.</td>
+    </tr>
+    <tr>
+      <td><code>public/courses.html</code> <span class="tag fixed">EDITED</span></td>
+      <td>Improved title and description to name the actual departments. Added canonical and OG tags.</td>
+    </tr>
+    <tr>
+      <td><code>public/departments.html</code> <span class="tag fixed">EDITED</span></td>
+      <td>Improved description to list actual department names. Added canonical and OG tags.</td>
+    </tr>
+    <tr>
+      <td><code>public/news.html</code> <span class="tag fixed">EDITED</span></td>
+      <td>Improved description. Added canonical and OG tags.</td>
+    </tr>
+    <tr>
+      <td><code>public/admissions.html</code> <span class="tag fixed">EDITED</span></td>
+      <td>Improved description. Added canonical and OG tags.</td>
+    </tr>
+    <tr>
+      <td><code>public/contact.html</code> <span class="tag fixed">EDITED</span></td>
+      <td>Improved description with real phone number and email from the site footer. Added canonical and OG tags.</td>
+    </tr>
+    <tr>
+      <td><code>public/downloads.html</code> <span class="tag fixed">EDITED</span></td>
+      <td>Improved description. Added canonical and OG tags.</td>
+    </tr>
+    <tr>
+      <td><code>public/portals.html</code> <span class="tag fixed">EDITED</span></td>
+      <td>Improved description to name actual portal types. Added canonical and OG tags.</td>
+    </tr>
+    <tr>
+      <td><code>public/apply.html</code> <span class="tag fixed">EDITED</span></td>
+      <td>Improved description. Added canonical and OG tags.</td>
+    </tr>
+    <tr>
+      <td><code>public/course-details.html</code> <span class="tag fixed">EDITED</span></td>
+      <td>
+        <strong>Dynamic SEO injection:</strong> once <code>loadCourseDetails()</code> receives the course from <code>/api/v1/courses/:id</code>, it writes a unique <code>document.title</code>, <code>&lt;meta description&gt;</code>, <code>&lt;link rel="canonical"&gt;</code>, all OG meta tags, and a <code>Course</code> JSON-LD block — each using the real course name, description, level, and department from the API response.<br /><br />
+        <strong>Default canonical</strong> set to <code>/courses.html</code> in HTML so pages without a valid <code>?id</code> don't get indexed with a useless generic title.<br /><br />
+        <strong>Duplicate navbar.js script</strong> removed.
+      </td>
+    </tr>
+    <tr>
+      <td><code>public/news-article.html</code> <span class="tag fixed">EDITED</span></td>
+      <td>
+        <strong>Dynamic SEO injection:</strong> once <code>loadArticle()</code> receives the article, it writes a unique title, description (stripped from article body HTML, first 155 chars), canonical URL, all OG tags (including the article's own image if present, else fallback to logo), and a <code>NewsArticle</code> JSON-LD block with real <code>datePublished</code>.<br /><br />
+        <strong>Default canonical</strong> set to <code>/news.html</code> in HTML for the same fallback reason.
+      </td>
+    </tr>
+  </table>
+
+  <div class="section-note">
+    <strong>Architecture note on dynamic pages:</strong> This is a static HTML + client-side fetch site — there is no template engine or SSR. Google's crawler does execute JavaScript, so the injected tags will be seen on the second crawl pass. This is the correct approach for this architecture. A future improvement would be a prerendering proxy (e.g. Rendertron / SSR via Puppeteer), but that requires infrastructure changes outside this task scope.
+  </div>
+
+  
+  <h2>STEP 3 — Outstanding Items &amp; Decisions Needed</h2>
+
+  <h3>Decisions needed from you</h3>
+  <div class="decision-box">
+    <strong>www vs non-www canonical choice.</strong> The code now redirects <code>www.</code> → non-www (matching the docs which consistently use <code>kigumotvc.ac.ke</code>). If cPanel is actually configured the other way (non-www → www), the redirect in Node.js will fight it and cause redirect loops. Verify your cPanel "Redirects" or <code>.htaccess</code> settings and confirm which is the canonical version you want. If you prefer www, swap the redirect direction and update all canonical URLs in the HTML files.
+  </div>
+
+  <h3>Cannot verify from codebase alone</h3>
+  <table>
+    <tr><th>Item</th><th>Why it needs manual action</th></tr>
+    <tr>
+      <td>Google Search Console domain verification</td>
+      <td>You must add the site to <a href="https://search.google.com/search-console">Google Search Console</a>, verify domain ownership (DNS TXT record via your registrar, or HTML file upload via cPanel), then submit <code>https://kigumotvc.ac.ke/sitemap.xml</code> under Indexing → Sitemaps.</td>
+    </tr>
+    <tr>
+      <td>HTTP → HTTPS redirect</td>
+      <td>This must be enforced at the Apache/cPanel level (via <code>.htaccess</code> or cPanel's "Force HTTPS" toggle). Node.js cannot enforce it because the TLS termination happens at Apache before requests reach the Node app. Verify it is already on.</td>
+    </tr>
+    <tr>
+      <td>Favicon format</td>
+      <td>The favicon is a JPEG (<code>logo.jpeg</code>). Modern browsers accept this, but for maximum compatibility (especially older Android and Windows) consider converting to a PNG or ICO and adding a 180×180 Apple Touch icon. No change was made as it works today.</td>
+    </tr>
+    <tr>
+      <td><code>admissions@kigumotvc.ac.ke</code></td>
+      <td>Found in <code>admissions.html</code> source. This email does not appear in the official contact information (only <code>kigumotvc@gmail.com</code> is in the footer). Verify whether this address is active before it gets indexed.</td>
+    </tr>
+    <tr>
+      <td>Google Analytics / Search Console integration</td>
+      <td>No analytics tag was found in the codebase. You cannot measure organic search traffic without it. Add a GA4 snippet or a Google Tag Manager container to <code>assets/js/main.js</code> or directly to each HTML <code>&lt;head&gt;</code>.</td>
+    </tr>
+    <tr>
+      <td>Crawler JS rendering for course/news pages</td>
+      <td>Google will see the injected title and meta on its second crawl pass (after JS executes). Bing and other crawlers may not execute JS and will only see the fallback static title. There is no way to fix this without SSR or a prerendering proxy.</td>
+    </tr>
+    <tr>
+      <td>Social share image dimensions</td>
+      <td>The <code>og:image</code> points to <code>assets/images/logo.jpeg</code>. Facebook and LinkedIn recommend 1200×630px. The current logo JPEG's actual dimensions were not checked. If it is small (e.g. a square logo), social share cards will look poor. Consider uploading a proper banner image and updating the <code>og:image</code> URL.</td>
+    </tr>
+  </table>
+
+  <h3>Not changed (already correct)</h3>
+  <ul>
+    <li>All public pages already had a <code>&lt;meta name="viewport"&gt;</code> — no action needed.</li>
+    <li>All dynamic images (news cards, staff photos, department images) already used correct alt text derived from real data — no change needed.</li>
+    <li>All pages had one <code>&lt;h1&gt;</code> per page — heading structure was already correct.</li>
+    <li>Static images on <code>index.html</code> (<em>"Kigumo TVC Logo"</em>, <em>"Kenya Government Coat of Arms"</em>) already had descriptive alt text.</li>
+    <li><code>/innovation/</code> public pages (<code>about.html</code>, <code>results.html</code>) are not linked from the main site nav and do not need indexing — they are correctly accessible but not submitted via sitemap.</li>
+  </ul>
+
+</div>
+<footer>Made with IBM Bob</footer>
+</body>
+</html>

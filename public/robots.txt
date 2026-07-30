@@ -1,0 +1,22 @@
+User-agent: *
+Allow: /
+
+# Private portals — authenticated dashboards should not be indexed
+Disallow: /portal/
+Disallow: /portal/admin/
+Disallow: /portal/student-dashboard
+Disallow: /portal/lecturer-dashboard
+Disallow: /portal/management-dashboard
+
+# Innovation portal admin/coordinator panels
+Disallow: /innovation/admin/
+Disallow: /innovation/coordinator/
+
+# API endpoints — JSON responses, not web pages
+Disallow: /api/
+
+# Uploaded user files — not web content
+Disallow: /uploads/
+
+# Sitemap
+Sitemap: https://kigumotvc.ac.ke/sitemap.xml
