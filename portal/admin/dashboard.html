@@ -480,6 +480,48 @@
         width: 70px;
       }
     }
+    /* ── Pagination ── */
+    .pagination {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.3rem;
+      margin-top: 0.9rem;
+      flex-wrap: wrap;
+    }
+    .pagination button {
+      min-width: 32px;
+      height: 32px;
+      padding: 0 0.5rem;
+      border: 1px solid #d1d5db;
+      background: #fff;
+      color: #1f2328;
+      border-radius: 4px;
+      font-size: 0.82rem;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+    }
+    .pagination button:hover:not(:disabled) {
+      background: #f0f4ff;
+      border-color: #3b82d4;
+      color: #3b82d4;
+    }
+    .pagination button.active {
+      background: #3b82d4;
+      color: #fff;
+      border-color: #3b82d4;
+      font-weight: 600;
+    }
+    .pagination button:disabled {
+      opacity: 0.4;
+      cursor: default;
+    }
+    .pagination-info {
+      font-size: 0.8rem;
+      color: #57606a;
+      text-align: center;
+      margin-top: 0.3rem;
+    }
   </style>
 </head>
 
@@ -1105,11 +1147,43 @@
     }
 
     // ── USERS (Admin CRUD) ──
+    // ── Pagination helpers ──────────────────────────────────────────────────
+    const PAGE_SIZE = 10;
+
+    function buildPaginationBar(containerId, currentPage, totalPages, onPageFn) {
+      if (totalPages <= 1) return '';
+      const maxButtons = 7;
+      let pages = [];
+      if (totalPages <= maxButtons) {
+        pages = Array.from({ length: totalPages }, (_, i) => i + 1);
+      } else {
+        pages = [1];
+        let start = Math.max(2, currentPage - 2);
+        let end = Math.min(totalPages - 1, currentPage + 2);
+        if (start > 2) pages.push('…');
+        for (let i = start; i <= end; i++) pages.push(i);
+        if (end < totalPages - 1) pages.push('…');
+        pages.push(totalPages);
+      }
+      const btnPrev = `<button onclick="${onPageFn}(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>&#8592;</button>`;
+      const btnNext = `<button onclick="${onPageFn}(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''}>&#8594;</button>`;
+      const btns = pages.map(p =>
+        p === '…'
+          ? `<button disabled>…</button>`
+          : `<button class="${p === currentPage ? 'active' : ''}" onclick="${onPageFn}(${p})">${p}</button>`
+      ).join('');
+      return `<div class="pagination">${btnPrev}${btns}${btnNext}</div>`;
+    }
+    // ───────────────────────────────────────────────────────────────────────
+
     let _usersData = [];
+    let _usersPage = 1;
+
+    function goToUsersPage(p) { _usersPage = p; renderUsersTable(document.getElementById('usersSearchInput')?.value || ''); }
 
     function renderUsersTable(query) {
       query = (query || '').toLowerCase().trim();
-      const rows = _usersData.filter(u => {
+      const filtered = _usersData.filter(u => {
         if (!query) return true;
         return (
           (u.full_name || '').toLowerCase().includes(query) ||
@@ -1120,12 +1194,20 @@
         );
       });
 
+      // Reset to page 1 when a new search narrows results
+      const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+      if (_usersPage > totalPages) _usersPage = 1;
+
+      const start = (_usersPage - 1) * PAGE_SIZE;
+      const rows = filtered.slice(start, start + PAGE_SIZE);
+
       const tbody = document.getElementById('usersTbody');
       const countEl = document.getElementById('usersSearchCount');
-      if (countEl) countEl.textContent = `Showing ${rows.length} of ${_usersData.length} user${_usersData.length !== 1 ? 's' : ''}`;
+      if (countEl) countEl.textContent = `Showing ${filtered.length === 0 ? 0 : start + 1}–${Math.min(start + PAGE_SIZE, filtered.length)} of ${filtered.length} user${filtered.length !== 1 ? 's' : ''}`;
 
       if (!rows.length) {
         tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;color:#888;padding:1.5rem;">No users match "${escapeHtml(query)}"</td></tr>`;
+        document.getElementById('usersPagination').innerHTML = '';
         return;
       }
       tbody.innerHTML = rows.map(u => {
@@ -1148,6 +1230,7 @@
             </td>
           </tr>`;
       }).join('');
+      document.getElementById('usersPagination').innerHTML = buildPaginationBar('usersPagination', _usersPage, totalPages, 'goToUsersPage');
     }
 
     async function loadUsers() {
@@ -1163,7 +1246,7 @@
             <div class="tab-search-bar">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
               <input id="usersSearchInput" type="text" placeholder="Search by name, email, role, department, reg no…"
-                oninput="renderUsersTable(this.value)">
+                oninput="_usersPage=1;renderUsersTable(this.value)">
               <button class="search-clear" onclick="document.getElementById('usersSearchInput').value='';renderUsersTable('');" title="Clear">✕</button>
             </div>
             <div class="tab-search-count" id="usersSearchCount"></div>
@@ -1175,8 +1258,10 @@
               </tr></thead>
               <tbody id="usersTbody"></tbody>
             </table>
-            </div>`;
+            </div>
+            <div id="usersPagination"></div>`;
 
+        _usersPage = 1;
         renderUsersTable('');
       } catch (err) {
         console.error('loadUsers error:', err);
@@ -1463,10 +1548,13 @@
     // ── DEPARTMENTS (FULLY UPDATED WITH VISION, MISSION, OBJECTIVE, EXAM_BODY) ──
     // ── DEPARTMENTS (FULLY UPDATED WITH VISION, MISSION, OBJECTIVE, EXAM_BODY) ──
     let _deptsData = [];
+    let _deptsPage = 1;
+
+    function goToDeptsPage(p) { _deptsPage = p; renderDeptsTable(document.getElementById('deptsSearchInput')?.value || ''); }
 
     function renderDeptsTable(query) {
       query = (query || '').toLowerCase().trim();
-      const rows = _deptsData.filter(dept => {
+      const filtered = _deptsData.filter(dept => {
         if (!query) return true;
         return (
           (dept.name || '').toLowerCase().includes(query) ||
@@ -1477,12 +1565,19 @@
         );
       });
 
+      const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+      if (_deptsPage > totalPages) _deptsPage = 1;
+
+      const start = (_deptsPage - 1) * PAGE_SIZE;
+      const rows = filtered.slice(start, start + PAGE_SIZE);
+
       const tbody = document.getElementById('deptsTbody');
       const countEl = document.getElementById('deptsSearchCount');
-      if (countEl) countEl.textContent = `Showing ${rows.length} of ${_deptsData.length} department${_deptsData.length !== 1 ? 's' : ''}`;
+      if (countEl) countEl.textContent = `Showing ${filtered.length === 0 ? 0 : start + 1}–${Math.min(start + PAGE_SIZE, filtered.length)} of ${filtered.length} department${filtered.length !== 1 ? 's' : ''}`;
 
       if (!rows.length) {
         tbody.innerHTML = `<tr><td colspan="10" style="text-align:center;color:#888;padding:1.5rem;">No departments match "${escapeHtml(query)}"</td></tr>`;
+        document.getElementById('deptsPagination').innerHTML = '';
         return;
       }
       tbody.innerHTML = rows.map(dept => {
@@ -1503,6 +1598,7 @@
             </td>
           </tr>`;
       }).join('');
+      document.getElementById('deptsPagination').innerHTML = buildPaginationBar('deptsPagination', _deptsPage, totalPages, 'goToDeptsPage');
     }
 
     async function loadDepartments() {
@@ -1517,7 +1613,7 @@
           <div class="tab-search-bar">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
             <input id="deptsSearchInput" type="text" placeholder="Search by name, type, exam body, HOD…"
-              oninput="renderDeptsTable(this.value)">
+              oninput="_deptsPage=1;renderDeptsTable(this.value)">
             <button class="search-clear" onclick="document.getElementById('deptsSearchInput').value='';renderDeptsTable('');" title="Clear">✕</button>
           </div>
           <div class="tab-search-count" id="deptsSearchCount"></div>
@@ -1530,8 +1626,10 @@
             </tr></thead>
             <tbody id="deptsTbody"></tbody>
           </table>
-          </div>`;
+          </div>
+          <div id="deptsPagination"></div>`;
 
+      _deptsPage = 1;
       renderDeptsTable('');
     }
 
@@ -1820,10 +1918,13 @@
     }
 
     let _coursesData = [];
+    let _coursesPage = 1;
+
+    function goToCoursesPage(p) { _coursesPage = p; renderCoursesTable(document.getElementById('coursesSearchInput')?.value || ''); }
 
     function renderCoursesTable(query) {
       query = (query || '').toLowerCase().trim();
-      const rows = _coursesData.filter(c => {
+      const filtered = _coursesData.filter(c => {
         if (!query) return true;
         const mc = c.module_count ?? 0;
         return (
@@ -1835,12 +1936,19 @@
         );
       });
 
+      const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+      if (_coursesPage > totalPages) _coursesPage = 1;
+
+      const start = (_coursesPage - 1) * PAGE_SIZE;
+      const rows = filtered.slice(start, start + PAGE_SIZE);
+
       const tbody = document.getElementById('coursesTbody');
       const countEl = document.getElementById('coursesSearchCount');
-      if (countEl) countEl.textContent = `Showing ${rows.length} of ${_coursesData.length} course${_coursesData.length !== 1 ? 's' : ''}`;
+      if (countEl) countEl.textContent = `Showing ${filtered.length === 0 ? 0 : start + 1}–${Math.min(start + PAGE_SIZE, filtered.length)} of ${filtered.length} course${filtered.length !== 1 ? 's' : ''}`;
 
       if (!rows.length) {
         tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;color:#888;padding:1.5rem;">No courses match "${escapeHtml(query)}"</td></tr>`;
+        document.getElementById('coursesPagination').innerHTML = '';
         return;
       }
       tbody.innerHTML = rows.map(c => {
@@ -1861,6 +1969,7 @@
             </td>
           </tr>`;
       }).join('');
+      document.getElementById('coursesPagination').innerHTML = buildPaginationBar('coursesPagination', _coursesPage, totalPages, 'goToCoursesPage');
     }
 
     async function loadCourses() {
@@ -1875,7 +1984,7 @@
           <div class="tab-search-bar">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
             <input id="coursesSearchInput" type="text" placeholder="Search by name, department, exam body, level…"
-              oninput="renderCoursesTable(this.value)">
+              oninput="_coursesPage=1;renderCoursesTable(this.value)">
             <button class="search-clear" onclick="document.getElementById('coursesSearchInput').value='';renderCoursesTable('');" title="Clear">✕</button>
           </div>
           <div class="tab-search-count" id="coursesSearchCount"></div>
@@ -1887,8 +1996,10 @@
             </tr></thead>
             <tbody id="coursesTbody"></tbody>
           </table>
-          </div>`;
+          </div>
+          <div id="coursesPagination"></div>`;
 
+      _coursesPage = 1;
       renderCoursesTable('');
     }
 
