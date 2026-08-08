@@ -20,27 +20,56 @@
     <meta property="og:site_name" content="Kigumo Technical and Vocational College" />
     <meta property="og:locale" content="en_KE" />
 
-    <!-- Structured Data: EducationalOrganization -->
+    <!-- Structured Data: EducationalOrganization + LocalBusiness -->
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
-      "@type": "EducationalOrganization",
+      "@type": ["EducationalOrganization", "LocalBusiness"],
       "name": "Kigumo Technical and Vocational College",
-      "alternateName": "Kigumo TVC",
+      "alternateName": ["Kigumo TVC", "KTVC", "Kigumo Technical Training Institute"],
       "url": "https://kigumotvc.ac.ke",
       "logo": "https://kigumotvc.ac.ke/assets/images/logo.jpeg",
-      "description": "TVETA-accredited public TVET institution in Kigumo, Murang'a County, Kenya, offering Competency-Based Education and Training (CBET) programmes.",
+      "image": "https://kigumotvc.ac.ke/assets/images/logo.jpeg",
+      "description": "TVETA-accredited public TVET institution in Kigumo, Murang'a County, Kenya, offering Competency-Based Education and Training (CBET) Diploma, Certificate, and Artisan programmes in ICT, Engineering, Business, Hospitality, and Agriculture.",
+      "foundingDate": "2015",
       "address": {
         "@type": "PostalAddress",
         "streetAddress": "P.O. Box 5-10203",
         "addressLocality": "Kigumo",
         "addressRegion": "Murang'a County",
+        "postalCode": "10203",
         "addressCountry": "KE"
+      },
+      "geo": {
+        "@type": "GeoCoordinates",
+        "latitude": -0.8142,
+        "longitude": 37.033
       },
       "telephone": "+254769394273",
       "email": "kigumotvc@gmail.com",
+      "openingHours": ["Mo-Fr 08:00-17:00", "Sa 09:00-12:00"],
+      "accreditingOrganization": {
+        "@type": "Organization",
+        "name": "Technical and Vocational Education and Training Authority (TVETA)",
+        "url": "https://www.tveta.go.ke/"
+      },
+      "hasOfferCatalog": {
+        "@type": "OfferCatalog",
+        "name": "CBET Programmes",
+        "itemListElement": [
+          { "@type": "Course", "name": "Diploma in ICT", "provider": { "@type": "CollegeOrUniversity", "name": "Kigumo TVC" } },
+          { "@type": "Course", "name": "Diploma in Automotive Engineering", "provider": { "@type": "CollegeOrUniversity", "name": "Kigumo TVC" } },
+          { "@type": "Course", "name": "Diploma in Electrical and Electronics Engineering", "provider": { "@type": "CollegeOrUniversity", "name": "Kigumo TVC" } },
+          { "@type": "Course", "name": "Diploma in Building and Construction", "provider": { "@type": "CollegeOrUniversity", "name": "Kigumo TVC" } },
+          { "@type": "Course", "name": "Diploma in Business Management", "provider": { "@type": "CollegeOrUniversity", "name": "Kigumo TVC" } },
+          { "@type": "Course", "name": "Diploma in Hospitality and Tourism", "provider": { "@type": "CollegeOrUniversity", "name": "Kigumo TVC" } },
+          { "@type": "Course", "name": "Diploma in Agriculture", "provider": { "@type": "CollegeOrUniversity", "name": "Kigumo TVC" } }
+        ]
+      },
       "sameAs": [
-        "https://web.facebook.com/kigumo.tvc/"
+        "https://web.facebook.com/kigumo.tvc/",
+        "https://wa.me/254769394273",
+        "https://kigumotvc.ac.ke"
       ]
     }
     </script>

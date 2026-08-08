@@ -18,6 +18,21 @@ app.set('trust proxy', 1);
 
 app.use(requestLogger);
 
+// ── HTTPS enforcement ───────────────────────────────────────
+// Redirect plain HTTP → HTTPS with 301 in production.
+// req.secure is false even on HTTPS when behind a reverse proxy,
+// so we also check the x-forwarded-proto header set by the proxy.
+app.use((req, res, next) => {
+  if (
+    process.env.NODE_ENV === 'production' &&
+    !req.secure &&
+    req.headers['x-forwarded-proto'] !== 'https'
+  ) {
+    return res.redirect(301, `https://${req.hostname}${req.originalUrl}`);
+  }
+  next();
+});
+
 // ── Canonical domain redirect ───────────────────────────────
 // Redirect www.kigumotvc.ac.ke → kigumotvc.ac.ke (non-www is canonical)
 // Only runs in production to avoid affecting localhost dev.
@@ -280,6 +295,10 @@ app.get("/downloads", (req, res) => {
   res.sendFile(path.join(__dirname, "../public/downloads.html"));
 });
 
+app.get("/faq", (req, res) => {
+  res.sendFile(path.join(__dirname, "../public/faq.html"));
+});
+
 // ── Dynamic sitemap ─────────────────────────────────────────
 // Serves /sitemap.xml with static pages + live courses, departments, and news
 // pulled from the database so it never goes stale.
@@ -288,17 +307,19 @@ app.get("/sitemap.xml", async (req, res) => {
   const today = new Date().toISOString().split("T")[0];
 
   // Static pages with their change frequency and priority
+  // Uses clean (no-.html) canonical URLs to match <link rel="canonical"> tags.
+  // /portals excluded — thin content, links to authenticated areas.
   const staticPages = [
-    { url: "/",               changefreq: "weekly",  priority: "1.0" },
-    { url: "/about.html",     changefreq: "monthly", priority: "0.8" },
-    { url: "/courses.html",   changefreq: "weekly",  priority: "0.9" },
-    { url: "/departments.html", changefreq: "monthly", priority: "0.8" },
-    { url: "/admissions.html", changefreq: "weekly",  priority: "0.9" },
-    { url: "/news.html",      changefreq: "daily",   priority: "0.8" },
-    { url: "/contact.html",   changefreq: "monthly", priority: "0.7" },
-    { url: "/downloads.html", changefreq: "monthly", priority: "0.7" },
-    { url: "/portals.html",   changefreq: "monthly", priority: "0.6" },
-    { url: "/apply.html",     changefreq: "weekly",  priority: "0.9" },
+    { url: "/",            changefreq: "weekly",  priority: "1.0" },
+    { url: "/about",       changefreq: "monthly", priority: "0.8" },
+    { url: "/courses",     changefreq: "weekly",  priority: "0.9" },
+    { url: "/departments", changefreq: "monthly", priority: "0.8" },
+    { url: "/admissions",  changefreq: "weekly",  priority: "0.9" },
+    { url: "/news",        changefreq: "daily",   priority: "0.8" },
+    { url: "/contact",     changefreq: "monthly", priority: "0.7" },
+    { url: "/downloads",   changefreq: "monthly", priority: "0.7" },
+    { url: "/apply",       changefreq: "weekly",  priority: "0.9" },
+    { url: "/faq",         changefreq: "monthly", priority: "0.8" },
   ];
 
   let courseEntries = [];
