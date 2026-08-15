@@ -433,6 +433,92 @@
         .about-hero h1 {
           font-size: 1.8rem;
         }
+
+        /* ── Service Charter mobile fixes ── */
+        .charter-doc {
+          padding: 1rem;
+          font-size: 0.82rem;
+        }
+
+        .charter-header {
+          flex-direction: column;
+          align-items: center;
+          text-align: center;
+          gap: 0.6rem;
+        }
+
+        .charter-header img {
+          width: 60px;
+          height: 60px;
+        }
+
+        .charter-header-text .ministry {
+          font-size: 0.85rem;
+        }
+
+        .charter-header-text .dept,
+        .charter-header-text p {
+          font-size: 0.75rem;
+        }
+
+        .charter-header-text .college {
+          font-size: 0.82rem;
+        }
+
+        .charter-title-bar {
+          font-size: 0.88rem;
+        }
+
+        /* Make the table scroll horizontally on small screens */
+        .charter-table-wrapper {
+          overflow-x: auto;
+          -webkit-overflow-scrolling: touch;
+        }
+
+        .charter-table {
+          min-width: 560px;
+          font-size: 0.78rem;
+        }
+
+        .charter-table th,
+        .charter-table td {
+          padding: 0.3rem 0.45rem;
+        }
+
+        /* Contacts block stacks vertically */
+        .charter-contacts {
+          flex-direction: column;
+          gap: 0.8rem;
+          font-size: 0.78rem;
+        }
+
+        .charter-commitment {
+          font-size: 0.76rem;
+        }
+
+        .charter-commitment-sub {
+          font-size: 0.75rem;
+        }
+
+        .charter-quality {
+          font-size: 0.82rem;
+        }
+      }
+
+      @media (max-width: 480px) {
+        .charter-doc {
+          padding: 0.75rem;
+        }
+
+        .charter-table {
+          min-width: 480px;
+          font-size: 0.74rem;
+        }
+
+        .charter-header img {
+          width: 50px;
+          height: 50px;
+        }
       }
     </style>
   </head>

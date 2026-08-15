@@ -4,6 +4,7 @@ CREATE TABLE `contact_enquiries` (
   `id` int NOT NULL AUTO_INCREMENT,
   `full_name` varchar(100) COLLATE utf8mb4_general_ci NOT NULL,
   `email` varchar(100) COLLATE utf8mb4_general_ci NOT NULL,
+  `phone_number` varchar(20) COLLATE utf8mb4_general_ci DEFAULT NULL,
   `subject` varchar(200) COLLATE utf8mb4_general_ci DEFAULT NULL,
   `message` text COLLATE utf8mb4_general_ci NOT NULL,
   `submitted_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,

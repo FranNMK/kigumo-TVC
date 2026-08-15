@@ -151,10 +151,99 @@
       font-weight: 600;
       width: 100%;
       transition: background 0.3s, transform 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.55rem;
     }
-    .btn-submit:hover {
+    .btn-submit:hover:not(:disabled) {
       background: #145214;
       transform: translateY(-2px);
+    }
+    .btn-submit:disabled {
+      background: #4a9e4a;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* ── Full-screen sending overlay ── */
+    .send-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.55);
+      z-index: 9999;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 1.2rem;
+    }
+    .send-overlay.active {
+      display: flex;
+    }
+    .send-overlay-label {
+      color: #fff;
+      font-size: 1.05rem;
+      font-weight: 600;
+      letter-spacing: 0.3px;
+    }
+    .send-overlay-success {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.9rem;
+      animation: overlayFadeIn 0.35s ease;
+    }
+    .send-overlay-success .success-tick {
+      width: 62px;
+      height: 62px;
+      border-radius: 50%;
+      background: #1a7a1a;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2rem;
+      line-height: 1;
+    }
+    .send-overlay-success p {
+      color: #fff;
+      font-size: 1.05rem;
+      font-weight: 600;
+      text-align: center;
+      max-width: 280px;
+      line-height: 1.5;
+      margin: 0;
+    }
+    @keyframes overlayFadeIn {
+      from { opacity: 0; transform: scale(0.85); }
+      to   { opacity: 1; transform: scale(1); }
+    }
+    .loader {
+      width: 50px;
+      aspect-ratio: 1;
+      display: grid;
+      border-radius: 50%;
+      background:
+        linear-gradient(0deg ,rgb(255 255 255/50%) 30%,#0000 0 70%,rgb(255 255 255/100%) 0) 50%/8% 100%,
+        linear-gradient(90deg,rgb(255 255 255/25%) 30%,#0000 0 70%,rgb(255 255 255/75% ) 0) 50%/100% 8%;
+      background-repeat: no-repeat;
+      animation: l23 1s infinite steps(12);
+    }
+    .loader::before,
+    .loader::after {
+      content: "";
+      grid-area: 1/1;
+      border-radius: 50%;
+      background: inherit;
+      opacity: 0.915;
+      transform: rotate(30deg);
+    }
+    .loader::after {
+      opacity: 0.83;
+      transform: rotate(60deg);
+    }
+    @keyframes l23 {
+      100% { transform: rotate(1turn); }
     }
 
     .contact-info {
@@ -295,6 +384,10 @@
           <input type="email" id="email" name="email" required placeholder="Enter your email address" />
         </div>
         <div class="form-group">
+          <label for="phone">Phone Number</label>
+          <input type="tel" id="phone" name="phone" placeholder="e.g. 0712 345 678" maxlength="15" />
+        </div>
+        <div class="form-group">
           <label for="subject">Subject *</label>
           <select id="subject" name="subject" required>
             <option value="">-- Select a topic --</option>
@@ -309,7 +402,9 @@
           <label for="message">Message *</label>
           <textarea id="message" name="message" required placeholder="Write your message here..."></textarea>
         </div>
-        <button type="submit" class="btn-submit">📩 Send Message</button>
+        <button type="submit" class="btn-submit" id="submitBtn">
+          📩 Send Message
+        </button>
       </form>
     </div>
 
@@ -415,20 +510,59 @@
         if (footer) document.getElementById('mainFooter').innerHTML = footer.outerHTML;
       }).catch(() => {});
 
-    const form = document.getElementById('contactForm');
-    const alertBox = document.getElementById('formAlert');
+    // inject the full-screen overlay once into the page
+    const overlay = document.createElement('div');
+    overlay.className = 'send-overlay';
+    overlay.innerHTML = `
+      <div id="overlaySpinner">
+        <div class="loader"></div>
+        <span class="send-overlay-label">Sending your message…</span>
+      </div>
+      <div class="send-overlay-success" id="overlaySuccess">
+        <div class="success-tick">✅</div>
+        <p>Message sent successfully!<br>We will get back to you soon.</p>
+      </div>`;
+    document.body.appendChild(overlay);
+
+    const form           = document.getElementById('contactForm');
+    const alertBox       = document.getElementById('formAlert');
+    const submitBtn      = document.getElementById('submitBtn');
+    const overlaySpinner = document.getElementById('overlaySpinner');
+    const overlaySuccess = document.getElementById('overlaySuccess');
+
+    const MIN_LOADER_MS   = 1500;
+    const SUCCESS_SHOW_MS = 2000;
+
+    function setLoading(on) {
+      submitBtn.disabled = on;
+      overlay.classList.toggle('active', on);
+      // always reset to spinner state when opening
+      if (on) {
+        overlaySpinner.style.display = 'flex';
+        overlaySuccess.style.display = 'none';
+      }
+    }
+
+    function showOverlaySuccess() {
+      overlaySpinner.style.display = 'none';
+      overlaySuccess.style.display = 'flex';
+    }
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
       alertBox.style.display = 'none';
+      setLoading(true);
+      const startTime = Date.now();
 
       const formData = {
         full_name: form.fullName.value.trim(),
         email: form.email.value.trim(),
+        phone: form.phone.value.trim(),
         subject: form.subject.value,
         message: form.message.value.trim()
       };
 
+      let success = false;
       try {
         const res = await fetch('/api/v1/contact', {
           method: 'POST',
@@ -437,9 +571,7 @@
         });
         const data = await res.json();
         if (data.success) {
-          alertBox.className = 'alert alert-success';
-          alertBox.textContent = '✅ Message sent successfully! We will get back to you soon.';
-          alertBox.style.display = 'block';
+          success = true;
           form.reset();
         } else {
           throw new Error(data.message || 'Failed to send');
@@ -448,6 +580,17 @@
         alertBox.className = 'alert alert-error';
         alertBox.textContent = '❌ Failed to send message. Please try again later.';
         alertBox.style.display = 'block';
+      } finally {
+        const elapsed = Date.now() - startTime;
+        const remaining = MIN_LOADER_MS - elapsed;
+        if (remaining > 0) {
+          await new Promise(r => setTimeout(r, remaining));
+        }
+        if (success) {
+          showOverlaySuccess();
+          await new Promise(r => setTimeout(r, SUCCESS_SHOW_MS));
+        }
+        setLoading(false);
       }
     });
   </script>
