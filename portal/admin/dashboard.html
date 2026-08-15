@@ -2930,6 +2930,7 @@
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
               <div><strong>From:</strong> ${escapeHtml(e.full_name)}</div>
               <div><strong>Email:</strong> <a href="mailto:${escapeHtml(e.email)}">${escapeHtml(e.email)}</a></div>
+              <div><strong>Phone:</strong> ${e.phone_number ? `<a href="tel:${escapeHtml(e.phone_number)}">${escapeHtml(e.phone_number)}</a>` : '<span style="color:#aaa;">—</span>'}</div>
               <div><strong>Subject:</strong> ${escapeHtml(e.subject)}</div>
               <div><strong>Date:</strong> ${new Date(e.submitted_at).toLocaleString()}</div>
               <div><strong>Status:</strong> <span class="badge ${e.is_read ? "badge-read" : "badge-unread"}">${e.is_read ? "Read" : "Unread"}</span></div>
