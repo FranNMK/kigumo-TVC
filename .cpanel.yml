@@ -1,0 +1,6 @@
+---
+deployment:
+  tasks:
+    - export DEPLOY_PATH="$HOME/public_html"
+    - /bin/mkdir -p "$DEPLOY_PATH"
+    - /bin/rsync -av --delete --exclude=".git/" --exclude="node_modules/" public/ "$DEPLOY_PATH/"
