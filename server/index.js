@@ -1,7 +1,8 @@
 const express = require("express");
+const path = require("path");
 const session = require("express-session");
 const MySQLStore = require("express-mysql-session")(session);
-const path = require("path");
+require("./utils/loadEnv");
 require("dotenv").config();
 const logger = require("./utils/logger");
 const requestLogger = require("./middleware/requestLogger");
@@ -116,19 +117,27 @@ const sessionSecret =
 // Use the existing mysql2 pool (from db.js) so sessions survive process
 // restarts and are shared across Passenger worker processes.
 // express-mysql-session creates the `sessions` table automatically on first run.
-const { pool: dbPool } = require("./db");
+const { pool: dbPool, execute: dbExecute } = require("./db");
 const sessionStore = new MySQLStore(
   {
     // Reuse the existing pool — do NOT create a second connection.
     // These options are ignored when a connection is passed in:
     createDatabaseTable: true,   // auto-create `sessions` table if absent
     clearExpired: true,          // periodically DELETE expired rows
-    checkExpirationInterval: 15 * 60 * 1000, // check every 15 min
+    checkExpirationInterval: 5 * 60 * 1000, // check every 5 min (prevents waking up after long idle)
     expiration: 30 * 60 * 1000,              // match cookie maxAge (30 min)
     endConnectionOnClose: false, // don't close the shared pool on store.close()
   },
   dbPool
 );
+
+// Prevent unhandled error event exceptions on background session operations
+sessionStore.on("error", (err) => {
+  logger.error("⚠️ MySQL session store background error (handled safely):", {
+    error: err.message,
+    code: err.code,
+  });
+});
 
 // Session configuration
 app.use(
@@ -175,7 +184,7 @@ app.use("/api/v1/management", require("./routes/management"));
 // inside it — including the one explicitly marked public.
 app.get("/api/v1/admin/intake-dates/public", async (req, res) => {
   try {
-    const [rows] = await dbPool.execute(
+    const [rows] = await dbExecute(
       `SELECT id, label, intake_date, application_deadline, programs_available, status
        FROM intake_dates_global
        WHERE YEAR(intake_date) >= YEAR(CURDATE())
@@ -191,7 +200,7 @@ app.get("/api/v1/admin/intake-dates/public", async (req, res) => {
 // is currently open or upcoming (the most recent one set by admin).
 app.get("/api/v1/admin/intake-dates/popup", async (req, res) => {
   try {
-    const [rows] = await dbPool.execute(
+    const [rows] = await dbExecute(
       `SELECT id, label, intake_date, application_deadline, programs_available, status
        FROM intake_dates_global
        WHERE show_popup = 1

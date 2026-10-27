@@ -34,7 +34,8 @@ async function uploadToCloudinary(file, folder) {
   const result = await uploadFile(dataURI, {
     folder,
     resource_type: resourceType,
-    access_mode: 'public'
+    access_mode: 'public',
+    timeout: 60000 // 60s per file to support large KCSE/ID documents
   });
   return result.secure_url;
 }
@@ -96,21 +97,20 @@ router.post('/', upload.fields([
       return res.status(400).json({ success: false, message: 'National ID / Birth Certificate is required' });
     }
 
-    // ── Upload to Cloudinary ──
-    const kcseUrl = await uploadToCloudinary(files.kcse_cert[0], 'kigumo-tvc/applications/kcse');
-    const idUrl = await uploadToCloudinary(files.id_doc[0], 'kigumo-tvc/applications/id');
-    let photoUrl = null;
-    if (files.photo && files.photo.length > 0) {
-      photoUrl = await uploadToCloudinary(files.photo[0], 'kigumo-tvc/applications/photos');
-    }
-    let kcpeUrl = null;
-    if (files.kcpe_cert && files.kcpe_cert.length > 0) {
-      kcpeUrl = await uploadToCloudinary(files.kcpe_cert[0], 'kigumo-tvc/applications/kcpe');
-    }
-    let leavingCertUrl = null;
-    if (files.leaving_cert && files.leaving_cert.length > 0) {
-      leavingCertUrl = await uploadToCloudinary(files.leaving_cert[0], 'kigumo-tvc/applications/leaving-cert');
-    }
+    // ── Upload to Cloudinary (Concurrent to prevent cumulative timeouts) ──
+    const [kcseUrl, idUrl, photoUrl, kcpeUrl, leavingCertUrl] = await Promise.all([
+      uploadToCloudinary(files.kcse_cert[0], 'kigumo-tvc/applications/kcse'),
+      uploadToCloudinary(files.id_doc[0], 'kigumo-tvc/applications/id'),
+      (files.photo && files.photo.length > 0)
+        ? uploadToCloudinary(files.photo[0], 'kigumo-tvc/applications/photos')
+        : Promise.resolve(null),
+      (files.kcpe_cert && files.kcpe_cert.length > 0)
+        ? uploadToCloudinary(files.kcpe_cert[0], 'kigumo-tvc/applications/kcpe')
+        : Promise.resolve(null),
+      (files.leaving_cert && files.leaving_cert.length > 0)
+        ? uploadToCloudinary(files.leaving_cert[0], 'kigumo-tvc/applications/leaving-cert')
+        : Promise.resolve(null)
+    ]);
 
     // ── Generate reference ──
     const reference = await generateReference();
@@ -164,7 +164,25 @@ router.post('/', upload.fields([
     });
 
   } catch (err) {
-    logger.error('Application submission error', { error: err.message, stack: err.stack });
+    logger.error('Application submission error', {
+      error: err.message,
+      isTimeout: err.isTimeout,
+      http_code: err.http_code,
+      stack: err.stack
+    });
+
+    if (
+      err.isTimeout ||
+      err.http_code === 499 ||
+      err.http_code === 408 ||
+      (err.message && /timeout|timed out|client closed/i.test(err.message))
+    ) {
+      return res.status(408).json({
+        success: false,
+        message: 'Document upload timed out. The file may be too large or the internet connection is slow. Please compress your KCSE/ID documents and try again.'
+      });
+    }
+
     res.status(500).json({ success: false, message: 'Submission failed. Please try again.' });
   }
 });

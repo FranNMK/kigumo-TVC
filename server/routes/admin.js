@@ -75,12 +75,16 @@ async function uploadToCloudinary(file, folder) {
   const fileBase64 = file.buffer.toString("base64");
   const dataURI = `data:${file.mimetype};base64,${fileBase64}`;
   try {
-    const result = await uploadFile(dataURI, { folder });
+    const result = await uploadFile(dataURI, { folder, timeout: 60000 });
     return result.secure_url;
   } catch (err) {
-    // Re-throw with a clearer message so route catch blocks log something useful
-    const detail = err.message || err.toString() || 'unknown Cloudinary error';
-    throw new Error(`Cloudinary upload failed: ${detail}`);
+    // Re-throw with clearer message and preserve error metadata for route catch blocks
+    const detail = err.userMessage || err.message || err.toString() || 'unknown Cloudinary error';
+    const error = new Error(`Cloudinary upload failed: ${detail}`);
+    error.isTimeout = err.isTimeout;
+    error.http_code = err.http_code;
+    error.originalError = err;
+    throw error;
   }
 }
 
@@ -1051,7 +1055,13 @@ router.post("/partners", upload.single("logo"), async (req, res) => {
     );
     res.json({ success: true, message: "Partner added" });
   } catch (err) {
-    logger.error("Partner create error", { error: err.message || err.toString() });
+    logger.error("Partner create error", { error: err.message || err.toString(), isTimeout: err.isTimeout });
+    if (err.isTimeout || err.http_code === 499 || (err.message && /timeout|499/i.test(err.message))) {
+      return res.status(408).json({
+        success: false,
+        message: "Partner logo upload timed out. Please upload a smaller image file or try again."
+      });
+    }
     res.status(500).json({ success: false, message: "Failed: " + err.message });
   }
 });
@@ -1082,7 +1092,13 @@ router.put("/partners/:id", upload.single("logo"), async (req, res) => {
     );
     res.json({ success: true, message: "Partner updated" });
   } catch (err) {
-    logger.error("Partner update error", { error: err.message || err.toString() });
+    logger.error("Partner update error", { error: err.message || err.toString(), isTimeout: err.isTimeout });
+    if (err.isTimeout || err.http_code === 499 || (err.message && /timeout|499/i.test(err.message))) {
+      return res.status(408).json({
+        success: false,
+        message: "Partner logo upload timed out. Please upload a smaller image file or try again."
+      });
+    }
     res.status(500).json({ success: false, message: "Update failed" });
   }
 });
