@@ -461,6 +461,7 @@ app.get("/api/ping", (req, res) => {
 
 app.get("/api/v1/diagnostics/upload-check", async (req, res) => {
   const cloudinary = require("cloudinary").v2;
+  const dns = require("dns").promises;
   const os = require("os");
 
   const cloudinaryConfigured = Boolean(
@@ -469,25 +470,65 @@ app.get("/api/v1/diagnostics/upload-check", async (req, res) => {
     process.env.CLOUDINARY_API_SECRET
   );
 
+  // 1. Fast DNS Resolution Check (max 1500ms)
+  let dnsResolved = null;
+  let dnsLatency = null;
+  let dnsError = null;
+  try {
+    const dnsStart = Date.now();
+    let dnsTimer;
+    const dnsPromise = dns.lookup("api.cloudinary.com");
+    const timeoutPromise = new Promise((_, reject) => {
+      dnsTimer = setTimeout(() => reject(new Error("DNS resolution timed out (1500ms)")), 1500);
+    });
+
+    const dnsResult = await Promise.race([dnsPromise, timeoutPromise]);
+    clearTimeout(dnsTimer);
+    dnsResolved = dnsResult.address;
+    dnsLatency = `${Date.now() - dnsStart}ms`;
+  } catch (err) {
+    dnsError = err.message || err.code || "DNS lookup failed";
+  }
+
+  // 2. Cloudinary API Ping with strict Hard Timeout (max 2500ms)
   let cloudinaryPing = "skipped";
   let pingLatency = null;
   let pingError = null;
 
   if (cloudinaryConfigured) {
-    const start = Date.now();
+    const pingStart = Date.now();
+    let pingTimer;
     try {
-      await cloudinary.api.ping({ timeout: 10000 });
+      const pingPromise = cloudinary.api.ping();
+      const hardTimeoutPromise = new Promise((_, reject) => {
+        pingTimer = setTimeout(
+          () => reject(new Error("Cloudinary ping timed out after 2500ms (firewall or outbound socket blocked)")),
+          2500
+        );
+      });
+
+      await Promise.race([pingPromise, hardTimeoutPromise]);
+      clearTimeout(pingTimer);
       cloudinaryPing = "ok";
-      pingLatency = `${Date.now() - start}ms`;
+      pingLatency = `${Date.now() - pingStart}ms`;
     } catch (err) {
+      clearTimeout(pingTimer);
       cloudinaryPing = "failed";
-      pingError = err.message;
+      pingError = err.message || err.toString();
     }
   }
 
+  // 3. Log file diagnostics & latest active logs
+  const logFiles = logger.getLogFilesInfo();
+  const recentAppLogs = logger.getRecentLogs("app.log", 15);
+  const recentErrorLogs = logger.getRecentLogs("error.log", 10);
+  const recentCloudinaryLogs = logger.getRecentLogs("cloudinary.log", 10);
+
   const memory = process.memoryUsage();
+
   res.json({
     success: true,
+    status: cloudinaryPing === "ok" ? "HEALTHY" : "DEGRADED",
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV || "development",
     cwd: process.cwd(),
@@ -497,20 +538,60 @@ app.get("/api/v1/diagnostics/upload-check", async (req, res) => {
       cloudName: process.env.CLOUDINARY_CLOUD_NAME || null,
       apiKeySet: Boolean(process.env.CLOUDINARY_API_KEY),
       apiSecretSet: Boolean(process.env.CLOUDINARY_API_SECRET),
+      dns: {
+        domain: "api.cloudinary.com",
+        resolvedIp: dnsResolved,
+        latency: dnsLatency,
+        error: dnsError,
+      },
       ping: cloudinaryPing,
       pingLatency,
-      pingError
+      pingError,
+      diagnosis: cloudinaryPing === "ok"
+        ? "✅ Cloudinary is reachable and operational."
+        : (dnsError
+            ? "❌ DNS failure on hosting server. Nameservers cannot resolve api.cloudinary.com."
+            : "⚠️ Cloudinary ping blocked or timed out. Check cPanel firewall (CSF / outbound port 443).")
     },
     cors: {
       allowedOrigins: Array.from(allowedOriginsSet),
-      requestOrigin: req.headers.origin || null
+      requestOrigin: req.headers.origin || null,
+    },
+    logs: {
+      logDirectory: logger.LOG_DIR,
+      files: logFiles,
+      recentAppLogs,
+      recentErrorLogs,
+      recentCloudinaryLogs,
     },
     memory: {
       heapUsedMB: Math.round(memory.heapUsed / 1024 / 1024),
       heapTotalMB: Math.round(memory.heapTotal / 1024 / 1024),
-      rssMB: Math.round(memory.rss / 1024 / 1024)
-    }
+      rssMB: Math.round(memory.rss / 1024 / 1024),
+    },
   });
+});
+
+// ── Live Logs Viewer Endpoint ───────────────────────────────
+// Allows viewing live newest logs from any browser
+app.get("/api/v1/diagnostics/logs", (req, res) => {
+  const file = req.query.file || "app.log";
+  const lines = Math.min(parseInt(req.query.lines, 10) || 100, 500);
+  const logLines = logger.getRecentLogs(file, lines);
+
+  if (req.query.format === "json") {
+    return res.json({
+      file,
+      count: logLines.length,
+      lines: logLines,
+    });
+  }
+
+  res.setHeader("Content-Type", "text/plain; charset=utf-8");
+  res.send(
+    `=== Kigumo TVC Live Log: ${file} (Last ${logLines.length} lines) ===\n\n` +
+      logLines.join("\n")
+  );
 });
 
 // ── 404 handler ─────────────────────────────────────────────

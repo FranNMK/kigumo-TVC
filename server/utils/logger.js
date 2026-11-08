@@ -329,14 +329,16 @@ function logMessage(level, message, meta = {}) {
       console.log(consoleOutput);
   }
 
-  // File output (always write ERROR and WARN, only write INFO/DEBUG in development)
-  if (
-    level === "ERROR" ||
-    level === "WARN" ||
-    process.env.NODE_ENV !== "production"
-  ) {
+  // File output: ALWAYS write to file for levels within currentLogLevel threshold.
+  // In production, currentLogLevel defaults to INFO, so all operational & request events are actively written to app.log!
+  if (LOG_LEVELS[level] <= currentLogLevel) {
     const fileOutput = formatFileLog(level, message, meta, location);
     writeToFile(level, fileOutput);
+
+    // Mirror ERROR and WARN into app.log so app.log maintains a complete, unified chronological timeline
+    if (level === "ERROR" || level === "WARN") {
+      writeToFile("COMBINED", fileOutput);
+    }
   }
 }
 
@@ -396,6 +398,51 @@ const logger = {
   debug(message, meta = {}) {
     logMessage("DEBUG", message, meta);
   },
+
+  /**
+   * Returns metadata about available log files in logs directory.
+   */
+  getLogFilesInfo() {
+    try {
+      if (!fs.existsSync(LOG_DIR)) return [];
+      const files = fs.readdirSync(LOG_DIR);
+      return files.map((file) => {
+        const fullPath = path.join(LOG_DIR, file);
+        const stats = fs.statSync(fullPath);
+        return {
+          filename: file,
+          sizeBytes: stats.size,
+          sizeKB: Math.round(stats.size / 1024),
+          modified: stats.mtime.toISOString(),
+        };
+      });
+    } catch (err) {
+      return [{ error: err.message }];
+    }
+  },
+
+  /**
+   * Reads the last N lines from a log file.
+   */
+  getRecentLogs(filename = "app.log", maxLines = 50) {
+    try {
+      // Prevent directory traversal
+      const safeFilename = path.basename(filename);
+      const fullPath = path.join(LOG_DIR, safeFilename);
+
+      if (!fs.existsSync(fullPath)) {
+        return [`[INFO] Log file ${safeFilename} has not been created yet.`];
+      }
+
+      const content = fs.readFileSync(fullPath, "utf8");
+      const lines = content.trim().split("\n").filter(Boolean);
+      return lines.slice(-maxLines);
+    } catch (err) {
+      return [`[ERROR] Failed to read ${filename}: ${err.message}`];
+    }
+  },
+
+  LOG_DIR,
 };
 
 module.exports = logger;
