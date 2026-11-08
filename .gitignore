@@ -14,8 +14,10 @@ github_kigumo.pub
 logs/
 *.log
 
-# ── Uploads (user files go to Cloudinary) ─────────────────
+# ── Uploads (user files - Cloudinary & Local Fallback) ───
 uploads/
+public/uploads/*
+!public/uploads/.gitkeep
 
 # ── Certificates (now stored as env variable) ─────────────
 server/certs/
