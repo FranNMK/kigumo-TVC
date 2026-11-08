@@ -6,36 +6,34 @@ const db = require('../db');
 const logger = require('../utils/logger');
 const { uploadFile } = require('../utils/cloudinary');
 
-// Multer config (memory storage)
+// Multer config (memory storage) - allows JPG, PNG, and PDF up to 10MB
 const upload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB per file
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB per file
   fileFilter: (req, file, cb) => {
-    const allowed = /jpeg|jpg|png/;
+    const allowed = /jpeg|jpg|png|pdf/;
     const ext = path.extname(file.originalname).toLowerCase().replace('.', '');
-    if (allowed.test(ext) || file.mimetype.startsWith('image/')) {
+    if (allowed.test(ext) || file.mimetype.startsWith('image/') || file.mimetype === 'application/pdf') {
       cb(null, true);
     } else {
-      cb(new Error('Unsupported file type. Only JPG and PNG images are allowed.'));
+      cb(new Error('Unsupported file type. Only JPG, PNG, and PDF files are allowed.'));
     }
   }
 });
 
-// ── HELPER: Upload to Cloudinary with correct resource_type ──
+// ── HELPER: Upload to Cloudinary via direct binary stream ──
 // PDFs are stored as 'raw' so they remain downloadable as original files.
 // Images are stored as 'image' for optimised delivery.
 async function uploadToCloudinary(file, folder) {
   if (!file) return null;
-  const base64 = file.buffer.toString('base64');
-  const dataURI = `data:${file.mimetype};base64,${base64}`;
+  const isImage = file.mimetype && file.mimetype.startsWith('image/');
+  const resourceType = isImage ? 'image' : 'raw';
 
-  const resourceType = file.mimetype.startsWith('image/') ? 'image' : 'raw';
-
-  const result = await uploadFile(dataURI, {
+  const result = await uploadFile(file.buffer || file, {
     folder,
     resource_type: resourceType,
     access_mode: 'public',
-    timeout: 60000 // 60s per file to support large KCSE/ID documents
+    timeout: 30000 // 30s per file limit to stay within cPanel Apache proxy limits
   });
   return result.secure_url;
 }
@@ -97,20 +95,19 @@ router.post('/', upload.fields([
       return res.status(400).json({ success: false, message: 'National ID / Birth Certificate is required' });
     }
 
-    // ── Upload to Cloudinary (Concurrent to prevent cumulative timeouts) ──
-    const [kcseUrl, idUrl, photoUrl, kcpeUrl, leavingCertUrl] = await Promise.all([
-      uploadToCloudinary(files.kcse_cert[0], 'kigumo-tvc/applications/kcse'),
-      uploadToCloudinary(files.id_doc[0], 'kigumo-tvc/applications/id'),
-      (files.photo && files.photo.length > 0)
-        ? uploadToCloudinary(files.photo[0], 'kigumo-tvc/applications/photos')
-        : Promise.resolve(null),
-      (files.kcpe_cert && files.kcpe_cert.length > 0)
-        ? uploadToCloudinary(files.kcpe_cert[0], 'kigumo-tvc/applications/kcpe')
-        : Promise.resolve(null),
-      (files.leaving_cert && files.leaving_cert.length > 0)
-        ? uploadToCloudinary(files.leaving_cert[0], 'kigumo-tvc/applications/leaving-cert')
-        : Promise.resolve(null)
-    ]);
+    // ── Upload to Cloudinary via controlled sequential streams ──
+    // Sequential execution avoids saturating cPanel Passenger entry process / socket bandwidth
+    const kcseUrl = await uploadToCloudinary(files.kcse_cert[0], 'kigumo-tvc/applications/kcse');
+    const idUrl = await uploadToCloudinary(files.id_doc[0], 'kigumo-tvc/applications/id');
+    const photoUrl = (files.photo && files.photo.length > 0)
+      ? await uploadToCloudinary(files.photo[0], 'kigumo-tvc/applications/photos')
+      : null;
+    const kcpeUrl = (files.kcpe_cert && files.kcpe_cert.length > 0)
+      ? await uploadToCloudinary(files.kcpe_cert[0], 'kigumo-tvc/applications/kcpe')
+      : null;
+    const leavingCertUrl = (files.leaving_cert && files.leaving_cert.length > 0)
+      ? await uploadToCloudinary(files.leaving_cert[0], 'kigumo-tvc/applications/leaving-cert')
+      : null;
 
     // ── Generate reference ──
     const reference = await generateReference();

@@ -7,15 +7,14 @@ require("dotenv").config();
 const logger = require("./utils/logger");
 const requestLogger = require("./middleware/requestLogger");
 // === Innovation Portal Routes ===
-const innovationAuthRoutes = require('./routes/innovation-auth');
-const innovationEventsRoutes = require('./routes/innovation-events');
-const innovationParticipantsRoutes = require('./routes/innovation-participants');
-const innovationCategoriesRoutes = require('./routes/innovation-categories');
-const innovationScoresRoutes = require('./routes/innovation-scores');
-
+const innovationAuthRoutes = require("./routes/innovation-auth");
+const innovationEventsRoutes = require("./routes/innovation-events");
+const innovationParticipantsRoutes = require("./routes/innovation-participants");
+const innovationCategoriesRoutes = require("./routes/innovation-categories");
+const innovationScoresRoutes = require("./routes/innovation-scores");
 
 const app = express();
-app.set('trust proxy', 1);
+app.set("trust proxy", 1);
 
 app.use(requestLogger);
 
@@ -25,9 +24,9 @@ app.use(requestLogger);
 // so we also check the x-forwarded-proto header set by the proxy.
 app.use((req, res, next) => {
   if (
-    process.env.NODE_ENV === 'production' &&
+    process.env.NODE_ENV === "production" &&
     !req.secure &&
-    req.headers['x-forwarded-proto'] !== 'https'
+    req.headers["x-forwarded-proto"] !== "https"
   ) {
     return res.redirect(301, `https://${req.hostname}${req.originalUrl}`);
   }
@@ -38,7 +37,10 @@ app.use((req, res, next) => {
 // Redirect www.kigumotvc.ac.ke → kigumotvc.ac.ke (non-www is canonical)
 // Only runs in production to avoid affecting localhost dev.
 app.use((req, res, next) => {
-  if (process.env.NODE_ENV === 'production' && req.hostname === 'www.kigumotvc.ac.ke') {
+  if (
+    process.env.NODE_ENV === "production" &&
+    req.hostname === "www.kigumotvc.ac.ke"
+  ) {
     return res.redirect(301, `https://kigumotvc.ac.ke${req.originalUrl}`);
   }
   next();
@@ -47,47 +49,92 @@ app.use((req, res, next) => {
 const cors = require("cors");
 
 // ── CORS configuration ─────────────────────────────────────
-// APP_ORIGINS  – comma-separated list of production/staging origins, set in .env
-//               e.g. APP_ORIGINS=https://www.kigumotvc.ac.ke,https://assets.kigumotvc.ac.ke
-// RAILWAY_PUBLIC_DOMAIN – kept so it can be removed from .env when Railway is retired;
-//                         it contributes nothing when the var is unset.
+// Always allow the production canonical domain (kigumotvc.ac.ke),
+// the www variant, assets subdomain, and any extra APP_ORIGINS.
+const defaultOrigins = [
+  "https://kigumotvc.ac.ke",
+  "https://www.kigumotvc.ac.ke",
+  "https://assets.kigumotvc.ac.ke",
+  "http://kigumotvc.ac.ke",
+  "http://www.kigumotvc.ac.ke",
+];
+
 const envOrigins = process.env.APP_ORIGINS
-  ? process.env.APP_ORIGINS.split(",").map((o) => o.trim()).filter(Boolean)
+  ? process.env.APP_ORIGINS.split(",")
+      .map((o) => o.trim())
+      .filter(Boolean)
   : [];
 
 const devOrigins =
   process.env.NODE_ENV !== "production"
-    ? ["http://localhost:3000", "http://localhost:8080"]
+    ? [
+        "http://localhost:3000",
+        "http://localhost:5000",
+        "http://localhost:8080",
+        "http://127.0.0.1:3000",
+        "http://127.0.0.1:5000",
+        "http://127.0.0.1:8080"
+      ]
     : [];
 
-// Railway origin: kept for backward compatibility — remove RAILWAY_PUBLIC_DOMAIN
-// from .env once the Railway deployment is fully retired.
+// Railway origin: kept for backward compatibility
 const railwayOrigins = [
   "https://kigumo-tvc-production.up.railway.app",
   process.env.RAILWAY_PUBLIC_DOMAIN || "",
 ].filter(Boolean);
 
-const allowedOrigins = [...envOrigins, ...devOrigins, ...railwayOrigins];
-
-if (process.env.NODE_ENV === "production" && envOrigins.length === 0) {
-  logger.warn(
-    "⚠️  APP_ORIGINS is not set — no production domains are in the CORS allowlist. " +
-    "Add APP_ORIGINS=https://www.kigumotvc.ac.ke,https://assets.kigumotvc.ac.ke to your .env file."
-  );
-}
+const allowedOriginsSet = new Set(
+  [...defaultOrigins, ...envOrigins, ...devOrigins, ...railwayOrigins].map((o) =>
+    o.toLowerCase().replace(/\/$/, "")
+  )
+);
 
 const corsOptions = {
-  origin: allowedOrigins,
+  origin: (origin, callback) => {
+    // 1. Allow non-browser requests (no origin header, e.g. curl, postman, mobile/server-to-server)
+    if (!origin) return callback(null, true);
+
+    const norm = origin.toLowerCase().replace(/\/$/, "");
+
+    // 2. Exact match in allowlist
+    if (allowedOriginsSet.has(norm)) {
+      return callback(null, true);
+    }
+
+    // 3. Any kigumotvc.ac.ke subdomain
+    if (/^https?:\/\/([a-z0-9-]+\.)*kigumotvc\.ac\.ke$/i.test(norm)) {
+      return callback(null, true);
+    }
+
+    // 4. In development, allow any localhost or loopback port
+    if (process.env.NODE_ENV !== "production") {
+      if (/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(norm)) {
+        return callback(null, true);
+      }
+    }
+
+    logger.warn(`⚠️ CORS blocked request from origin: ${origin}`);
+    return callback(new Error(`CORS origin not allowed: ${origin}`));
+  },
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"],
+  allowedHeaders: [
+    "Content-Type",
+    "Authorization",
+    "X-Requested-With",
+    "Accept",
+    "Origin"
+  ],
+  exposedHeaders: ["Content-Disposition"],
+  maxAge: 86400 // Cache preflight for 24 hours to reduce latency & NPROC
 };
 
 app.use(cors(corsOptions));
 
 // ── Middleware ──────────────────────────────────────────────
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+// Safe payload limits for JSON and URL-encoded forms
+app.use(express.json({ limit: "10mb" }));
+app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 
 // Serve static files from public folder (website pages)
 app.use(express.static(path.join(__dirname, "../public")));
@@ -100,14 +147,19 @@ app.use("/uploads", express.static(path.join(__dirname, "../public/uploads")));
 app.use("/portal", express.static(path.join(__dirname, "../portal")));
 
 // Serve innovation portal static assets
-app.use('/innovation', express.static(path.join(__dirname, '../public/innovation')));
+app.use(
+  "/innovation",
+  express.static(path.join(__dirname, "../public/innovation")),
+);
 
 // ── Session secret ─────────────────────────────────────────
 // Crash loudly at startup if SESSION_SECRET is missing in production.
 // A missing secret would silently fall back to a known public string,
 // which allows anyone to forge session cookies.
 if (process.env.NODE_ENV === "production" && !process.env.SESSION_SECRET) {
-  logger.error("FATAL: SESSION_SECRET environment variable is not set. Server will not start.");
+  logger.error(
+    "FATAL: SESSION_SECRET environment variable is not set. Server will not start.",
+  );
   process.exit(1);
 }
 const sessionSecret =
@@ -122,13 +174,13 @@ const sessionStore = new MySQLStore(
   {
     // Reuse the existing pool — do NOT create a second connection.
     // These options are ignored when a connection is passed in:
-    createDatabaseTable: true,   // auto-create `sessions` table if absent
-    clearExpired: true,          // periodically DELETE expired rows
+    createDatabaseTable: true, // auto-create `sessions` table if absent
+    clearExpired: true, // periodically DELETE expired rows
     checkExpirationInterval: 5 * 60 * 1000, // check every 5 min (prevents waking up after long idle)
-    expiration: 30 * 60 * 1000,              // match cookie maxAge (30 min)
+    expiration: 30 * 60 * 1000, // match cookie maxAge (30 min)
     endConnectionOnClose: false, // don't close the shared pool on store.close()
   },
-  dbPool
+  dbPool,
 );
 
 // Prevent unhandled error event exceptions on background session operations
@@ -188,7 +240,7 @@ app.get("/api/v1/admin/intake-dates/public", async (req, res) => {
       `SELECT id, label, intake_date, application_deadline, programs_available, status
        FROM intake_dates_global
        WHERE YEAR(intake_date) >= YEAR(CURDATE())
-       ORDER BY intake_date ASC`
+       ORDER BY intake_date ASC`,
     );
     res.json({ success: true, data: rows });
   } catch (err) {
@@ -206,7 +258,7 @@ app.get("/api/v1/admin/intake-dates/popup", async (req, res) => {
        WHERE show_popup = 1
          AND status IN ('open','upcoming')
        ORDER BY intake_date ASC
-       LIMIT 1`
+       LIMIT 1`,
     );
     res.json({ success: true, data: rows[0] || null });
   } catch (err) {
@@ -220,11 +272,11 @@ app.use("/api/v1/slides", require("./routes/slides"));
 app.use("/api/v1/partners", require("./routes/partners"));
 app.use("/api/v1/applications", require("./routes/applications"));
 app.use("/api/v1/portals", require("./routes/portals"));
-app.use('/api/v1/innovation/auth', innovationAuthRoutes);
-app.use('/api/v1/innovation/events', innovationEventsRoutes);
-app.use('/api/v1/innovation/participants', innovationParticipantsRoutes);
-app.use('/api/v1/innovation/categories', innovationCategoriesRoutes);
-app.use('/api/v1/innovation/scores', innovationScoresRoutes);
+app.use("/api/v1/innovation/auth", innovationAuthRoutes);
+app.use("/api/v1/innovation/events", innovationEventsRoutes);
+app.use("/api/v1/innovation/participants", innovationParticipantsRoutes);
+app.use("/api/v1/innovation/categories", innovationCategoriesRoutes);
+app.use("/api/v1/innovation/scores", innovationScoresRoutes);
 
 // ── Portal Page Routes ─────────────────────────────────────
 // CRITICAL ADDITION: These routes serve portal HTML pages
@@ -233,7 +285,6 @@ app.use('/api/v1/innovation/scores', innovationScoresRoutes);
 /**
  * GET /portal - Redirects to login page
  */
-
 
 app.get("/portal", (req, res) => {
   res.redirect("/portal/login");
@@ -319,16 +370,16 @@ app.get("/sitemap.xml", async (req, res) => {
   // Uses clean (no-.html) canonical URLs to match <link rel="canonical"> tags.
   // /portals excluded — thin content, links to authenticated areas.
   const staticPages = [
-    { url: "/",            changefreq: "weekly",  priority: "1.0" },
-    { url: "/about",       changefreq: "monthly", priority: "0.8" },
-    { url: "/courses",     changefreq: "weekly",  priority: "0.9" },
+    { url: "/", changefreq: "weekly", priority: "1.0" },
+    { url: "/about", changefreq: "monthly", priority: "0.8" },
+    { url: "/courses", changefreq: "weekly", priority: "0.9" },
     { url: "/departments", changefreq: "monthly", priority: "0.8" },
-    { url: "/admissions",  changefreq: "weekly",  priority: "0.9" },
-    { url: "/news",        changefreq: "daily",   priority: "0.8" },
-    { url: "/contact",     changefreq: "monthly", priority: "0.7" },
-    { url: "/downloads",   changefreq: "monthly", priority: "0.7" },
-    { url: "/apply",       changefreq: "weekly",  priority: "0.9" },
-    { url: "/faq",         changefreq: "monthly", priority: "0.8" },
+    { url: "/admissions", changefreq: "weekly", priority: "0.9" },
+    { url: "/news", changefreq: "daily", priority: "0.8" },
+    { url: "/contact", changefreq: "monthly", priority: "0.7" },
+    { url: "/downloads", changefreq: "monthly", priority: "0.7" },
+    { url: "/apply", changefreq: "weekly", priority: "0.9" },
+    { url: "/faq", changefreq: "monthly", priority: "0.8" },
   ];
 
   let courseEntries = [];
@@ -337,44 +388,59 @@ app.get("/sitemap.xml", async (req, res) => {
 
   try {
     const [courses] = await dbPool.execute(
-      `SELECT id FROM courses WHERE is_active = TRUE ORDER BY id ASC`
+      `SELECT id FROM courses WHERE is_active = TRUE ORDER BY id ASC`,
     );
-    courseEntries = courses.map(c => ({
+    courseEntries = courses.map((c) => ({
       url: `/course-details.html?id=${c.id}`,
       changefreq: "monthly",
-      priority: "0.7"
+      priority: "0.7",
     }));
-  } catch (_) { /* non-fatal — static pages still included */ }
+  } catch (_) {
+    /* non-fatal — static pages still included */
+  }
 
   try {
     const [depts] = await dbPool.execute(
-      `SELECT id FROM departments ORDER BY id ASC`
+      `SELECT id FROM departments ORDER BY id ASC`,
     );
-    deptEntries = depts.map(d => ({
+    deptEntries = depts.map((d) => ({
       url: `/departments.html#dept-${d.id}`,
       changefreq: "monthly",
-      priority: "0.6"
+      priority: "0.6",
     }));
-  } catch (_) { /* non-fatal */ }
+  } catch (_) {
+    /* non-fatal */
+  }
 
   try {
     const [articles] = await dbPool.execute(
-      `SELECT id, published_at FROM news_articles WHERE is_published = TRUE ORDER BY published_at DESC`
+      `SELECT id, published_at FROM news_articles WHERE is_published = TRUE ORDER BY published_at DESC`,
     );
-    newsEntries = articles.map(a => ({
+    newsEntries = articles.map((a) => ({
       url: `/news-article.html?id=${a.id}`,
-      lastmod: a.published_at ? new Date(a.published_at).toISOString().split("T")[0] : today,
+      lastmod: a.published_at
+        ? new Date(a.published_at).toISOString().split("T")[0]
+        : today,
       changefreq: "never",
-      priority: "0.6"
+      priority: "0.6",
     }));
-  } catch (_) { /* non-fatal */ }
+  } catch (_) {
+    /* non-fatal */
+  }
 
-  const allEntries = [...staticPages, ...courseEntries, ...deptEntries, ...newsEntries];
+  const allEntries = [
+    ...staticPages,
+    ...courseEntries,
+    ...deptEntries,
+    ...newsEntries,
+  ];
 
-  const urlNodes = allEntries.map(e => {
-    const lastmod = e.lastmod || today;
-    return `  <url>\n    <loc>${BASE}${e.url}</loc>\n    <lastmod>${lastmod}</lastmod>\n    <changefreq>${e.changefreq}</changefreq>\n    <priority>${e.priority}</priority>\n  </url>`;
-  }).join("\n");
+  const urlNodes = allEntries
+    .map((e) => {
+      const lastmod = e.lastmod || today;
+      return `  <url>\n    <loc>${BASE}${e.url}</loc>\n    <lastmod>${lastmod}</lastmod>\n    <changefreq>${e.changefreq}</changefreq>\n    <priority>${e.priority}</priority>\n  </url>`;
+    })
+    .join("\n");
 
   const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urlNodes}\n</urlset>`;
 
@@ -383,13 +449,67 @@ app.get("/sitemap.xml", async (req, res) => {
   res.send(xml);
 });
 
-// ── Health check ────────────────────────────────────────────
+// ── Health & Diagnostics ────────────────────────────────────
 app.get("/api/ping", (req, res) => {
   res.json({
     success: true,
     message: "Kigumo TVC server is running",
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV || "development",
+  });
+});
+
+app.get("/api/v1/diagnostics/upload-check", async (req, res) => {
+  const cloudinary = require("cloudinary").v2;
+  const os = require("os");
+
+  const cloudinaryConfigured = Boolean(
+    process.env.CLOUDINARY_CLOUD_NAME &&
+    process.env.CLOUDINARY_API_KEY &&
+    process.env.CLOUDINARY_API_SECRET
+  );
+
+  let cloudinaryPing = "skipped";
+  let pingLatency = null;
+  let pingError = null;
+
+  if (cloudinaryConfigured) {
+    const start = Date.now();
+    try {
+      await cloudinary.api.ping({ timeout: 10000 });
+      cloudinaryPing = "ok";
+      pingLatency = `${Date.now() - start}ms`;
+    } catch (err) {
+      cloudinaryPing = "failed";
+      pingError = err.message;
+    }
+  }
+
+  const memory = process.memoryUsage();
+  res.json({
+    success: true,
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || "development",
+    cwd: process.cwd(),
+    tmpDir: os.tmpdir(),
+    cloudinary: {
+      configured: cloudinaryConfigured,
+      cloudName: process.env.CLOUDINARY_CLOUD_NAME || null,
+      apiKeySet: Boolean(process.env.CLOUDINARY_API_KEY),
+      apiSecretSet: Boolean(process.env.CLOUDINARY_API_SECRET),
+      ping: cloudinaryPing,
+      pingLatency,
+      pingError
+    },
+    cors: {
+      allowedOrigins: Array.from(allowedOriginsSet),
+      requestOrigin: req.headers.origin || null
+    },
+    memory: {
+      heapUsedMB: Math.round(memory.heapUsed / 1024 / 1024),
+      heapTotalMB: Math.round(memory.heapTotal / 1024 / 1024),
+      rssMB: Math.round(memory.rss / 1024 / 1024)
+    }
   });
 });
 

@@ -919,8 +919,8 @@
     }
 
     // Simulated progress animation (call before actual fetch)
-    function startProgressAnimation() {
-      showProgress("Uploading...");
+    function startProgressAnimation(initialText) {
+      showProgress(initialText || "Uploading...");
       let percent = 0;
       const interval = setInterval(() => {
         percent += Math.random() * 15;
@@ -928,8 +928,11 @@
           percent = 90;
           clearInterval(interval);
         }
-        updateProgress(Math.floor(percent), "Uploading to Cloudinary...");
-      }, 400);
+        updateProgress(
+          Math.floor(percent),
+          percent > 60 ? "Finalizing database record..." : "Streaming to Cloudinary..."
+        );
+      }, 350);
       return interval;
     }
 
@@ -939,16 +942,19 @@
       document.getElementById("progressPercent").textContent = "100%";
       document.getElementById("progressText").textContent = success
         ? "✅ Done!"
-        : "❌ Failed";
+        : "❌ Upload Failed";
       document.getElementById("progressStatus").textContent = message || "";
       bar.style.background = success
         ? "linear-gradient(90deg,#1a7a1a,#0d8a0d)"
         : "linear-gradient(90deg,#c00,#ff4444)";
 
-      setTimeout(() => {
-        hideProgress();
-        bar.style.background = "linear-gradient(90deg,#1a7a1a,#f5c518)";
-      }, 1500);
+      setTimeout(
+        () => {
+          hideProgress();
+          bar.style.background = "linear-gradient(90deg,#1a7a1a,#f5c518)";
+        },
+        success ? 1500 : 5000
+      );
     }
 
     // ── OVERVIEW ──
@@ -1041,26 +1047,30 @@
 
     async function addSlide(e) {
       e.preventDefault();
-      const progressInterval = startProgressAnimation();
+      const progressInterval = startProgressAnimation("Uploading slide...");
       try {
         const r = await fetch(`${API}/slides`, { method: "POST", body: new FormData(e.target) });
         clearInterval(progressInterval);
-        const result = await r.json();
+        const text = await r.text();
+        let result;
+        try { result = JSON.parse(text); } catch (_) { result = { success: false, message: `Server HTTP ${r.status}: ${r.statusText}` }; }
         if (result.success) { finishProgress(true, "Slide added!"); closeModal(); loadSlides(); }
         else finishProgress(false, result.message || "Upload failed");
-      } catch (err) { clearInterval(progressInterval); finishProgress(false, "Network error"); }
+      } catch (err) { clearInterval(progressInterval); finishProgress(false, err.message || "Network error"); }
     }
 
     async function updateSlide(e, id) {
       e.preventDefault();
-      const progressInterval = startProgressAnimation();
+      const progressInterval = startProgressAnimation("Updating slide...");
       try {
         const r = await fetch(`${API}/slides/${id}`, { method: "PUT", body: new FormData(e.target) });
         clearInterval(progressInterval);
-        const result = await r.json();
+        const text = await r.text();
+        let result;
+        try { result = JSON.parse(text); } catch (_) { result = { success: false, message: `Server HTTP ${r.status}: ${r.statusText}` }; }
         if (result.success) { finishProgress(true, "Slide updated!"); closeModal(); loadSlides(); }
         else finishProgress(false, result.message || "Update failed");
-      } catch (err) { clearInterval(progressInterval); finishProgress(false, "Network error"); }
+      } catch (err) { clearInterval(progressInterval); finishProgress(false, err.message || "Network error"); }
     }
 
     async function toggleSlide(id) {
@@ -1092,7 +1102,7 @@
       e.preventDefault();
       const f = new FormData(e.target);
 
-      const progressInterval = startProgressAnimation();
+      const progressInterval = startProgressAnimation("Updating principal message...");
 
       try {
         const r = await fetch(`${API}/principal-message`, {
@@ -1101,7 +1111,14 @@
         });
         clearInterval(progressInterval);
 
-        const result = await r.json();
+        const text = await r.text();
+        let result;
+        try {
+          result = JSON.parse(text);
+        } catch (_) {
+          result = { success: false, message: `Server HTTP ${r.status}: ${r.statusText}` };
+        }
+
         if (result.success) {
           finishProgress(true, "Principal message updated!");
           loadPrincipal();
@@ -1110,7 +1127,7 @@
         }
       } catch (err) {
         clearInterval(progressInterval);
-        finishProgress(false, "Network error. Please try again.");
+        finishProgress(false, err.message || "Network error. Please try again.");
       }
     }
 
@@ -1436,14 +1453,20 @@
       e.preventDefault();
       const form = e.target;
       const formData = new FormData(form);
-      showProgress("Updating user...");
-      updateProgress(30, "Saving changes...");
+      const progressInterval = startProgressAnimation("Updating user...");
       try {
         const r = await fetch(API + "/users/" + id, {
           method: "PUT",
           body: formData,
         });
-        const result = await r.json();
+        clearInterval(progressInterval);
+        const text = await r.text();
+        let result;
+        try {
+          result = JSON.parse(text);
+        } catch (_) {
+          result = { success: false, message: `Server HTTP ${r.status}: ${r.statusText}` };
+        }
         if (result.success) {
           finishProgress(true, "User updated successfully!");
           closeModal();
@@ -1452,7 +1475,8 @@
           finishProgress(false, result.message || "Failed to update user");
         }
       } catch (err) {
-        finishProgress(false, "Network error. Please try again.");
+        clearInterval(progressInterval);
+        finishProgress(false, err.message || "Network error. Please try again.");
       }
     }
 

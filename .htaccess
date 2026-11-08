@@ -1,0 +1,52 @@
+# ==============================================================================
+# Kigumo TVC - Production Apache & Phusion Passenger Configuration (.htaccess)
+# ==============================================================================
+
+# 1. Phusion Passenger (cPanel Node.js Application Manager)
+<IfModule mod_passenger.c>
+  PassengerAppType node
+  PassengerStartupFile index.js
+  PassengerMinInstances 1
+  PassengerMaxRequestTime 300
+  PassengerRequestTimeout 300
+</IfModule>
+
+# 2. Apache Request & Upload Limits
+<IfModule mod_core.c>
+  # 50MB Request Body Limit (matches Multer max upload limit)
+  LimitRequestBody 52428800
+  Timeout 300
+</IfModule>
+
+# 3. Apache CORS Fallback Headers
+<IfModule mod_headers.c>
+  Header always set Access-Control-Allow-Credentials "true"
+  Header always set Access-Control-Allow-Methods "GET, POST, PUT, DELETE, PATCH, OPTIONS"
+  Header always set Access-Control-Allow-Headers "Content-Type, Authorization, X-Requested-With, Accept, Origin"
+</IfModule>
+
+# 4. ModSecurity Adjustments (prevent false-positive drops on file upload payloads)
+<IfModule mod_security2.c>
+  SecRuleEngine On
+  SecRequestBodyAccess On
+  SecRequestBodyLimit 52428800
+  SecRequestBodyNoFilesLimit 10485760
+</IfModule>
+
+# 5. Disable Directory Browsing
+Options -Indexes
+
+# 6. HTTPS & Domain Canonicalization (Apache Layer)
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+
+  # Force HTTPS
+  RewriteCond %{HTTPS} off
+  RewriteCond %{HTTP:X-Forwarded-Proto} !https
+  RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+  # Canonical domain: redirect www.kigumotvc.ac.ke -> kigumotvc.ac.ke
+  RewriteCond %{HTTP_HOST} ^www\.kigumotvc\.ac\.ke$ [NC]
+  RewriteRule ^ https://kigumotvc.ac.ke%{REQUEST_URI} [L,R=301]
+</IfModule>
+

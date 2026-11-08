@@ -70,12 +70,16 @@ const upload = multer({
 });
 
 // Helper: upload buffer to Cloudinary and return the secure URL
-async function uploadToCloudinary(file, folder) {
+async function uploadToCloudinary(file, folder, extraOptions = {}) {
   if (!file) return null;
-  const fileBase64 = file.buffer.toString("base64");
-  const dataURI = `data:${file.mimetype};base64,${fileBase64}`;
   try {
-    const result = await uploadFile(dataURI, { folder, timeout: 60000 });
+    // Pass binary buffer directly for zero-memory-copy streaming via upload_stream
+    const result = await uploadFile(file.buffer || file, {
+      folder,
+      timeout: 30000,
+      resource_type: isVideoFile(file) ? 'video' : 'auto',
+      ...extraOptions
+    });
     return result.secure_url;
   } catch (err) {
     // Re-throw with clearer message and preserve error metadata for route catch blocks

@@ -3,16 +3,17 @@
  * 
  * Optimized for cPanel hosting with TiDB & Cloudinary:
  * - Automatically ensures environment variables are loaded via loadEnv
- * - Configures explicit upload timeout (default 60,000ms) to prevent 499 Request Timeouts
- * - Implements 1-step automatic retry for transient timeouts and connection resets
+ * - Direct binary streaming (upload_stream) avoiding V8 heap base64 allocations
+ * - Configures explicit upload timeout (default 30,000ms) to stay within Apache/Passenger proxy limits
  * - Formats error properties (isTimeout, http_code) for graceful HTTP responses
  */
 
 require('./loadEnv');
+const { Readable } = require('stream');
 const cloudinary = require('cloudinary').v2;
 const logger = require('./cloudinaryLogger');
 
-const CLOUDINARY_TIMEOUT = parseInt(process.env.CLOUDINARY_TIMEOUT) || 60000;
+const CLOUDINARY_TIMEOUT = parseInt(process.env.CLOUDINARY_TIMEOUT, 10) || 30000;
 
 // Configure Cloudinary SDK with global timeout
 cloudinary.config({
@@ -50,25 +51,131 @@ function isTimeoutError(err) {
     err.code === 'ETIMEDOUT' ||
     err.code === 'ESOCKETTIMEDOUT' ||
     err.code === 'ECONNRESET' ||
-    (err.message && /timeout|timed out|client closed/i.test(err.message))
+    Boolean(err.message && /timeout|timed out|client closed/i.test(err.message))
   );
 }
 
 /**
+ * Upload a Buffer directly using Cloudinary's upload_stream.
+ * Avoids base64 encoding and multi-megabyte string allocation in V8 heap.
+ * @param {Buffer} buffer - file buffer from Multer memoryStorage
+ * @param {object} options - Cloudinary upload options (folder, resource_type, timeout, etc.)
+ * @returns {Promise<object>} Cloudinary upload result
+ */
+function uploadBufferStream(buffer, options = {}) {
+  const start = Date.now();
+  const timeoutMs = options.timeout || CLOUDINARY_TIMEOUT;
+  const defaults = {
+    folder: 'kigumo-tvc',
+    resource_type: 'auto',
+    use_filename: true,
+    unique_filename: true,
+    overwrite: false
+  };
+  const uploadOptions = { ...defaults, ...options };
+
+  logger.debug('Streaming buffer to Cloudinary', {
+    folder: uploadOptions.folder,
+    resource_type: uploadOptions.resource_type,
+    timeout: timeoutMs,
+    bytes: buffer.length
+  });
+
+  return new Promise((resolve, reject) => {
+    let finished = false;
+    const timer = setTimeout(() => {
+      if (finished) return;
+      finished = true;
+      const err = new Error(`Cloudinary upload stream timed out after ${timeoutMs}ms`);
+      err.isTimeout = true;
+      err.code = 'ETIMEDOUT';
+      logger.error('❌ Cloudinary stream upload timed out', {
+        folder: uploadOptions.folder,
+        duration: `${Date.now() - start}ms`
+      });
+      reject(err);
+    }, timeoutMs);
+
+    const uploadStream = cloudinary.uploader.upload_stream(
+      uploadOptions,
+      (err, result) => {
+        if (finished) return;
+        finished = true;
+        clearTimeout(timer);
+        const duration = Date.now() - start;
+
+        if (err) {
+          err.isTimeout = isTimeoutError(err);
+          err.duration = duration;
+          logger.error('❌ Stream upload failed', {
+            error: err.message,
+            http_code: err.http_code,
+            code: err.code,
+            duration: `${duration}ms`
+          });
+          return reject(err);
+        }
+
+        logger.info('✅ Stream upload successful', {
+          public_id: result.public_id,
+          secure_url: result.secure_url,
+          format: result.format,
+          bytes: result.bytes,
+          duration: `${duration}ms`
+        });
+        resolve(result);
+      }
+    );
+
+    const readable = Readable.from(buffer);
+    readable.on('error', (streamErr) => {
+      if (finished) return;
+      finished = true;
+      clearTimeout(timer);
+      logger.error('❌ Readable stream error during Cloudinary upload', { error: streamErr.message });
+      reject(streamErr);
+    });
+
+    readable.pipe(uploadStream);
+  });
+}
+
+/**
  * Upload a file to Cloudinary with timeout protection and retry.
- * @param {string|Buffer} file - file path, buffer, or base64 data URI
+ * Handles Buffers, file paths, and data URIs seamlessly.
+ * @param {string|Buffer} file - file buffer, path, or base64 data URI
  * @param {object} options - folder, public_id, resource_type, timeout, etc.
  * @returns {Promise<object>} { secure_url, public_id, width, height, format, bytes }
  */
 async function uploadFile(file, options = {}) {
   const start = Date.now();
+  const timeoutMs = options.timeout || CLOUDINARY_TIMEOUT;
+
+  // If file is a Buffer, use uploadBufferStream directly
+  if (Buffer.isBuffer(file)) {
+    try {
+      return await uploadBufferStream(file, { ...options, timeout: timeoutMs });
+    } catch (err) {
+      if (isTimeoutError(err) && !options._isRetry) {
+        logger.warn(`⚠️ Cloudinary stream upload timed out. Retrying once with +10s...`);
+        return await uploadBufferStream(file, {
+          ...options,
+          timeout: timeoutMs + 10000,
+          _isRetry: true
+        });
+      }
+      throw err;
+    }
+  }
+
+  // Fallback for strings, paths, or data URIs
   const defaults = {
     folder: 'kigumo-tvc',
     resource_type: 'auto',
     use_filename: true,
     unique_filename: true,
     overwrite: false,
-    timeout: CLOUDINARY_TIMEOUT
+    timeout: timeoutMs
   };
   const uploadOptions = { ...defaults, ...options };
 
@@ -93,14 +200,13 @@ async function uploadFile(file, options = {}) {
     const isTimeout = isTimeoutError(err);
     const duration = Date.now() - start;
 
-    // Retry once on timeout or connection reset if under max allowed time
     if (isTimeout && !uploadOptions._isRetry) {
       logger.warn(`⚠️ Cloudinary upload timed out after ${duration}ms (code: ${err.http_code || err.code}). Retrying once...`);
       try {
         const retryStart = Date.now();
         const retryResult = await cloudinary.uploader.upload(file, {
           ...uploadOptions,
-          timeout: CLOUDINARY_TIMEOUT + 15000, // slight extension for retry
+          timeout: timeoutMs + 10000,
           _isRetry: true
         });
         logger.info('✅ Upload retry succeeded', {
@@ -113,7 +219,6 @@ async function uploadFile(file, options = {}) {
       }
     }
 
-    // Attach rich error metadata for HTTP controllers
     err.isTimeout = isTimeout;
     err.duration = duration;
     err.userMessage = isTimeout
@@ -165,6 +270,7 @@ function optimisedUrl(publicId, transformations = {}) {
 
 module.exports = {
   uploadFile,
+  uploadBufferStream,
   deleteFile,
   optimisedUrl,
   isTimeoutError,

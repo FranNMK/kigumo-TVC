@@ -84,7 +84,11 @@ const checks = [
           if (!v) return null;
           const origins = v.split(',').map(s => s.trim());
           const invalid = origins.filter(o => !o.startsWith('http://') && !o.startsWith('https://'));
-          return invalid.length > 0 ? `Invalid origin format: ${invalid.join(', ')}` : null;
+          if (invalid.length > 0) return `Invalid origin format: ${invalid.join(', ')}`;
+          if (!origins.includes('https://kigumotvc.ac.ke')) {
+            return "Note: Missing canonical 'https://kigumotvc.ac.ke'. Ensure both www and non-www are present.";
+          }
+          return null;
         }
       }
     ]
